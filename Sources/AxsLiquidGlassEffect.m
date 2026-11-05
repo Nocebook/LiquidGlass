@@ -181,14 +181,14 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
     double specular = [config axs_liquidglass_specularStrength];
     double mesh = [config axs_liquidglass_meshStrength];
     NSInteger perfMode = [config axs_liquidglass_perfMode];
-    CGFloat radius = [self axs_liquidglass_radiusForView:view];
+    CGFloat cornerRadius = [self axs_liquidglass_radiusForView:view];
 
     if (isWidget) {
         // 三档语义要严格区分：1 只调参数、2 加零 layer 描边、3 才允许真正的图层。
         // 小组件进程只有 30~50MB 预算，档位 3 也强制走省电参数，不给它上折射网格。
         NSInteger widgetMode = [config axs_liquidglass_widgetMode];
         if (widgetMode >= 3 && rim > 0.001) {
-            [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:radius
+            [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                        fill:fill * 0.55 border:rim
                                                    specular:specular * 0.5 perfMode:0];
             axs_liquidglass_clearWidgetEdge(view);
@@ -201,10 +201,10 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
         }
     } else if ([AxsLiquidGlassSurface axs_liquidglass_allowsDecorativeLayersForKind:kind]) {
         // 主屏 / 控制中心 / 通知：玻璃膜 + 边缘折射，这一组才是"液态"观感的来源。
-        [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:radius
+        [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                    fill:fill border:rim
                                                specular:specular perfMode:perfMode];
-        [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToView:view radius:radius
+        [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToView:view radius:cornerRadius
                                                           strength:mesh perfMode:perfMode];
     } else {
         [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
