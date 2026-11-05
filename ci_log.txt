@@ -1,699 +1,700 @@
-﻿2026-11-05T11:28:53.1918470Z Current runner version: '2.338.2'
-2026-11-05T11:28:53.1935450Z ##[group]Runner Image Provisioner
-2026-11-05T11:28:53.1936120Z Hosted Compute Agent
-2026-11-05T11:28:53.1936570Z Version: 20260828.587
-2026-11-05T11:28:53.1936970Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
-2026-11-05T11:28:53.1937440Z Build Date: 2026-08-28T16:44:25Z
-2026-11-05T11:28:53.1937960Z Worker ID: {252308f5-12b4-4c56-83cb-34810d187749}
-2026-11-05T11:28:53.1938500Z Azure Region: westus
-2026-11-05T11:28:53.1938950Z ##[endgroup]
-2026-11-05T11:28:53.1939790Z ##[group]Operating System
-2026-11-05T11:28:53.1940180Z macOS
-2026-11-05T11:28:53.1940580Z 14.8.9
-2026-11-05T11:28:53.1940970Z 23J631
-2026-11-05T11:28:53.1941350Z ##[endgroup]
-2026-11-05T11:28:53.1941760Z ##[group]Runner Image
-2026-11-05T11:28:53.1942130Z Image: macos-14-arm64
-2026-11-05T11:28:53.1942550Z Version: 20260831.0302.1
-2026-11-05T11:28:53.1943570Z Included Software: https://github.com/actions/runner-images/blob/macos-14-arm64/20260831.0302/images/macos/macos-14-arm64-Readme.md
-2026-11-05T11:28:53.1944660Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-14-arm64%2F20260831.0302
-2026-11-05T11:28:53.1945440Z ##[endgroup]
-2026-11-05T11:28:53.1946180Z ##[group]GITHUB_TOKEN Permissions
-2026-11-05T11:28:53.1947390Z Contents: write
-2026-11-05T11:28:53.1947800Z Metadata: read
-2026-11-05T11:28:53.1948160Z ##[endgroup]
-2026-11-05T11:28:53.1949620Z Secret source: Actions
-2026-11-05T11:28:53.1950180Z Cache mode: write
-2026-11-05T11:28:53.1950650Z Prepare workflow directory
-2026-11-05T11:28:53.2325340Z Prepare all required actions
-2026-11-05T11:28:53.2364890Z Getting action download info
-2026-11-05T11:28:53.5329400Z Download action repository 'maxim-lobanov/setup-xcode@v1' (SHA:ed7a3b1fda3918c0306d1b724322adc0b8cc0a90)
-2026-11-05T11:28:54.0581990Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
-2026-11-05T11:28:54.1362200Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
-2026-11-05T11:28:54.2302380Z Download action repository 'softprops/action-gh-release@v2' (SHA:3bb12739c298aeb8a4eeaf626c5b8d85266b0e65)
-2026-11-05T11:28:54.6761370Z Complete job name: Build (roothide)
-2026-11-05T11:28:54.7191480Z ##[group]Run maxim-lobanov/setup-xcode@v1
-2026-11-05T11:28:54.7192430Z with:
-2026-11-05T11:28:54.7193000Z   xcode-version: 15.4
-2026-11-05T11:28:54.7193700Z env:
-2026-11-05T11:28:54.7194250Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:28:54.7194960Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:28:54.7195880Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:54.7196710Z ##[endgroup]
-2026-11-05T11:28:55.0190460Z Switching Xcode to version '15.4'...
-2026-11-05T11:28:55.0843510Z Xcode is set to 15.4.0 (15F31d)
-2026-11-05T11:28:55.1090720Z ##[group]Run actions/checkout@v4
-2026-11-05T11:28:55.1091360Z with:
-2026-11-05T11:28:55.1091900Z   repository: Nocebook/LiquidGlass
-2026-11-05T11:28:55.1096870Z   token: ***
-2026-11-05T11:28:55.1097450Z   ssh-strict: true
-2026-11-05T11:28:55.1097980Z   ssh-user: git
-2026-11-05T11:28:55.1098570Z   persist-credentials: true
-2026-11-05T11:28:55.1099170Z   clean: true
-2026-11-05T11:28:55.1099700Z   sparse-checkout-cone-mode: true
-2026-11-05T11:28:55.1100320Z   fetch-depth: 1
-2026-11-05T11:28:55.1100840Z   fetch-tags: false
-2026-11-05T11:28:55.1101460Z   show-progress: true
-2026-11-05T11:28:55.1102090Z   lfs: false
-2026-11-05T11:28:55.1102600Z   submodules: false
-2026-11-05T11:28:55.1103140Z   set-safe-directory: true
-2026-11-05T11:28:55.1103740Z   allow-unsafe-pr-checkout: false
-2026-11-05T11:28:55.1114980Z env:
-2026-11-05T11:28:55.1115540Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:28:55.1116260Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:28:55.1117170Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:55.1118080Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:28:55.1118820Z ##[endgroup]
-2026-11-05T11:28:55.2307390Z Syncing repository: Nocebook/LiquidGlass
-2026-11-05T11:28:55.2310730Z ##[group]Getting Git version info
-2026-11-05T11:28:55.2311820Z Working directory is '/Users/runner/work/LiquidGlass/LiquidGlass'
-2026-11-05T11:28:55.2313150Z [command]/opt/homebrew/bin/git version
-2026-11-05T11:28:55.2541540Z git version 2.55.0
-2026-11-05T11:28:55.2553360Z ##[endgroup]
-2026-11-05T11:28:55.2558740Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/7199c233-2195-49bd-ad5f-0162dfd05948/.gitconfig'
-2026-11-05T11:28:55.2564000Z Temporarily overriding HOME='/Users/runner/work/_temp/7199c233-2195-49bd-ad5f-0162dfd05948' before making global git config changes
-2026-11-05T11:28:55.2565750Z Adding repository directory to the temporary git global config as a safe directory
-2026-11-05T11:28:55.2567390Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass
-2026-11-05T11:28:55.2650330Z Deleting the contents of '/Users/runner/work/LiquidGlass/LiquidGlass'
-2026-11-05T11:28:55.2652940Z ##[group]Initializing the repository
-2026-11-05T11:28:55.2656190Z [command]/opt/homebrew/bin/git init /Users/runner/work/LiquidGlass/LiquidGlass
-2026-11-05T11:28:55.2844750Z hint: Using 'master' as the name for the initial branch. This default branch name
-2026-11-05T11:28:55.2846670Z hint: will change to "main" in Git 3.0. To configure the initial branch name
-2026-11-05T11:28:55.2848170Z hint: to use in all of your new repositories, which will suppress this warning,
-2026-11-05T11:28:55.2849620Z hint: call:
-2026-11-05T11:28:55.2850360Z hint:
-2026-11-05T11:28:55.2851230Z hint: 	git config --global init.defaultBranch <name>
-2026-11-05T11:28:55.2852130Z hint:
-2026-11-05T11:28:55.2852900Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
-2026-11-05T11:28:55.2854100Z hint: 'development'. The just-created branch can be renamed via this command:
-2026-11-05T11:28:55.2855140Z hint:
-2026-11-05T11:28:55.2855670Z hint: 	git branch -m <name>
-2026-11-05T11:28:55.2856350Z hint:
-2026-11-05T11:28:55.2857230Z hint: Disable this message with "git config set advice.defaultBranchName false"
-2026-11-05T11:28:55.2858670Z Initialized empty Git repository in /Users/runner/work/LiquidGlass/LiquidGlass/.git/
-2026-11-05T11:28:55.2861170Z [command]/opt/homebrew/bin/git remote add origin https://github.com/Nocebook/LiquidGlass
-2026-11-05T11:28:55.2910120Z ##[endgroup]
-2026-11-05T11:28:55.2911270Z ##[group]Disabling automatic garbage collection
-2026-11-05T11:28:55.2912610Z [command]/opt/homebrew/bin/git config --local gc.auto 0
-2026-11-05T11:28:55.2962430Z ##[endgroup]
-2026-11-05T11:28:55.2964300Z ##[group]Setting up auth
-2026-11-05T11:28:55.2966990Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-11-05T11:28:55.3016260Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-11-05T11:28:55.3613490Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-11-05T11:28:55.3650390Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-11-05T11:28:55.4093610Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:28:55.4130890Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-11-05T11:28:55.4571880Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-11-05T11:28:55.4612860Z ##[endgroup]
-2026-11-05T11:28:55.4613970Z ##[group]Fetching the repository
-2026-11-05T11:28:55.4618660Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +614cae29c301e917c4358c8e87a16bd200713005:refs/remotes/origin/main
-2026-11-05T11:28:55.9010590Z From https://github.com/Nocebook/LiquidGlass
-2026-11-05T11:28:55.9011810Z  * [new ref]         614cae29c301e917c4358c8e87a16bd200713005 -> origin/main
-2026-11-05T11:28:55.9014400Z ##[endgroup]
-2026-11-05T11:28:55.9015490Z ##[group]Determining the checkout info
-2026-11-05T11:28:55.9016720Z ##[endgroup]
-2026-11-05T11:28:55.9019110Z [command]/opt/homebrew/bin/git sparse-checkout disable
-2026-11-05T11:28:55.9074350Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
-2026-11-05T11:28:55.9115990Z ##[group]Checking out the ref
-2026-11-05T11:28:55.9117530Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
-2026-11-05T11:28:55.9260770Z Switched to a new branch 'main'
-2026-11-05T11:28:55.9268740Z branch 'main' set up to track 'origin/main'.
-2026-11-05T11:28:55.9271750Z ##[endgroup]
-2026-11-05T11:28:55.9317980Z [command]/opt/homebrew/bin/git log -1 --format=%H
-2026-11-05T11:28:55.9354290Z 614cae29c301e917c4358c8e87a16bd200713005
-2026-11-05T11:28:55.9445730Z ##[group]Run echo "$THEOS/bin" >> "$GITHUB_PATH"
-2026-11-05T11:28:55.9446930Z [36;1mecho "$THEOS/bin" >> "$GITHUB_PATH"[0m
-2026-11-05T11:28:55.9447930Z [36;1mecho "THEOS=$THEOS" >> "$GITHUB_ENV"[0m
-2026-11-05T11:28:55.9448940Z [36;1mecho "THEOS_IGNORE_PARALLEL_BUILDING_NOTICE=yes" >> "$HOME/.theosrc"[0m
-2026-11-05T11:28:55.9500690Z shell: /bin/bash -e {0}
-2026-11-05T11:28:55.9501320Z env:
-2026-11-05T11:28:55.9501850Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:28:55.9502500Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:28:55.9503350Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:55.9504220Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:28:55.9504930Z ##[endgroup]
-2026-11-05T11:28:55.9799060Z ##[group]Run BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
-2026-11-05T11:28:55.9800160Z [36;1mBASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"[0m
-2026-11-05T11:28:55.9801030Z [36;1m[ -n "$BASE" ] || BASE="6.1.0"[0m
-2026-11-05T11:28:55.9801680Z [36;1mVERSION="${BASE}-16"[0m
-2026-11-05T11:28:55.9802300Z [36;1mecho "Using version: $VERSION"[0m
-2026-11-05T11:28:55.9803110Z [36;1msed -i '' "s/^Version: .*/Version: ${VERSION}/" control[0m
-2026-11-05T11:28:55.9803990Z [36;1mecho "package_version=${VERSION}" >> "$GITHUB_OUTPUT"[0m
-2026-11-05T11:28:55.9850860Z shell: /bin/bash -e {0}
-2026-11-05T11:28:55.9851440Z env:
-2026-11-05T11:28:55.9852320Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:28:55.9853030Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:28:55.9853880Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:55.9854790Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:28:55.9855620Z ##[endgroup]
-2026-11-05T11:28:56.0074580Z Using version: 6.1.0-16
-2026-11-05T11:28:56.0240570Z ##[group]Run actions/checkout@v4
-2026-11-05T11:28:56.0241200Z with:
-2026-11-05T11:28:56.0241740Z   repository: roothide/theos
-2026-11-05T11:28:56.0242330Z   path: theos-roothide
-2026-11-05T11:28:56.0242870Z   submodules: recursive
-2026-11-05T11:28:56.0247440Z   token: ***
-2026-11-05T11:28:56.0247940Z   ssh-strict: true
-2026-11-05T11:28:56.0248450Z   ssh-user: git
-2026-11-05T11:28:56.0248980Z   persist-credentials: true
-2026-11-05T11:28:56.0249550Z   clean: true
-2026-11-05T11:28:56.0250080Z   sparse-checkout-cone-mode: true
-2026-11-05T11:28:56.0250680Z   fetch-depth: 1
-2026-11-05T11:28:56.0251190Z   fetch-tags: false
-2026-11-05T11:28:56.0251710Z   show-progress: true
-2026-11-05T11:28:56.0252250Z   lfs: false
-2026-11-05T11:28:56.0252740Z   set-safe-directory: true
-2026-11-05T11:28:56.0253350Z   allow-unsafe-pr-checkout: false
-2026-11-05T11:28:56.0253950Z env:
-2026-11-05T11:28:56.0254430Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:28:56.0255080Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:28:56.0255890Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:56.0256910Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:28:56.0257600Z ##[endgroup]
-2026-11-05T11:28:56.0913280Z Syncing repository: roothide/theos
-2026-11-05T11:28:56.0914570Z ##[group]Getting Git version info
-2026-11-05T11:28:56.0915790Z Working directory is '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide'
-2026-11-05T11:28:56.0933350Z [command]/opt/homebrew/bin/git version
-2026-11-05T11:28:56.0973340Z git version 2.55.0
-2026-11-05T11:28:56.0983670Z ##[endgroup]
-2026-11-05T11:28:56.0988070Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/14058d02-5b16-4634-a883-ac7615f04daf/.gitconfig'
-2026-11-05T11:28:56.0993690Z Temporarily overriding HOME='/Users/runner/work/_temp/14058d02-5b16-4634-a883-ac7615f04daf' before making global git config changes
-2026-11-05T11:28:56.0995430Z Adding repository directory to the temporary git global config as a safe directory
-2026-11-05T11:28:56.0997170Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:56.1036430Z ##[group]Initializing the repository
-2026-11-05T11:28:56.1039330Z [command]/opt/homebrew/bin/git init /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:28:56.1103670Z hint: Using 'master' as the name for the initial branch. This default branch name
-2026-11-05T11:28:56.1105110Z hint: will change to "main" in Git 3.0. To configure the initial branch name
-2026-11-05T11:28:56.1106320Z hint: to use in all of your new repositories, which will suppress this warning,
-2026-11-05T11:28:56.1107210Z hint: call:
-2026-11-05T11:28:56.1107720Z hint:
-2026-11-05T11:28:56.1108390Z hint: 	git config --global init.defaultBranch <name>
-2026-11-05T11:28:56.1109130Z hint:
-2026-11-05T11:28:56.1109810Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
-2026-11-05T11:28:56.1111020Z hint: 'development'. The just-created branch can be renamed via this command:
-2026-11-05T11:28:56.1111890Z hint:
-2026-11-05T11:28:56.1112410Z hint: 	git branch -m <name>
-2026-11-05T11:28:56.1113010Z hint:
-2026-11-05T11:28:56.1113750Z hint: Disable this message with "git config set advice.defaultBranchName false"
-2026-11-05T11:28:56.1115290Z Initialized empty Git repository in /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/
-2026-11-05T11:28:56.1117530Z [command]/opt/homebrew/bin/git remote add origin https://github.com/roothide/theos
-2026-11-05T11:28:56.1151910Z ##[endgroup]
-2026-11-05T11:28:56.1152900Z ##[group]Disabling automatic garbage collection
-2026-11-05T11:28:56.1153840Z [command]/opt/homebrew/bin/git config --local gc.auto 0
-2026-11-05T11:28:56.1189230Z ##[endgroup]
-2026-11-05T11:28:56.1190100Z ##[group]Setting up auth
-2026-11-05T11:28:56.1192540Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-11-05T11:28:56.1229640Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-11-05T11:28:56.1684560Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-11-05T11:28:56.1725450Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-11-05T11:28:56.2542930Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:28:56.2799830Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-11-05T11:28:56.3199480Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-11-05T11:28:56.3253680Z ##[endgroup]
-2026-11-05T11:28:56.3254780Z ##[group]Determining the default branch
-2026-11-05T11:28:56.3255540Z Retrieving the default branch name
-2026-11-05T11:28:56.7855920Z Default branch 'master'
-2026-11-05T11:28:56.7857380Z ##[endgroup]
-2026-11-05T11:28:56.7857780Z ##[group]Fetching the repository
-2026-11-05T11:28:56.7859740Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +refs/heads/master:refs/remotes/origin/master
-2026-11-05T11:28:57.3368860Z From https://github.com/roothide/theos
-2026-11-05T11:28:57.3371350Z  * [new branch]      master     -> origin/master
-2026-11-05T11:28:57.3372950Z ##[endgroup]
-2026-11-05T11:28:57.3373540Z ##[group]Determining the checkout info
-2026-11-05T11:28:57.3374130Z ##[endgroup]
-2026-11-05T11:28:57.3376470Z [command]/opt/homebrew/bin/git sparse-checkout disable
-2026-11-05T11:28:57.3459080Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
-2026-11-05T11:28:57.3517250Z ##[group]Checking out the ref
-2026-11-05T11:28:57.3519930Z [command]/opt/homebrew/bin/git checkout --progress --force -B master refs/remotes/origin/master
-2026-11-05T11:28:57.3814450Z Reset branch 'master'
-2026-11-05T11:28:57.3817110Z branch 'master' set up to track 'origin/master'.
-2026-11-05T11:28:57.3821980Z ##[endgroup]
-2026-11-05T11:28:57.3822370Z ##[group]Setting up auth for fetching submodules
-2026-11-05T11:28:57.3826420Z [command]/opt/homebrew/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
-2026-11-05T11:28:57.3903630Z [command]/opt/homebrew/bin/git config --global --unset-all url.https://github.com/.insteadOf
-2026-11-05T11:28:57.3968400Z [command]/opt/homebrew/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
-2026-11-05T11:28:57.4025120Z [command]/opt/homebrew/bin/git config --global --add url.https://github.com/.insteadOf org-178651407@github.com:
-2026-11-05T11:28:57.4098370Z ##[endgroup]
-2026-11-05T11:28:57.4098970Z ##[group]Fetching submodules
-2026-11-05T11:28:57.4106070Z [command]/opt/homebrew/bin/git submodule sync --recursive
-2026-11-05T11:28:57.4906230Z [command]/opt/homebrew/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
-2026-11-05T11:28:57.5590140Z Submodule 'vendor/dm.pl' (https://github.com/theos/dm.pl.git) registered for path 'vendor/dm.pl'
-2026-11-05T11:28:57.5693220Z Submodule 'vendor/include' (https://github.com/roothide/headers.git) registered for path 'vendor/include'
-2026-11-05T11:28:57.5698670Z Submodule 'vendor/lib' (https://github.com/roothide/lib.git) registered for path 'vendor/lib'
-2026-11-05T11:28:57.5699350Z Submodule 'vendor/logos' (https://github.com/theos/logos.git) registered for path 'vendor/logos'
-2026-11-05T11:28:57.5700050Z Submodule 'vendor/nic' (https://github.com/theos/nic.git) registered for path 'vendor/nic'
-2026-11-05T11:28:57.5700710Z Submodule 'vendor/orion' (https://github.com/theos/orion.git) registered for path 'vendor/orion'
-2026-11-05T11:28:57.5702040Z Submodule 'vendor/swift-support' (https://github.com/theos/swift-support.git) registered for path 'vendor/swift-support'
-2026-11-05T11:28:57.5702880Z Submodule 'vendor/templates' (https://github.com/theos/templates.git) registered for path 'vendor/templates'
-2026-11-05T11:28:57.5743680Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/dm.pl'...
-2026-11-05T11:28:57.9971650Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/include'...
-2026-11-05T11:28:58.5416650Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/lib'...
-2026-11-05T11:28:59.1933940Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/logos'...
-2026-11-05T11:28:59.7408180Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/nic'...
-2026-11-05T11:29:00.2689680Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/orion'...
-2026-11-05T11:29:00.7999040Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/swift-support'...
-2026-11-05T11:29:01.2656510Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/templates'...
-2026-11-05T11:29:01.8928170Z Submodule path 'vendor/dm.pl': checked out 'd9a3b72e274226dd2823c0a7c1d6d05099f4f51c'
-2026-11-05T11:29:02.0135880Z Submodule path 'vendor/include': checked out '744ee65cd464becd8b06cab6eaeffc0512b371f1'
-2026-11-05T11:29:02.0875210Z Submodule path 'vendor/lib': checked out '85e9b5b8aff11bbefc59525c64c8f55149926e56'
-2026-11-05T11:29:02.1167080Z Submodule path 'vendor/logos': checked out '365a4e7028234e90bc2cbc724e5c87607130d3b3'
-2026-11-05T11:29:02.1430180Z Submodule path 'vendor/nic': checked out '4e7adcbeac2e4636b91e2f76341adfe4c4d0ceec'
-2026-11-05T11:29:02.1794710Z Submodule path 'vendor/orion': checked out '762159dc214d5aafa2edfc7554c659fc3c658b5b'
-2026-11-05T11:29:02.1846350Z Submodule 'fishhook' (https://github.com/facebook/fishhook.git) registered for path 'vendor/orion/fishhook'
-2026-11-05T11:29:02.1925260Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/orion/fishhook'...
-2026-11-05T11:29:02.6463050Z Submodule path 'vendor/orion/fishhook': checked out 'aadc161ac3b80db07a9908851839a17ba63a9eb1'
-2026-11-05T11:29:02.6737800Z Submodule path 'vendor/swift-support': checked out '4cf59ff04cdb2ceb27ea2228753e0497297b6182'
-2026-11-05T11:29:02.7121740Z Submodule path 'vendor/templates': checked out '6c3944e281c4726f1383755d0fbb642840312d28'
-2026-11-05T11:29:02.7185170Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local gc.auto 0
-2026-11-05T11:29:02.7785500Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:02.7890600Z Entering 'vendor/include'
-2026-11-05T11:29:02.8004230Z Entering 'vendor/lib'
-2026-11-05T11:29:02.8133850Z Entering 'vendor/logos'
-2026-11-05T11:29:02.8245050Z Entering 'vendor/nic'
-2026-11-05T11:29:02.8364730Z Entering 'vendor/orion'
-2026-11-05T11:29:02.8485240Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:02.8629850Z Entering 'vendor/swift-support'
-2026-11-05T11:29:02.8756930Z Entering 'vendor/templates'
-2026-11-05T11:29:02.8933610Z ##[endgroup]
-2026-11-05T11:29:02.8935760Z ##[group]Persisting credentials for submodules
-2026-11-05T11:29:02.8938370Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :"
-2026-11-05T11:29:03.0004710Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:03.0225420Z Entering 'vendor/include'
-2026-11-05T11:29:03.0398050Z Entering 'vendor/lib'
-2026-11-05T11:29:03.0533140Z Entering 'vendor/logos'
-2026-11-05T11:29:03.0664840Z Entering 'vendor/nic'
-2026-11-05T11:29:03.0803100Z Entering 'vendor/orion'
-2026-11-05T11:29:03.0933910Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:03.1060470Z Entering 'vendor/swift-support'
-2026-11-05T11:29:03.1185220Z Entering 'vendor/templates'
-2026-11-05T11:29:03.1351780Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url"
-2026-11-05T11:29:03.2087930Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:03.2286670Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/dm.pl/config	remote.origin.url
-2026-11-05T11:29:03.2344030Z Entering 'vendor/include'
-2026-11-05T11:29:03.2517210Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/include/config	remote.origin.url
-2026-11-05T11:29:03.2583110Z Entering 'vendor/lib'
-2026-11-05T11:29:03.2768160Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/lib/config	remote.origin.url
-2026-11-05T11:29:03.2826330Z Entering 'vendor/logos'
-2026-11-05T11:29:03.3015000Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/logos/config	remote.origin.url
-2026-11-05T11:29:03.3076890Z Entering 'vendor/nic'
-2026-11-05T11:29:03.3232910Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/nic/config	remote.origin.url
-2026-11-05T11:29:03.3287940Z Entering 'vendor/orion'
-2026-11-05T11:29:03.3442230Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/config	remote.origin.url
-2026-11-05T11:29:03.3497400Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:03.3689100Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/modules/fishhook/config	remote.origin.url
-2026-11-05T11:29:03.3760810Z Entering 'vendor/swift-support'
-2026-11-05T11:29:03.3956180Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/swift-support/config	remote.origin.url
-2026-11-05T11:29:03.4022750Z Entering 'vendor/templates'
-2026-11-05T11:29:03.4213120Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/templates/config	remote.origin.url
-2026-11-05T11:29:03.4318700Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'
-2026-11-05T11:29:03.4879470Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:03.4990050Z Entering 'vendor/include'
-2026-11-05T11:29:03.5102970Z Entering 'vendor/lib'
-2026-11-05T11:29:03.5213000Z Entering 'vendor/logos'
-2026-11-05T11:29:03.5323680Z Entering 'vendor/nic'
-2026-11-05T11:29:03.5433110Z Entering 'vendor/orion'
-2026-11-05T11:29:03.5547710Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:03.5669510Z Entering 'vendor/swift-support'
-2026-11-05T11:29:03.5787900Z Entering 'vendor/templates'
-2026-11-05T11:29:03.5913670Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'org-178651407@github.com:'
-2026-11-05T11:29:03.6418930Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:03.6530150Z Entering 'vendor/include'
-2026-11-05T11:29:03.6640290Z Entering 'vendor/lib'
-2026-11-05T11:29:03.6747830Z Entering 'vendor/logos'
-2026-11-05T11:29:03.6855190Z Entering 'vendor/nic'
-2026-11-05T11:29:03.6962920Z Entering 'vendor/orion'
-2026-11-05T11:29:03.7075850Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:03.7202710Z Entering 'vendor/swift-support'
-2026-11-05T11:29:03.7326200Z Entering 'vendor/templates'
-2026-11-05T11:29:03.7457910Z ##[endgroup]
-2026-11-05T11:29:03.7531130Z [command]/opt/homebrew/bin/git log -1 --format=%H
-2026-11-05T11:29:03.7579790Z 3ac89c984ec652fd16bcd91b33ae16de45ce76fa
-2026-11-05T11:29:03.7710350Z ##[group]Run set -euo pipefail
-2026-11-05T11:29:03.7710600Z [36;1mset -euo pipefail[0m
-2026-11-05T11:29:03.7710830Z [36;1mmkdir -p "$THEOS/sdks"[0m
-2026-11-05T11:29:03.7711130Z [36;1mif [ -d "$THEOS/sdks/iPhoneOS16.5.sdk" ]; then[0m
-2026-11-05T11:29:03.7711520Z [36;1m  echo "iPhoneOS16.5.sdk already present"[0m
-2026-11-05T11:29:03.7711830Z [36;1m  exit 0[0m
-2026-11-05T11:29:03.7712020Z [36;1mfi[0m
-2026-11-05T11:29:03.7712200Z [36;1mSDK_STAGE="$(mktemp -d)"[0m
-2026-11-05T11:29:03.7712490Z [36;1mtrap 'rm -rf "$SDK_STAGE"' EXIT[0m
-2026-11-05T11:29:03.7712960Z [36;1mgit clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$SDK_STAGE/sdks"[0m
-2026-11-05T11:29:03.7713530Z [36;1mgit -C "$SDK_STAGE/sdks" sparse-checkout set iPhoneOS16.5.sdk[0m
-2026-11-05T11:29:03.7713930Z [36;1mcp -R "$SDK_STAGE/sdks/iPhoneOS16.5.sdk" "$THEOS/sdks/"[0m
-2026-11-05T11:29:03.7714230Z [36;1mls -1 "$THEOS/sdks"[0m
-2026-11-05T11:29:03.7774530Z shell: /bin/bash -e {0}
-2026-11-05T11:29:03.7774760Z env:
-2026-11-05T11:29:03.7774990Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:29:03.7775240Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:29:03.7775610Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:29:03.7775940Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:29:03.7776200Z ##[endgroup]
-2026-11-05T11:29:03.8172200Z Cloning into '/var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/tmp.yw1RKNbHYK/sdks'...
-2026-11-05T11:29:24.8688230Z iPhoneOS16.5.sdk
-2026-11-05T11:29:25.4858360Z ##[group]Run brew install ldid dpkg xz
-2026-11-05T11:29:25.4858720Z [36;1mbrew install ldid dpkg xz[0m
-2026-11-05T11:29:25.4859040Z [36;1mecho "$(brew --prefix)/bin" >> "$GITHUB_PATH"[0m
-2026-11-05T11:29:25.5107550Z shell: /bin/bash -e {0}
-2026-11-05T11:29:25.5107820Z env:
-2026-11-05T11:29:25.5108000Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:29:25.5108310Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:29:25.5108850Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:29:25.5109210Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:29:25.5109500Z ##[endgroup]
-2026-11-05T11:29:27.1562110Z [33mWarning:[0m xz 5.8.3 is already installed and up-to-date.
-2026-11-05T11:29:27.1562590Z To reinstall 5.8.3, run:
-2026-11-05T11:29:27.1562840Z   brew reinstall xz
-2026-11-05T11:29:27.2395500Z ##[warning]`$HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK` is set: not checking for outdated
+﻿2026-11-05T13:33:46.8483040Z Current runner version: '2.338.2'
+2026-11-05T13:33:46.8497100Z ##[group]Runner Image Provisioner
+2026-11-05T13:33:46.8497610Z Hosted Compute Agent
+2026-11-05T13:33:46.8498000Z Version: 20260828.587
+2026-11-05T13:33:46.8498400Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-11-05T13:33:46.8498880Z Build Date: 2026-08-28T16:44:25Z
+2026-11-05T13:33:46.8499320Z Worker ID: {28050528-0e48-4633-9858-c4610d91917b}
+2026-11-05T13:33:46.8499770Z Azure Region: westus
+2026-11-05T13:33:46.8500140Z ##[endgroup]
+2026-11-05T13:33:46.8500950Z ##[group]Operating System
+2026-11-05T13:33:46.8501320Z macOS
+2026-11-05T13:33:46.8501640Z 14.8.9
+2026-11-05T13:33:46.8501950Z 23J631
+2026-11-05T13:33:46.8502270Z ##[endgroup]
+2026-11-05T13:33:46.8502610Z ##[group]Runner Image
+2026-11-05T13:33:46.8503000Z Image: macos-14-arm64
+2026-11-05T13:33:46.8503370Z Version: 20260831.0302.1
+2026-11-05T13:33:46.8504180Z Included Software: https://github.com/actions/runner-images/blob/macos-14-arm64/20260831.0302/images/macos/macos-14-arm64-Readme.md
+2026-11-05T13:33:46.8505200Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-14-arm64%2F20260831.0302
+2026-11-05T13:33:46.8505850Z ##[endgroup]
+2026-11-05T13:33:46.8506540Z ##[group]GITHUB_TOKEN Permissions
+2026-11-05T13:33:46.8507530Z Contents: write
+2026-11-05T13:33:46.8507890Z Metadata: read
+2026-11-05T13:33:46.8508230Z ##[endgroup]
+2026-11-05T13:33:46.8509550Z Secret source: Actions
+2026-11-05T13:33:46.8510100Z Cache mode: write
+2026-11-05T13:33:46.8510520Z Prepare workflow directory
+2026-11-05T13:33:46.8842560Z Prepare all required actions
+2026-11-05T13:33:46.8878880Z Getting action download info
+2026-11-05T13:33:47.3761100Z Download action repository 'maxim-lobanov/setup-xcode@v1' (SHA:ed7a3b1fda3918c0306d1b724322adc0b8cc0a90)
+2026-11-05T13:33:47.8092740Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-05T13:33:47.8695630Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-05T13:33:47.9597980Z Download action repository 'softprops/action-gh-release@v2' (SHA:3bb12739c298aeb8a4eeaf626c5b8d85266b0e65)
+2026-11-05T13:33:48.3515750Z Complete job name: Build (roothide)
+2026-11-05T13:33:48.3964120Z ##[group]Run maxim-lobanov/setup-xcode@v1
+2026-11-05T13:33:48.3965050Z with:
+2026-11-05T13:33:48.3965670Z   xcode-version: 15.4
+2026-11-05T13:33:48.3966770Z env:
+2026-11-05T13:33:48.3967410Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:33:48.3968140Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:33:48.3969150Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:48.3970070Z ##[endgroup]
+2026-11-05T13:33:48.4898940Z Switching Xcode to version '15.4'...
+2026-11-05T13:33:48.5408910Z Xcode is set to 15.4.0 (15F31d)
+2026-11-05T13:33:48.5646910Z ##[group]Run actions/checkout@v4
+2026-11-05T13:33:48.5647630Z with:
+2026-11-05T13:33:48.5648210Z   repository: Nocebook/LiquidGlass
+2026-11-05T13:33:48.5653510Z   token: ***
+2026-11-05T13:33:48.5654140Z   ssh-strict: true
+2026-11-05T13:33:48.5654710Z   ssh-user: git
+2026-11-05T13:33:48.5655280Z   persist-credentials: true
+2026-11-05T13:33:48.5655930Z   clean: true
+2026-11-05T13:33:48.5656500Z   sparse-checkout-cone-mode: true
+2026-11-05T13:33:48.5657190Z   fetch-depth: 1
+2026-11-05T13:33:48.5657750Z   fetch-tags: false
+2026-11-05T13:33:48.5658340Z   show-progress: true
+2026-11-05T13:33:48.5658930Z   lfs: false
+2026-11-05T13:33:48.5659480Z   submodules: false
+2026-11-05T13:33:48.5660060Z   set-safe-directory: true
+2026-11-05T13:33:48.5660720Z   allow-unsafe-pr-checkout: false
+2026-11-05T13:33:48.5661390Z env:
+2026-11-05T13:33:48.5661940Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:33:48.5662630Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:33:48.5663580Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:48.5664520Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:33:48.5665280Z ##[endgroup]
+2026-11-05T13:33:48.6523260Z Syncing repository: Nocebook/LiquidGlass
+2026-11-05T13:33:48.6525880Z ##[group]Getting Git version info
+2026-11-05T13:33:48.6526810Z Working directory is '/Users/runner/work/LiquidGlass/LiquidGlass'
+2026-11-05T13:33:48.6528470Z [command]/opt/homebrew/bin/git version
+2026-11-05T13:33:48.6730220Z git version 2.55.0
+2026-11-05T13:33:48.6738910Z ##[endgroup]
+2026-11-05T13:33:48.6744270Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/cdddda74-18a9-4156-8d7f-f7d7a2992fea/.gitconfig'
+2026-11-05T13:33:48.6750500Z Temporarily overriding HOME='/Users/runner/work/_temp/cdddda74-18a9-4156-8d7f-f7d7a2992fea' before making global git config changes
+2026-11-05T13:33:48.6752420Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-05T13:33:48.6754280Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass
+2026-11-05T13:33:48.6840320Z Deleting the contents of '/Users/runner/work/LiquidGlass/LiquidGlass'
+2026-11-05T13:33:48.6843340Z ##[group]Initializing the repository
+2026-11-05T13:33:48.6846220Z [command]/opt/homebrew/bin/git init /Users/runner/work/LiquidGlass/LiquidGlass
+2026-11-05T13:33:48.7036140Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-05T13:33:48.7037730Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-05T13:33:48.7039080Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-05T13:33:48.7040130Z hint: call:
+2026-11-05T13:33:48.7040680Z hint:
+2026-11-05T13:33:48.7041490Z hint: 	git config --global init.defaultBranch <name>
+2026-11-05T13:33:48.7042280Z hint:
+2026-11-05T13:33:48.7043170Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-05T13:33:48.7044370Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-05T13:33:48.7045300Z hint:
+2026-11-05T13:33:48.7045920Z hint: 	git branch -m <name>
+2026-11-05T13:33:48.7046570Z hint:
+2026-11-05T13:33:48.7047380Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-05T13:33:48.7048780Z Initialized empty Git repository in /Users/runner/work/LiquidGlass/LiquidGlass/.git/
+2026-11-05T13:33:48.7051890Z [command]/opt/homebrew/bin/git remote add origin https://github.com/Nocebook/LiquidGlass
+2026-11-05T13:33:48.7105850Z ##[endgroup]
+2026-11-05T13:33:48.7106970Z ##[group]Disabling automatic garbage collection
+2026-11-05T13:33:48.7108160Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+2026-11-05T13:33:48.7152950Z ##[endgroup]
+2026-11-05T13:33:48.7154030Z ##[group]Setting up auth
+2026-11-05T13:33:48.7156590Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-05T13:33:48.7202570Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-05T13:33:48.7823200Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-05T13:33:48.7871470Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-05T13:33:48.8391020Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:33:48.8435170Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-05T13:33:48.8995770Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-05T13:33:48.9028030Z ##[endgroup]
+2026-11-05T13:33:48.9029350Z ##[group]Fetching the repository
+2026-11-05T13:33:48.9032750Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +5586fd7558f5ce5569567182eb84284e5b4e40f1:refs/remotes/origin/main
+2026-11-05T13:33:49.6671560Z From https://github.com/Nocebook/LiquidGlass
+2026-11-05T13:33:49.6672760Z  * [new ref]         5586fd7558f5ce5569567182eb84284e5b4e40f1 -> origin/main
+2026-11-05T13:33:49.6675040Z ##[endgroup]
+2026-11-05T13:33:49.6675820Z ##[group]Determining the checkout info
+2026-11-05T13:33:49.6676530Z ##[endgroup]
+2026-11-05T13:33:49.6680510Z [command]/opt/homebrew/bin/git sparse-checkout disable
+2026-11-05T13:33:49.6750450Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-05T13:33:49.6797050Z ##[group]Checking out the ref
+2026-11-05T13:33:49.6800140Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-11-05T13:33:49.6964720Z Switched to a new branch 'main'
+2026-11-05T13:33:49.6969850Z branch 'main' set up to track 'origin/main'.
+2026-11-05T13:33:49.6974450Z ##[endgroup]
+2026-11-05T13:33:49.7042430Z [command]/opt/homebrew/bin/git log -1 --format=%H
+2026-11-05T13:33:49.7088660Z 5586fd7558f5ce5569567182eb84284e5b4e40f1
+2026-11-05T13:33:49.7175790Z ##[group]Run echo "$THEOS/bin" >> "$GITHUB_PATH"
+2026-11-05T13:33:49.7176250Z [36;1mecho "$THEOS/bin" >> "$GITHUB_PATH"[0m
+2026-11-05T13:33:49.7176580Z [36;1mecho "THEOS=$THEOS" >> "$GITHUB_ENV"[0m
+2026-11-05T13:33:49.7177000Z [36;1mecho "THEOS_IGNORE_PARALLEL_BUILDING_NOTICE=yes" >> "$HOME/.theosrc"[0m
+2026-11-05T13:33:49.7238990Z shell: /bin/bash -e {0}
+2026-11-05T13:33:49.7239290Z env:
+2026-11-05T13:33:49.7239540Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:33:49.7239830Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:33:49.7240240Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:49.7240630Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:33:49.7240960Z ##[endgroup]
+2026-11-05T13:33:49.7645720Z ##[group]Run BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
+2026-11-05T13:33:49.7646240Z [36;1mBASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"[0m
+2026-11-05T13:33:49.7646620Z [36;1m[ -n "$BASE" ] || BASE="6.1.0"[0m
+2026-11-05T13:33:49.7646880Z [36;1mVERSION="${BASE}-19"[0m
+2026-11-05T13:33:49.7647140Z [36;1mecho "Using version: $VERSION"[0m
+2026-11-05T13:33:49.7647510Z [36;1msed -i '' "s/^Version: .*/Version: ${VERSION}/" control[0m
+2026-11-05T13:33:49.7647920Z [36;1mecho "package_version=${VERSION}" >> "$GITHUB_OUTPUT"[0m
+2026-11-05T13:33:49.7700760Z shell: /bin/bash -e {0}
+2026-11-05T13:33:49.7701000Z env:
+2026-11-05T13:33:49.7701210Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:33:49.7701470Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:33:49.7701840Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:49.7702240Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:33:49.7702600Z ##[endgroup]
+2026-11-05T13:33:49.8120310Z Using version: 6.1.0-19
+2026-11-05T13:33:49.8239380Z ##[group]Run actions/checkout@v4
+2026-11-05T13:33:49.8239750Z with:
+2026-11-05T13:33:49.8240060Z   repository: roothide/theos
+2026-11-05T13:33:49.8240340Z   path: theos-roothide
+2026-11-05T13:33:49.8240610Z   submodules: recursive
+2026-11-05T13:33:49.8242940Z   token: ***
+2026-11-05T13:33:49.8243180Z   ssh-strict: true
+2026-11-05T13:33:49.8243450Z   ssh-user: git
+2026-11-05T13:33:49.8243700Z   persist-credentials: true
+2026-11-05T13:33:49.8243980Z   clean: true
+2026-11-05T13:33:49.8244230Z   sparse-checkout-cone-mode: true
+2026-11-05T13:33:49.8244520Z   fetch-depth: 1
+2026-11-05T13:33:49.8244750Z   fetch-tags: false
+2026-11-05T13:33:49.8245010Z   show-progress: true
+2026-11-05T13:33:49.8245260Z   lfs: false
+2026-11-05T13:33:49.8245520Z   set-safe-directory: true
+2026-11-05T13:33:49.8245900Z   allow-unsafe-pr-checkout: false
+2026-11-05T13:33:49.8246180Z env:
+2026-11-05T13:33:49.8246490Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:33:49.8246870Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:33:49.8247330Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:49.8248000Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:33:49.8248350Z ##[endgroup]
+2026-11-05T13:33:49.9071160Z Syncing repository: roothide/theos
+2026-11-05T13:33:49.9071710Z ##[group]Getting Git version info
+2026-11-05T13:33:49.9072160Z Working directory is '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide'
+2026-11-05T13:33:49.9094080Z [command]/opt/homebrew/bin/git version
+2026-11-05T13:33:49.9142000Z git version 2.55.0
+2026-11-05T13:33:49.9152390Z ##[endgroup]
+2026-11-05T13:33:49.9158500Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/881afdc3-75e1-4633-bd2c-195dc807a924/.gitconfig'
+2026-11-05T13:33:49.9164770Z Temporarily overriding HOME='/Users/runner/work/_temp/881afdc3-75e1-4633-bd2c-195dc807a924' before making global git config changes
+2026-11-05T13:33:49.9165580Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-05T13:33:49.9167720Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:49.9218240Z ##[group]Initializing the repository
+2026-11-05T13:33:49.9221840Z [command]/opt/homebrew/bin/git init /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:49.9296510Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-05T13:33:49.9301760Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-05T13:33:49.9302480Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-05T13:33:49.9302940Z hint: call:
+2026-11-05T13:33:49.9303320Z hint:
+2026-11-05T13:33:49.9303660Z hint: 	git config --global init.defaultBranch <name>
+2026-11-05T13:33:49.9304000Z hint:
+2026-11-05T13:33:49.9304340Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-05T13:33:49.9304920Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-05T13:33:49.9305330Z hint:
+2026-11-05T13:33:49.9305900Z hint: 	git branch -m <name>
+2026-11-05T13:33:49.9306270Z hint:
+2026-11-05T13:33:49.9306660Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-05T13:33:49.9307370Z Initialized empty Git repository in /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/
+2026-11-05T13:33:49.9308610Z [command]/opt/homebrew/bin/git remote add origin https://github.com/roothide/theos
+2026-11-05T13:33:49.9354290Z ##[endgroup]
+2026-11-05T13:33:49.9354810Z ##[group]Disabling automatic garbage collection
+2026-11-05T13:33:49.9357000Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+2026-11-05T13:33:49.9404380Z ##[endgroup]
+2026-11-05T13:33:49.9404990Z ##[group]Setting up auth
+2026-11-05T13:33:49.9406380Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-05T13:33:49.9451250Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-05T13:33:49.9990350Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-05T13:33:50.0034160Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-05T13:33:50.0602280Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:33:50.0645830Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-05T13:33:50.1198040Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-05T13:33:50.1249610Z ##[endgroup]
+2026-11-05T13:33:50.1250340Z ##[group]Determining the default branch
+2026-11-05T13:33:50.1251010Z Retrieving the default branch name
+2026-11-05T13:33:50.5934440Z Default branch 'master'
+2026-11-05T13:33:50.5936100Z ##[endgroup]
+2026-11-05T13:33:50.5936690Z ##[group]Fetching the repository
+2026-11-05T13:33:50.5937570Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +refs/heads/master:refs/remotes/origin/master
+2026-11-05T13:33:51.1203850Z From https://github.com/roothide/theos
+2026-11-05T13:33:51.1204350Z  * [new branch]      master     -> origin/master
+2026-11-05T13:33:51.1205930Z ##[endgroup]
+2026-11-05T13:33:51.1206300Z ##[group]Determining the checkout info
+2026-11-05T13:33:51.1206990Z ##[endgroup]
+2026-11-05T13:33:51.1211490Z [command]/opt/homebrew/bin/git sparse-checkout disable
+2026-11-05T13:33:51.1267280Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-05T13:33:51.1312310Z ##[group]Checking out the ref
+2026-11-05T13:33:51.1314280Z [command]/opt/homebrew/bin/git checkout --progress --force -B master refs/remotes/origin/master
+2026-11-05T13:33:51.1555470Z Reset branch 'master'
+2026-11-05T13:33:51.1558260Z branch 'master' set up to track 'origin/master'.
+2026-11-05T13:33:51.1562840Z ##[endgroup]
+2026-11-05T13:33:51.1563230Z ##[group]Setting up auth for fetching submodules
+2026-11-05T13:33:51.1567310Z [command]/opt/homebrew/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-05T13:33:51.1617810Z [command]/opt/homebrew/bin/git config --global --unset-all url.https://github.com/.insteadOf
+2026-11-05T13:33:51.1660360Z [command]/opt/homebrew/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+2026-11-05T13:33:51.1704010Z [command]/opt/homebrew/bin/git config --global --add url.https://github.com/.insteadOf org-178651407@github.com:
+2026-11-05T13:33:51.1746280Z ##[endgroup]
+2026-11-05T13:33:51.1746670Z ##[group]Fetching submodules
+2026-11-05T13:33:51.1749330Z [command]/opt/homebrew/bin/git submodule sync --recursive
+2026-11-05T13:33:51.2283490Z [command]/opt/homebrew/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+2026-11-05T13:33:51.2809590Z Submodule 'vendor/dm.pl' (https://github.com/theos/dm.pl.git) registered for path 'vendor/dm.pl'
+2026-11-05T13:33:51.2814640Z Submodule 'vendor/include' (https://github.com/roothide/headers.git) registered for path 'vendor/include'
+2026-11-05T13:33:51.2821560Z Submodule 'vendor/lib' (https://github.com/roothide/lib.git) registered for path 'vendor/lib'
+2026-11-05T13:33:51.2830380Z Submodule 'vendor/logos' (https://github.com/theos/logos.git) registered for path 'vendor/logos'
+2026-11-05T13:33:51.2837360Z Submodule 'vendor/nic' (https://github.com/theos/nic.git) registered for path 'vendor/nic'
+2026-11-05T13:33:51.2842310Z Submodule 'vendor/orion' (https://github.com/theos/orion.git) registered for path 'vendor/orion'
+2026-11-05T13:33:51.2848510Z Submodule 'vendor/swift-support' (https://github.com/theos/swift-support.git) registered for path 'vendor/swift-support'
+2026-11-05T13:33:51.2853200Z Submodule 'vendor/templates' (https://github.com/theos/templates.git) registered for path 'vendor/templates'
+2026-11-05T13:33:51.2934550Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/dm.pl'...
+2026-11-05T13:33:51.7248690Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/include'...
+2026-11-05T13:33:52.2662070Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/lib'...
+2026-11-05T13:33:52.7897760Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/logos'...
+2026-11-05T13:33:53.2743150Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/nic'...
+2026-11-05T13:33:53.7353870Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/orion'...
+2026-11-05T13:33:54.2690610Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/swift-support'...
+2026-11-05T13:33:54.7215040Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/templates'...
+2026-11-05T13:33:55.2795740Z Submodule path 'vendor/dm.pl': checked out 'd9a3b72e274226dd2823c0a7c1d6d05099f4f51c'
+2026-11-05T13:33:55.3687870Z Submodule path 'vendor/include': checked out '744ee65cd464becd8b06cab6eaeffc0512b371f1'
+2026-11-05T13:33:55.4151460Z Submodule path 'vendor/lib': checked out '85e9b5b8aff11bbefc59525c64c8f55149926e56'
+2026-11-05T13:33:55.4412100Z Submodule path 'vendor/logos': checked out '365a4e7028234e90bc2cbc724e5c87607130d3b3'
+2026-11-05T13:33:55.4650740Z Submodule path 'vendor/nic': checked out '4e7adcbeac2e4636b91e2f76341adfe4c4d0ceec'
+2026-11-05T13:33:55.4979660Z Submodule path 'vendor/orion': checked out '762159dc214d5aafa2edfc7554c659fc3c658b5b'
+2026-11-05T13:33:55.5023690Z Submodule 'fishhook' (https://github.com/facebook/fishhook.git) registered for path 'vendor/orion/fishhook'
+2026-11-05T13:33:55.5102250Z Cloning into '/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/vendor/orion/fishhook'...
+2026-11-05T13:33:55.9512690Z Submodule path 'vendor/orion/fishhook': checked out 'aadc161ac3b80db07a9908851839a17ba63a9eb1'
+2026-11-05T13:33:55.9738180Z Submodule path 'vendor/swift-support': checked out '4cf59ff04cdb2ceb27ea2228753e0497297b6182'
+2026-11-05T13:33:56.0108310Z Submodule path 'vendor/templates': checked out '6c3944e281c4726f1383755d0fbb642840312d28'
+2026-11-05T13:33:56.0166990Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local gc.auto 0
+2026-11-05T13:33:56.0705960Z Entering 'vendor/dm.pl'
+2026-11-05T13:33:56.0816830Z Entering 'vendor/include'
+2026-11-05T13:33:56.0924180Z Entering 'vendor/lib'
+2026-11-05T13:33:56.1032220Z Entering 'vendor/logos'
+2026-11-05T13:33:56.1136870Z Entering 'vendor/nic'
+2026-11-05T13:33:56.1239620Z Entering 'vendor/orion'
+2026-11-05T13:33:56.1341660Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:33:56.1458920Z Entering 'vendor/swift-support'
+2026-11-05T13:33:56.1564240Z Entering 'vendor/templates'
+2026-11-05T13:33:56.1681260Z ##[endgroup]
+2026-11-05T13:33:56.1682320Z ##[group]Persisting credentials for submodules
+2026-11-05T13:33:56.1685190Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :"
+2026-11-05T13:33:56.2223410Z Entering 'vendor/dm.pl'
+2026-11-05T13:33:56.2351810Z Entering 'vendor/include'
+2026-11-05T13:33:56.2480330Z Entering 'vendor/lib'
+2026-11-05T13:33:56.2611260Z Entering 'vendor/logos'
+2026-11-05T13:33:56.2737610Z Entering 'vendor/nic'
+2026-11-05T13:33:56.2864850Z Entering 'vendor/orion'
+2026-11-05T13:33:56.2988620Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:33:56.3119230Z Entering 'vendor/swift-support'
+2026-11-05T13:33:56.3244770Z Entering 'vendor/templates'
+2026-11-05T13:33:56.3389360Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-11-05T13:33:56.3899410Z Entering 'vendor/dm.pl'
+2026-11-05T13:33:56.4022210Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/dm.pl/config	remote.origin.url
+2026-11-05T13:33:56.4064450Z Entering 'vendor/include'
+2026-11-05T13:33:56.4187160Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/include/config	remote.origin.url
+2026-11-05T13:33:56.4231660Z Entering 'vendor/lib'
+2026-11-05T13:33:56.4355510Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/lib/config	remote.origin.url
+2026-11-05T13:33:56.4399840Z Entering 'vendor/logos'
+2026-11-05T13:33:56.4534220Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/logos/config	remote.origin.url
+2026-11-05T13:33:56.4580050Z Entering 'vendor/nic'
+2026-11-05T13:33:56.4704450Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/nic/config	remote.origin.url
+2026-11-05T13:33:56.4748520Z Entering 'vendor/orion'
+2026-11-05T13:33:56.4871420Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/config	remote.origin.url
+2026-11-05T13:33:56.4914210Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:33:56.5045900Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/modules/fishhook/config	remote.origin.url
+2026-11-05T13:33:56.5095440Z Entering 'vendor/swift-support'
+2026-11-05T13:33:56.5230270Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/swift-support/config	remote.origin.url
+2026-11-05T13:33:56.5277730Z Entering 'vendor/templates'
+2026-11-05T13:33:56.5411700Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/templates/config	remote.origin.url
+2026-11-05T13:33:56.5498490Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'
+2026-11-05T13:33:56.6035520Z Entering 'vendor/dm.pl'
+2026-11-05T13:33:56.6143150Z Entering 'vendor/include'
+2026-11-05T13:33:56.6248270Z Entering 'vendor/lib'
+2026-11-05T13:33:56.6358310Z Entering 'vendor/logos'
+2026-11-05T13:33:56.6466490Z Entering 'vendor/nic'
+2026-11-05T13:33:56.6581890Z Entering 'vendor/orion'
+2026-11-05T13:33:56.6697270Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:33:56.6805830Z Entering 'vendor/swift-support'
+2026-11-05T13:33:56.6912740Z Entering 'vendor/templates'
+2026-11-05T13:33:56.7030310Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'org-178651407@github.com:'
+2026-11-05T13:33:56.7552840Z Entering 'vendor/dm.pl'
+2026-11-05T13:33:56.7657240Z Entering 'vendor/include'
+2026-11-05T13:33:56.7765310Z Entering 'vendor/lib'
+2026-11-05T13:33:56.7874610Z Entering 'vendor/logos'
+2026-11-05T13:33:56.7978770Z Entering 'vendor/nic'
+2026-11-05T13:33:56.8084180Z Entering 'vendor/orion'
+2026-11-05T13:33:56.8189170Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:33:56.8298090Z Entering 'vendor/swift-support'
+2026-11-05T13:33:56.8403720Z Entering 'vendor/templates'
+2026-11-05T13:33:56.8518400Z ##[endgroup]
+2026-11-05T13:33:56.8574520Z [command]/opt/homebrew/bin/git log -1 --format=%H
+2026-11-05T13:33:56.8619190Z 3ac89c984ec652fd16bcd91b33ae16de45ce76fa
+2026-11-05T13:33:56.8700210Z ##[group]Run set -euo pipefail
+2026-11-05T13:33:56.8700450Z [36;1mset -euo pipefail[0m
+2026-11-05T13:33:56.8700630Z [36;1mmkdir -p "$THEOS/sdks"[0m
+2026-11-05T13:33:56.8700850Z [36;1mif [ -d "$THEOS/sdks/iPhoneOS16.5.sdk" ]; then[0m
+2026-11-05T13:33:56.8701110Z [36;1m  echo "iPhoneOS16.5.sdk already present"[0m
+2026-11-05T13:33:56.8701330Z [36;1m  exit 0[0m
+2026-11-05T13:33:56.8701460Z [36;1mfi[0m
+2026-11-05T13:33:56.8701600Z [36;1mSDK_STAGE="$(mktemp -d)"[0m
+2026-11-05T13:33:56.8701800Z [36;1mtrap 'rm -rf "$SDK_STAGE"' EXIT[0m
+2026-11-05T13:33:56.8702200Z [36;1mgit clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$SDK_STAGE/sdks"[0m
+2026-11-05T13:33:56.8702660Z [36;1mgit -C "$SDK_STAGE/sdks" sparse-checkout set iPhoneOS16.5.sdk[0m
+2026-11-05T13:33:56.8702990Z [36;1mcp -R "$SDK_STAGE/sdks/iPhoneOS16.5.sdk" "$THEOS/sdks/"[0m
+2026-11-05T13:33:56.8703240Z [36;1mls -1 "$THEOS/sdks"[0m
+2026-11-05T13:33:56.8754010Z shell: /bin/bash -e {0}
+2026-11-05T13:33:56.8754210Z env:
+2026-11-05T13:33:56.8754400Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:33:56.8754640Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:33:56.8754930Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:33:56.8755230Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:33:56.8755450Z ##[endgroup]
+2026-11-05T13:33:56.9121760Z Cloning into '/var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/tmp.NA2bNhuI2R/sdks'...
+2026-11-05T13:34:16.6104700Z iPhoneOS16.5.sdk
+2026-11-05T13:34:17.1432330Z ##[group]Run brew install ldid dpkg xz
+2026-11-05T13:34:17.1432620Z [36;1mbrew install ldid dpkg xz[0m
+2026-11-05T13:34:17.1432900Z [36;1mecho "$(brew --prefix)/bin" >> "$GITHUB_PATH"[0m
+2026-11-05T13:34:17.1565600Z shell: /bin/bash -e {0}
+2026-11-05T13:34:17.1565810Z env:
+2026-11-05T13:34:17.1566000Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:34:17.1566240Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:34:17.1566550Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:34:17.1566890Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:34:17.1567120Z ##[endgroup]
+2026-11-05T13:34:18.5552860Z [33mWarning:[0m xz 5.8.3 is already installed and up-to-date.
+2026-11-05T13:34:18.5553290Z To reinstall 5.8.3, run:
+2026-11-05T13:34:18.5553490Z   brew reinstall xz
+2026-11-05T13:34:18.6241480Z ##[warning]`$HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK` is set: not checking for outdated
 dependents or dependents with broken linkage!
 
-2026-11-05T11:29:27.2402410Z [32m==>[0m [1mDownloading bottle manifests[0m
-2026-11-05T11:29:27.4526150Z ✔︎ Bottle Manifest ldid (2.1.5_1)
-2026-11-05T11:29:27.4608820Z ✔︎ Bottle Manifest dpkg (1.23.7)
-2026-11-05T11:29:27.4610210Z [34m==>[0m [1mWould install 2 formulae:[0m
-2026-11-05T11:29:27.4610970Z ldid dpkg
-2026-11-05T11:29:27.5252270Z [34m==>[0m [1mWould install 1 dependency for ldid:[0m
-2026-11-05T11:29:27.5252760Z libplist
-2026-11-05T11:29:27.5796360Z [34m==>[0m [1mWould install 2 dependencies for dpkg:[0m
-2026-11-05T11:29:27.5796840Z gpatch
-2026-11-05T11:29:27.5797230Z libmd
-2026-11-05T11:29:27.6063000Z [32m==>[0m [1mFetching downloads for: [32mldid[39m and [32mdpkg[39m[0m
-2026-11-05T11:29:27.8456260Z ✔︎ Bottle ldid (2.1.5_1)
-2026-11-05T11:29:27.8456790Z ✔︎ Bottle Manifest libplist (2.7.0)
-2026-11-05T11:29:27.8457120Z ✔︎ Bottle Manifest gpatch (2.8)
-2026-11-05T11:29:27.8700710Z ✔︎ Bottle gpatch (2.8)
-2026-11-05T11:29:27.8863680Z ✔︎ Bottle libplist (2.7.0)
-2026-11-05T11:29:28.0016780Z ✔︎ Bottle Manifest libmd (1.2.0)
-2026-11-05T11:29:28.0320320Z ✔︎ Bottle dpkg (1.23.7)
-2026-11-05T11:29:28.0666020Z ✔︎ Bottle libmd (1.2.0)
-2026-11-05T11:29:28.0805780Z [32m==>[0m [1mInstalling ldid dependency: [32mlibplist[39m[0m
-2026-11-05T11:29:28.0853540Z [34m==>[0m [1mPouring libplist--2.7.0.arm64_sonoma.bottle.tar.gz[0m
-2026-11-05T11:29:28.2756770Z 🍺  /opt/homebrew/Cellar/libplist/2.7.0: 32 files, 606.6KB
-2026-11-05T11:29:28.2759120Z [32m==>[0m [1mInstalling [32mldid[39m[0m
-2026-11-05T11:29:28.2760560Z [34m==>[0m [1mPouring ldid--2.1.5_1.arm64_sonoma.bottle.1.tar.gz[0m
-2026-11-05T11:29:28.2990520Z 🍺  /opt/homebrew/Cellar/ldid/2.1.5_1: 6 files, 270.1KB
-2026-11-05T11:29:28.3162510Z [32m==>[0m [1mInstalling dependencies for dpkg:[0m [32mgpatch[39m and [32mlibmd[39m[0m
-2026-11-05T11:29:28.3163300Z [32m==>[0m [1mInstalling dpkg dependency: [32mgpatch[39m[0m
-2026-11-05T11:29:28.3202420Z [34m==>[0m [1mPouring gpatch--2.8.arm64_sonoma.bottle.tar.gz[0m
-2026-11-05T11:29:28.3328410Z 🍺  /opt/homebrew/Cellar/gpatch/2.8: 12 files, 412.4KB
-2026-11-05T11:29:28.3329920Z [32m==>[0m [1mInstalling dpkg dependency: [32mlibmd[39m[0m
-2026-11-05T11:29:28.3345490Z [34m==>[0m [1mPouring libmd--1.2.0.arm64_sonoma.bottle.tar.gz[0m
-2026-11-05T11:29:28.4162860Z 🍺  /opt/homebrew/Cellar/libmd/1.2.0: 138 files, 1MB
-2026-11-05T11:29:28.4164230Z [32m==>[0m [1mInstalling [32mdpkg[39m[0m
-2026-11-05T11:29:28.4166220Z [34m==>[0m [1mPouring dpkg--1.23.7.arm64_sonoma.bottle.tar.gz[0m
-2026-11-05T11:29:28.7566340Z 🍺  /opt/homebrew/Cellar/dpkg/1.23.7: 740 files, 18.3MB
-2026-11-05T11:29:28.7581230Z [32m==>[0m [1mCaveats[0m
-2026-11-05T11:29:28.7584890Z [34m==>[0m [1mdpkg[0m
-2026-11-05T11:29:28.7607410Z This installation of dpkg is not configured to install software, so
-2026-11-05T11:29:28.7612370Z commands such as `dpkg -i`, `dpkg --configure` will fail.
-2026-11-05T11:29:28.7822590Z ##[group]Run set -euo pipefail
-2026-11-05T11:29:28.7822890Z [36;1mset -euo pipefail[0m
-2026-11-05T11:29:28.7823330Z [36;1mchmod 755 layout/DEBIAN/postinst layout/DEBIAN/postrm 2>/dev/null || true[0m
-2026-11-05T11:29:28.7823740Z [36;1msh build.sh "roothide"[0m
-2026-11-05T11:29:28.7825040Z [36;1m# roothide 环境里 dpkg 的系统架构是 iphoneos-arm64，而 theos 的 roothide[0m
-2026-11-05T11:29:28.7825550Z [36;1m# scheme 会把 Architecture 字段写成 iphoneos-arm64e，Sileo 直接判为不兼容。[0m
-2026-11-05T11:29:28.7826110Z [36;1m# 这里重打包，把字段改回 iphoneos-arm64（二进制本身已经是单架构 arm64）。[0m
-2026-11-05T11:29:28.7826650Z [36;1mfor deb in packages/*.deb; do[0m
-2026-11-05T11:29:28.7826970Z [36;1m  [ -e "$deb" ] || continue[0m
-2026-11-05T11:29:28.7827310Z [36;1m  stage="$(mktemp -d)"[0m
-2026-11-05T11:29:28.7827610Z [36;1m  dpkg-deb -R "$deb" "$stage"[0m
-2026-11-05T11:29:28.7828090Z [36;1m  sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"[0m
-2026-11-05T11:29:28.7828660Z [36;1m  chmod 755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/postrm" 2>/dev/null || true[0m
-2026-11-05T11:29:28.7829150Z [36;1m  chmod -R go-w "$stage/DEBIAN"[0m
-2026-11-05T11:29:28.7829500Z [36;1m[0m
-2026-11-05T11:29:28.7829820Z [36;1m  # roothide scheme 出的是 rootfs 布局（/Library、/Applications），[0m
-2026-11-05T11:29:28.7830220Z [36;1m  # 而 RootHide Bootstrap 是 rootless 布局，rootfs 只读装不进。[0m
-2026-11-05T11:29:28.7830580Z [36;1m  # 这里统一挪进 var/jb，dylib 的 jbroot 解析不受移动影响。[0m
-2026-11-05T11:29:28.7830990Z [36;1m  python3 tools/relocate_to_jbroot.py "$stage"[0m
-2026-11-05T11:29:28.7831300Z [36;1m[0m
-2026-11-05T11:29:28.7831690Z [36;1m  app_path="$(find "$stage" -maxdepth 5 -type d -name 'Heli.app' | head -n 1)"[0m
-2026-11-05T11:29:28.7832190Z [36;1m  if [ -z "$app_path" ]; then[0m
-2026-11-05T11:29:28.7832440Z [36;1m    echo "ERROR: Heli.app 没有打进包，桌面不会有设置图标"[0m
-2026-11-05T11:29:28.7832790Z [36;1m    find "$stage" -maxdepth 5 | head -60[0m
-2026-11-05T11:29:28.7833030Z [36;1m    exit 1[0m
-2026-11-05T11:29:28.7833200Z [36;1m  fi[0m
-2026-11-05T11:29:28.7833360Z [36;1m  echo "app bundle: $app_path"[0m
-2026-11-05T11:29:28.7833620Z [36;1m  ls -la "$app_path"[0m
-2026-11-05T11:29:28.7833810Z [36;1m[0m
-2026-11-05T11:29:28.7833980Z [36;1m  # 隐根硬校验：roothide 的 rootfs 是只读的，[0m
-2026-11-05T11:29:28.7834220Z [36;1m  # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。[0m
-2026-11-05T11:29:28.7834500Z [36;1m  python3 tools/check_deb_paths.py "$stage"[0m
-2026-11-05T11:29:28.7834800Z [36;1m[0m
-2026-11-05T11:29:28.7834990Z [36;1m  dpkg-deb -b "$stage" "$deb"[0m
-2026-11-05T11:29:28.7835230Z [36;1m  rm -rf "$stage"[0m
-2026-11-05T11:29:28.7835470Z [36;1m  echo "--- $deb ---"[0m
-2026-11-05T11:29:28.7835830Z [36;1m  dpkg-deb -f "$deb" Package Architecture Version Depends[0m
-2026-11-05T11:29:28.7836130Z [36;1m  dpkg-deb -c "$deb" | sed -n '1,60p'[0m
-2026-11-05T11:29:28.7836410Z [36;1m  # theos 的 roothide scheme 会把架构写进文件名，统一成 iphoneos-arm64[0m
-2026-11-05T11:29:28.7836750Z [36;1m  case "$deb" in[0m
-2026-11-05T11:29:28.7836980Z [36;1m    *_iphoneos-arm64e.deb)[0m
-2026-11-05T11:29:28.7837400Z [36;1m      fixed="${deb%_iphoneos-arm64e.deb}_iphoneos-arm64.deb"[0m
-2026-11-05T11:29:28.7837730Z [36;1m      mv -f "$deb" "$fixed"[0m
-2026-11-05T11:29:28.7838070Z [36;1m      echo "renamed: $fixed"[0m
-2026-11-05T11:29:28.7838380Z [36;1m      ;;[0m
-2026-11-05T11:29:28.7838590Z [36;1m  esac[0m
-2026-11-05T11:29:28.7838760Z [36;1mdone[0m
-2026-11-05T11:29:28.7838990Z [36;1mecho "=== .deb files ==="[0m
-2026-11-05T11:29:28.7839300Z [36;1mfind ./packages -name "*.deb" -type f[0m
-2026-11-05T11:29:28.7941810Z shell: /bin/bash -e {0}
-2026-11-05T11:29:28.7942030Z env:
-2026-11-05T11:29:28.7942200Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:29:28.7942420Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:29:28.7942720Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:29:28.7943040Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:29:28.7943260Z ##[endgroup]
-2026-11-05T11:29:28.8327870Z 
-2026-11-05T11:29:28.8330150Z Building roothide
-2026-11-05T11:29:33.4135710Z [0;36m==> [1;39mCleaning…[m
-2026-11-05T11:29:33.4540890Z [1;31m> [1;3;39mMaking clean in AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:33.6943950Z [0;36m==> [1;39mCleaning…[m
-2026-11-05T11:29:33.7045670Z [1;31m> [1;3;39mMaking clean in App…[m
-2026-11-05T11:29:33.9230220Z [0;36m==> [1;39mCleaning…[m
-2026-11-05T11:29:34.3861290Z [1;31m> [1;3;39mMaking all for tweak AxsLiquidGlass…[m
-2026-11-05T11:29:35.7713530Z [0;31m==> [1;39mPreprocessing Hooks/AxsLiquidGlassIsland.xm…[m
-2026-11-05T11:29:35.8644960Z [0;32m==> [1;39mCompiling Hooks/AxsLiquidGlassIsland.xm (arm64)…[m
-2026-11-05T11:29:38.2921090Z [0;31m==> [1;39mPreprocessing Hooks/AxsLiquidGlassMain.xm…[m
-2026-11-05T11:29:38.3562170Z [0;32m==> [1;39mCompiling Hooks/AxsLiquidGlassMain.xm (arm64)…[m
-2026-11-05T11:29:38.4368340Z [0;31m==> [1;39mPreprocessing Hooks/AxsLiquidGlassWidgets.xm…[m
-2026-11-05T11:29:38.4803490Z [0;32m==> [1;39mCompiling Hooks/AxsLiquidGlassWidgets.xm (arm64)…[m
-2026-11-05T11:29:38.5366740Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassBackdrop.m (arm64)…[m
-2026-11-05T11:29:39.5698410Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassConfig.m (arm64)…[m
-2026-11-05T11:29:39.6686020Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassEffect.m (arm64)…[m
-2026-11-05T11:29:39.7571950Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassRim.m (arm64)…[m
-2026-11-05T11:29:39.8203860Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassSurface.m (arm64)…[m
-2026-11-05T11:29:39.8882290Z [0;33m==> [1;39mLinking tweak AxsLiquidGlass (arm64)…[m
-2026-11-05T11:29:40.0327660Z ld: warning: -multiply_defined is obsolete
-2026-11-05T11:29:40.2591120Z [0;34m==> [1;39mGenerating debug symbols for AxsLiquidGlass…[m
-2026-11-05T11:29:40.3935730Z [0;34m==> [1;39mStripping AxsLiquidGlass (arm64)…[m
-2026-11-05T11:29:40.4115130Z [0;34m==> [1;39mSigning AxsLiquidGlass…[m
-2026-11-05T11:29:40.4816240Z [1;31m> [1;3;39mMaking all in AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:40.6768100Z [1;31m> [1;3;39mMaking all for bundle AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:40.8928000Z [0;35m==> [1;39mCopying resource directories into the bundle wrapper…[m
-2026-11-05T11:29:41.3524640Z [0;32m==> [1;39mCompiling AxsLiquidGlassRootListController.m (arm64)…[m
-2026-11-05T11:29:42.3840610Z [0;32m==> [1;39mCompiling AxsLiquidGlassSliderCell.m (arm64)…[m
-2026-11-05T11:29:42.4603640Z [0;33m==> [1;39mLinking bundle AxsLiquidGlassPrefs (arm64)…[m
-2026-11-05T11:29:42.4740750Z ld: warning: -multiply_defined is obsolete
-2026-11-05T11:29:42.5950510Z [0;34m==> [1;39mGenerating debug symbols for AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:42.6072880Z [0;34m==> [1;39mStripping AxsLiquidGlassPrefs (arm64)…[m
-2026-11-05T11:29:42.6151450Z [0;34m==> [1;39mSigning AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:42.6244380Z [1;31m> [1;3;39mMaking all in App…[m
-2026-11-05T11:29:42.8031640Z [1;31m> [1;3;39mMaking all for application Heli…[m
-2026-11-05T11:29:43.0267350Z [0;35m==> [1;39mCopying resource files into the application wrapper…[m
-2026-11-05T11:29:43.0486870Z [0;35m==> [1;39mCopying resource directories into the application wrapper…[m
-2026-11-05T11:29:43.4932520Z [0;32m==> [1;39mCompiling main.m (arm64)…[m
-2026-11-05T11:29:44.4148490Z [0;32m==> [1;39mCompiling HeliAppDelegate.m (arm64)…[m
-2026-11-05T11:29:44.4755750Z [0;32m==> [1;39mCompiling HeliRootViewController.m (arm64)…[m
-2026-11-05T11:29:44.6009750Z [0;32m==> [1;39mCompiling HeliGlass.m (arm64)…[m
-2026-11-05T11:29:44.6911300Z [0;32m==> [1;39mCompiling HeliRows.m (arm64)…[m
-2026-11-05T11:29:44.8163110Z [0;33m==> [1;39mLinking application Heli (arm64)…[m
-2026-11-05T11:29:44.8300370Z ld: warning: -multiply_defined is obsolete
-2026-11-05T11:29:44.9482670Z [0;34m==> [1;39mGenerating debug symbols for Heli…[m
-2026-11-05T11:29:44.9620570Z [0;34m==> [1;39mStripping Heli (arm64)…[m
-2026-11-05T11:29:44.9702500Z [0;34m==> [1;39mSigning Heli…[m
-2026-11-05T11:29:45.0957430Z [1;31m> [1;3;39mMaking stage for tweak AxsLiquidGlass…[m
-2026-11-05T11:29:45.3632260Z [1;31m> [1;3;39mMaking stage in AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:45.5405790Z [1;31m> [1;3;39mMaking stage for bundle AxsLiquidGlassPrefs…[m
-2026-11-05T11:29:45.7864820Z [1;31m> [1;3;39mMaking stage in App…[m
-2026-11-05T11:29:45.9561080Z [1;31m> [1;3;39mMaking stage for application Heli…[m
-2026-11-05T11:29:46.9036540Z dm.pl: building package `com.heli.liquid:iphoneos-arm64e' in `./packages/com.heli.liquid_6.1.0-16_iphoneos-arm64e.deb'
-2026-11-05T11:29:47.2600390Z relocated into var/jb: Applications, Library
-2026-11-05T11:29:47.2666760Z app bundle: /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/tmp.iuWXkQhlsI/var/jb/Applications/Heli.app
-2026-11-05T11:29:47.2701220Z total 344
-2026-11-05T11:29:47.2702630Z drwxr-xr-x  6 runner  staff     192 Nov  5 11:29 .
-2026-11-05T11:29:47.2703600Z drwxr-xr-x  3 runner  staff      96 Nov  5 11:29 ..
-2026-11-05T11:29:47.2704560Z -rw-r--r--  1 runner  staff   13705 Nov  5 11:28 AppIcon60x60@2x.png
-2026-11-05T11:29:47.2705470Z -rw-r--r--  1 runner  staff   25182 Nov  5 11:28 AppIcon60x60@3x.png
-2026-11-05T11:29:47.2706740Z -rwxr-xr-x  1 runner  staff  126448 Nov  5 11:29 Heli
-2026-11-05T11:29:47.2707700Z -rw-r--r--  1 runner  staff     885 Nov  5 11:29 Info.plist
-2026-11-05T11:29:47.2903550Z path check: all entries under var/jb
-2026-11-05T11:29:47.2987130Z dpkg-deb: warning: root directory /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/tmp.iuWXkQhlsI has unusual owner or group 501:20
-2026-11-05T11:29:47.2988660Z dpkg-deb: warning: ignoring 1 warning about the control file(s)
-2026-11-05T11:29:47.2990270Z dpkg-deb: hint: you might need to pass --root-owner-group, see <https://wiki.debian.org/Teams/Dpkg/RootlessBuilds> for further details
-2026-11-05T11:29:47.2992010Z dpkg-deb: building package 'com.heli.liquid' in 'packages/com.heli.liquid_6.1.0-16_iphoneos-arm64e.deb'.
-2026-11-05T11:29:47.3584360Z --- packages/com.heli.liquid_6.1.0-16_iphoneos-arm64e.deb ---
-2026-11-05T11:29:47.3706610Z Package: com.heli.liquid
-2026-11-05T11:29:47.3707390Z Architecture: iphoneos-arm64
-2026-11-05T11:29:47.3707920Z Version: 6.1.0-16
-2026-11-05T11:29:47.3708590Z Depends: mobilesubstrate | ellekit, preferenceloader, firmware (>= 15.0)
-2026-11-05T11:29:47.3865430Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./
-2026-11-05T11:29:47.3866370Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/
-2026-11-05T11:29:47.3867210Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/
-2026-11-05T11:29:47.3868150Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Applications/
-2026-11-05T11:29:47.3869160Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Applications/Heli.app/
-2026-11-05T11:29:47.3870350Z -rw-r--r-- runner/staff  13705 2026-11-05 11:28 ./var/jb/Applications/Heli.app/AppIcon60x60@2x.png
-2026-11-05T11:29:47.3871720Z -rw-r--r-- runner/staff  25182 2026-11-05 11:28 ./var/jb/Applications/Heli.app/AppIcon60x60@3x.png
-2026-11-05T11:29:47.3872940Z -rwxr-xr-x runner/staff 126448 2026-11-05 11:29 ./var/jb/Applications/Heli.app/Heli
-2026-11-05T11:29:47.3874130Z -rw-r--r-- runner/staff    885 2026-11-05 11:29 ./var/jb/Applications/Heli.app/Info.plist
-2026-11-05T11:29:47.3875170Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Library/
-2026-11-05T11:29:47.3876100Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Library/MobileSubstrate/
-2026-11-05T11:29:47.3877290Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Library/MobileSubstrate/DynamicLibraries/
-2026-11-05T11:29:47.3878780Z -rwxr-xr-x runner/staff  91200 2026-11-05 11:29 ./var/jb/Library/MobileSubstrate/DynamicLibraries/AxsLiquidGlass.dylib
-2026-11-05T11:29:47.3880470Z -rw-r--r-- runner/staff    256 2026-11-05 11:29 ./var/jb/Library/MobileSubstrate/DynamicLibraries/AxsLiquidGlass.plist
-2026-11-05T11:29:47.3881850Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Library/PreferenceBundles/
-2026-11-05T11:29:47.3884040Z drwxr-xr-x runner/staff      0 2026-11-05 11:29 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/
-2026-11-05T11:29:47.3885810Z -rwxr-xr-x runner/staff  89072 2026-11-05 11:29 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/AxsLiquidGlassPrefs
-2026-11-05T11:29:47.3887900Z -rw-r--r-- runner/staff   1718 2026-11-05 11:29 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/AxsLiquidGlassRoot.plist
-2026-11-05T11:29:47.3889380Z -rw-r--r-- runner/staff    336 2026-11-05 11:29 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/Info.plist
-2026-11-05T11:29:47.3890120Z -rw-r--r-- runner/staff   1978 2026-11-05 11:28 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/icon.png
-2026-11-05T11:29:47.3890830Z -rw-r--r-- runner/staff   5734 2026-11-05 11:28 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/icon@2x.png
-2026-11-05T11:29:47.3891460Z -rw-r--r-- runner/staff  10604 2026-11-05 11:28 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/icon@3x.png
-2026-11-05T11:29:47.3892000Z drwxr-xr-x runner/staff      0 2026-11-05 11:28 ./var/jb/Library/PreferenceLoader/
-2026-11-05T11:29:47.3892480Z drwxr-xr-x runner/staff      0 2026-11-05 11:28 ./var/jb/Library/PreferenceLoader/Preferences/
-2026-11-05T11:29:47.3893040Z -rw-r--r-- runner/staff    200 2026-11-05 11:29 ./var/jb/Library/PreferenceLoader/Preferences/AxsLiquidGlassPrefs.plist
-2026-11-05T11:29:47.3893560Z renamed: packages/com.heli.liquid_6.1.0-16_iphoneos-arm64.deb
-2026-11-05T11:29:47.3893830Z === .deb files ===
-2026-11-05T11:29:47.3910860Z ./packages/com.heli.liquid_6.1.0-16_iphoneos-arm64.deb
-2026-11-05T11:29:47.3988740Z ##[group]Run actions/upload-artifact@v4
-2026-11-05T11:29:47.3988990Z with:
-2026-11-05T11:29:47.3989160Z   name: packages-roothide
-2026-11-05T11:29:47.3989360Z   path: ./packages/*.deb
-2026-11-05T11:29:47.3989540Z   if-no-files-found: error
-2026-11-05T11:29:47.3989720Z   compression-level: 6
-2026-11-05T11:29:47.3989900Z   overwrite: false
-2026-11-05T11:29:47.3990090Z   include-hidden-files: false
-2026-11-05T11:29:47.3990270Z env:
-2026-11-05T11:29:47.3990450Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:29:47.3990680Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:29:47.3991000Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:29:47.3991360Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:29:47.3991640Z ##[endgroup]
-2026-11-05T11:29:47.7235260Z (node:5559) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-2026-11-05T11:29:47.7242590Z (Use `node --trace-deprecation ...` to show where the warning was created)
-2026-11-05T11:29:47.7295180Z With the provided path, there will be 1 file uploaded
-2026-11-05T11:29:47.7297490Z Artifact name is valid!
-2026-11-05T11:29:47.7297990Z Root directory input is valid!
-2026-11-05T11:29:48.0343030Z Beginning upload of artifact content to blob storage
-2026-11-05T11:29:48.0611230Z (node:5559) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
-2026-11-05T11:29:48.2775150Z Uploaded bytes 102698
-2026-11-05T11:29:48.3244650Z Finished uploading artifact content to blob storage!
-2026-11-05T11:29:48.3246920Z SHA256 digest of uploaded artifact zip is 66646864cac5e10287e3681cceeb721d1bfc96fa13dfcdc9f14f26d86ed46ed1
-2026-11-05T11:29:48.3248830Z Finalizing artifact upload
-2026-11-05T11:29:48.7944260Z Artifact packages-roothide.zip successfully finalized. Artifact ID 13411465198
-2026-11-05T11:29:48.7944880Z Artifact packages-roothide has been successfully uploaded! Final size is 102698 bytes. Artifact ID is 13411465198
-2026-11-05T11:29:48.7945520Z Artifact download URL: https://github.com/Nocebook/LiquidGlass/actions/runs/42019283171/artifacts/13411465198
-2026-11-05T11:29:48.8125940Z ##[group]Run softprops/action-gh-release@v2
-2026-11-05T11:29:48.8126210Z with:
-2026-11-05T11:29:48.8128330Z   token: ***
-2026-11-05T11:29:48.8128470Z   tag_name: v6.1.0-16
-2026-11-05T11:29:48.8128660Z   name: liquid (HL) v6.1.0-16
-2026-11-05T11:29:48.8128840Z   files: ./packages/*.deb
-2026-11-05T11:29:48.8129050Z   overwrite_files: true
-2026-11-05T11:29:48.8129220Z env:
-2026-11-05T11:29:48.8129370Z   HOMEBREW_NO_AUTO_UPDATE: 1
-2026-11-05T11:29:48.8129590Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
-2026-11-05T11:29:48.8130110Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:29:48.8130440Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
-2026-11-05T11:29:48.8130690Z ##[endgroup]
-2026-11-05T11:29:49.1896410Z 👩‍🏭 Creating new GitHub release for tag v6.1.0-16...
-2026-11-05T11:29:50.9183590Z ⬆️ Uploading com.heli.liquid_6.1.0-16_iphoneos-arm64.deb...
-2026-11-05T11:29:51.6965640Z ✅ Uploaded com.heli.liquid_6.1.0-16_iphoneos-arm64.deb
-2026-11-05T11:29:51.6967390Z Finalizing release...
-2026-11-05T11:29:52.5532040Z Getting assets list...
-2026-11-05T11:29:52.8674080Z 🎉 Release ready at https://github.com/Nocebook/LiquidGlass/releases/tag/v6.1.0-16
-2026-11-05T11:29:52.8824610Z Post job cleanup.
-2026-11-05T11:29:52.9726910Z [command]/opt/homebrew/bin/git version
-2026-11-05T11:29:52.9911570Z git version 2.55.0
-2026-11-05T11:29:52.9931160Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/96c63cbf-e990-473c-ac83-1b7617ff7749/.gitconfig'
-2026-11-05T11:29:52.9938630Z Temporarily overriding HOME='/Users/runner/work/_temp/96c63cbf-e990-473c-ac83-1b7617ff7749' before making global git config changes
-2026-11-05T11:29:52.9940360Z Adding repository directory to the temporary git global config as a safe directory
-2026-11-05T11:29:52.9943270Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
-2026-11-05T11:29:53.0054620Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-11-05T11:29:53.0108390Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-11-05T11:29:53.0987350Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:53.1178220Z Entering 'vendor/include'
-2026-11-05T11:29:53.1357690Z Entering 'vendor/lib'
-2026-11-05T11:29:53.1523290Z Entering 'vendor/logos'
-2026-11-05T11:29:53.1691410Z Entering 'vendor/nic'
-2026-11-05T11:29:53.1856470Z Entering 'vendor/orion'
-2026-11-05T11:29:53.2101560Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:53.2324120Z Entering 'vendor/swift-support'
-2026-11-05T11:29:53.2476170Z Entering 'vendor/templates'
-2026-11-05T11:29:53.2644940Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-11-05T11:29:53.2692830Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.2700130Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
-2026-11-05T11:29:53.2757420Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-11-05T11:29:53.3413780Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:53.3519810Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.3615960Z Entering 'vendor/include'
-2026-11-05T11:29:53.3748330Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.3855520Z Entering 'vendor/lib'
-2026-11-05T11:29:53.3967340Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.4099560Z Entering 'vendor/logos'
-2026-11-05T11:29:53.4195020Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.4324450Z Entering 'vendor/nic'
-2026-11-05T11:29:53.4429810Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.4535760Z Entering 'vendor/orion'
-2026-11-05T11:29:53.4634570Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.4739500Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:53.4840760Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.4947690Z Entering 'vendor/swift-support'
-2026-11-05T11:29:53.5050010Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.5159200Z Entering 'vendor/templates'
-2026-11-05T11:29:53.5247730Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.5356480Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.5410450Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-11-05T11:29:53.6063550Z Entering 'vendor/dm.pl'
-2026-11-05T11:29:53.6126530Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/dm.pl/config	remote.origin.url
-2026-11-05T11:29:53.6176210Z Entering 'vendor/include'
-2026-11-05T11:29:53.6248320Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/include/config	remote.origin.url
-2026-11-05T11:29:53.6299050Z Entering 'vendor/lib'
-2026-11-05T11:29:53.6369180Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/lib/config	remote.origin.url
-2026-11-05T11:29:53.6417610Z Entering 'vendor/logos'
-2026-11-05T11:29:53.6494920Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/logos/config	remote.origin.url
-2026-11-05T11:29:53.6540840Z Entering 'vendor/nic'
-2026-11-05T11:29:53.6608440Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/nic/config	remote.origin.url
-2026-11-05T11:29:53.6654870Z Entering 'vendor/orion'
-2026-11-05T11:29:53.6722830Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/config	remote.origin.url
-2026-11-05T11:29:53.6768240Z Entering 'vendor/orion/fishhook'
-2026-11-05T11:29:53.6834910Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/modules/fishhook/config	remote.origin.url
-2026-11-05T11:29:53.6941460Z Entering 'vendor/swift-support'
-2026-11-05T11:29:53.7035580Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/swift-support/config	remote.origin.url
-2026-11-05T11:29:53.7085060Z Entering 'vendor/templates'
-2026-11-05T11:29:53.7159710Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/templates/config	remote.origin.url
-2026-11-05T11:29:53.7215040Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/dm.pl/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7264490Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/include/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7311620Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/lib/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7358240Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/logos/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7407230Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/nic/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7456110Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7507360Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/modules/fishhook/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7556280Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/swift-support/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7604760Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/templates/config --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:53.7769690Z Post job cleanup.
-2026-11-05T11:29:53.8570060Z [command]/opt/homebrew/bin/git version
-2026-11-05T11:29:53.8619520Z git version 2.55.0
-2026-11-05T11:29:53.8640800Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/ec39b5e0-57fb-4e4d-9f18-66a4aed5d48b/.gitconfig'
-2026-11-05T11:29:53.8657260Z Temporarily overriding HOME='/Users/runner/work/_temp/ec39b5e0-57fb-4e4d-9f18-66a4aed5d48b' before making global git config changes
-2026-11-05T11:29:53.8658120Z Adding repository directory to the temporary git global config as a safe directory
-2026-11-05T11:29:53.8658750Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass
-2026-11-05T11:29:53.8725480Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
-2026-11-05T11:29:53.8778010Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
-2026-11-05T11:29:53.9456090Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-2026-11-05T11:29:53.9499330Z http.https://github.com/.extraheader
-2026-11-05T11:29:53.9507670Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
-2026-11-05T11:29:53.9556390Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
-2026-11-05T11:29:54.0426050Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
-2026-11-05T11:29:54.0467180Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
-2026-11-05T11:29:54.1209510Z Evaluate and set job outputs
-2026-11-05T11:29:54.1214110Z Set output 'package_version'
-2026-11-05T11:29:54.1215630Z Cleaning up orphan processes
-2026-11-05T11:29:54.6742680Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4, softprops/action-gh-release@v2. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-11-05T13:34:18.6246720Z [32m==>[0m [1mDownloading bottle manifests[0m
+2026-11-05T13:34:18.8301450Z ✔︎ Bottle Manifest ldid (2.1.5_1)
+2026-11-05T13:34:18.8391930Z ✔︎ Bottle Manifest dpkg (1.23.7)
+2026-11-05T13:34:18.8394790Z [34m==>[0m [1mWould install 2 formulae:[0m
+2026-11-05T13:34:18.8395280Z ldid dpkg
+2026-11-05T13:34:18.9050020Z [34m==>[0m [1mWould install 1 dependency for ldid:[0m
+2026-11-05T13:34:18.9050360Z libplist
+2026-11-05T13:34:18.9506020Z [34m==>[0m [1mWould install 2 dependencies for dpkg:[0m
+2026-11-05T13:34:18.9506320Z gpatch
+2026-11-05T13:34:18.9506500Z libmd
+2026-11-05T13:34:18.9798510Z [32m==>[0m [1mFetching downloads for: [32mldid[39m and [32mdpkg[39m[0m
+2026-11-05T13:34:19.2066430Z ✔︎ Bottle ldid (2.1.5_1)
+2026-11-05T13:34:19.2123320Z ✔︎ Bottle Manifest libplist (2.7.0)
+2026-11-05T13:34:19.2127580Z ✔︎ Bottle Manifest gpatch (2.8)
+2026-11-05T13:34:19.2130790Z ✔︎ Bottle gpatch (2.8)
+2026-11-05T13:34:19.2173000Z ✔︎ Bottle libplist (2.7.0)
+2026-11-05T13:34:19.3067630Z ✔︎ Bottle Manifest libmd (1.2.0)
+2026-11-05T13:34:19.3633080Z ✔︎ Bottle dpkg (1.23.7)
+2026-11-05T13:34:19.4184650Z ✔︎ Bottle libmd (1.2.0)
+2026-11-05T13:34:19.4318610Z [32m==>[0m [1mInstalling ldid dependency: [32mlibplist[39m[0m
+2026-11-05T13:34:19.4373380Z [34m==>[0m [1mPouring libplist--2.7.0.arm64_sonoma.bottle.tar.gz[0m
+2026-11-05T13:34:19.6207810Z 🍺  /opt/homebrew/Cellar/libplist/2.7.0: 32 files, 606.6KB
+2026-11-05T13:34:19.6209950Z [32m==>[0m [1mInstalling [32mldid[39m[0m
+2026-11-05T13:34:19.6211210Z [34m==>[0m [1mPouring ldid--2.1.5_1.arm64_sonoma.bottle.1.tar.gz[0m
+2026-11-05T13:34:19.6516650Z 🍺  /opt/homebrew/Cellar/ldid/2.1.5_1: 6 files, 270.1KB
+2026-11-05T13:34:19.6716130Z [32m==>[0m [1mInstalling dependencies for dpkg:[0m [32mgpatch[39m and [32mlibmd[39m[0m
+2026-11-05T13:34:19.6717080Z [32m==>[0m [1mInstalling dpkg dependency: [32mgpatch[39m[0m
+2026-11-05T13:34:19.6734450Z [34m==>[0m [1mPouring gpatch--2.8.arm64_sonoma.bottle.tar.gz[0m
+2026-11-05T13:34:19.6865220Z 🍺  /opt/homebrew/Cellar/gpatch/2.8: 12 files, 412.4KB
+2026-11-05T13:34:19.6867060Z [32m==>[0m [1mInstalling dpkg dependency: [32mlibmd[39m[0m
+2026-11-05T13:34:19.6888240Z [34m==>[0m [1mPouring libmd--1.2.0.arm64_sonoma.bottle.tar.gz[0m
+2026-11-05T13:34:19.7667840Z 🍺  /opt/homebrew/Cellar/libmd/1.2.0: 138 files, 1MB
+2026-11-05T13:34:19.7670820Z [32m==>[0m [1mInstalling [32mdpkg[39m[0m
+2026-11-05T13:34:19.7672340Z [34m==>[0m [1mPouring dpkg--1.23.7.arm64_sonoma.bottle.tar.gz[0m
+2026-11-05T13:34:20.0950570Z 🍺  /opt/homebrew/Cellar/dpkg/1.23.7: 740 files, 18.3MB
+2026-11-05T13:34:20.0953760Z [32m==>[0m [1mCaveats[0m
+2026-11-05T13:34:20.0954290Z [34m==>[0m [1mdpkg[0m
+2026-11-05T13:34:20.0954690Z This installation of dpkg is not configured to install software, so
+2026-11-05T13:34:20.0955090Z commands such as `dpkg -i`, `dpkg --configure` will fail.
+2026-11-05T13:34:20.1157180Z ##[group]Run set -euo pipefail
+2026-11-05T13:34:20.1157470Z [36;1mset -euo pipefail[0m
+2026-11-05T13:34:20.1157780Z [36;1mchmod 755 layout/DEBIAN/postinst layout/DEBIAN/postrm 2>/dev/null || true[0m
+2026-11-05T13:34:20.1158120Z [36;1msh build.sh "roothide"[0m
+2026-11-05T13:34:20.1158620Z [36;1m# roothide 环境里 dpkg 的系统架构是 iphoneos-arm64，而 theos 的 roothide[0m
+2026-11-05T13:34:20.1158990Z [36;1m# scheme 会把 Architecture 字段写成 iphoneos-arm64e，Sileo 直接判为不兼容。[0m
+2026-11-05T13:34:20.1159320Z [36;1m# 这里重打包，把字段改回 iphoneos-arm64（二进制本身已经是单架构 arm64）。[0m
+2026-11-05T13:34:20.1159580Z [36;1mfor deb in packages/*.deb; do[0m
+2026-11-05T13:34:20.1159820Z [36;1m  [ -e "$deb" ] || continue[0m
+2026-11-05T13:34:20.1160040Z [36;1m  stage="$(mktemp -d)"[0m
+2026-11-05T13:34:20.1160240Z [36;1m  dpkg-deb -R "$deb" "$stage"[0m
+2026-11-05T13:34:20.1160620Z [36;1m  sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"[0m
+2026-11-05T13:34:20.1161120Z [36;1m  chmod 755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/postrm" 2>/dev/null || true[0m
+2026-11-05T13:34:20.1161470Z [36;1m  chmod -R go-w "$stage/DEBIAN"[0m
+2026-11-05T13:34:20.1161670Z [36;1m[0m
+2026-11-05T13:34:20.1161880Z [36;1m  # roothide scheme 出的是 rootfs 布局（/Library、/Applications），[0m
+2026-11-05T13:34:20.1162210Z [36;1m  # 而 RootHide Bootstrap 是 rootless 布局，rootfs 只读装不进。[0m
+2026-11-05T13:34:20.1162510Z [36;1m  # 这里统一挪进 var/jb，dylib 的 jbroot 解析不受移动影响。[0m
+2026-11-05T13:34:20.1162780Z [36;1m  python3 tools/relocate_to_jbroot.py "$stage"[0m
+2026-11-05T13:34:20.1163140Z [36;1m[0m
+2026-11-05T13:34:20.1163390Z [36;1m  app_path="$(find "$stage" -maxdepth 5 -type d -name 'Heli.app' | head -n 1)"[0m
+2026-11-05T13:34:20.1163750Z [36;1m  if [ -z "$app_path" ]; then[0m
+2026-11-05T13:34:20.1163980Z [36;1m    echo "ERROR: Heli.app 没有打进包，桌面不会有设置图标"[0m
+2026-11-05T13:34:20.1164250Z [36;1m    find "$stage" -maxdepth 5 | head -60[0m
+2026-11-05T13:34:20.1164470Z [36;1m    exit 1[0m
+2026-11-05T13:34:20.1164640Z [36;1m  fi[0m
+2026-11-05T13:34:20.1164790Z [36;1m  echo "app bundle: $app_path"[0m
+2026-11-05T13:34:20.1165010Z [36;1m  ls -la "$app_path"[0m
+2026-11-05T13:34:20.1165230Z [36;1m[0m
+2026-11-05T13:34:20.1165380Z [36;1m  # 隐根硬校验：roothide 的 rootfs 是只读的，[0m
+2026-11-05T13:34:20.1165630Z [36;1m  # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。[0m
+2026-11-05T13:34:20.1165900Z [36;1m  python3 tools/check_deb_paths.py "$stage"[0m
+2026-11-05T13:34:20.1166140Z [36;1m[0m
+2026-11-05T13:34:20.1166270Z [36;1m  dpkg-deb -b "$stage" "$deb"[0m
+2026-11-05T13:34:20.1166560Z [36;1m  rm -rf "$stage"[0m
+2026-11-05T13:34:20.1166730Z [36;1m  echo "--- $deb ---"[0m
+2026-11-05T13:34:20.1167000Z [36;1m  dpkg-deb -f "$deb" Package Architecture Version Depends[0m
+2026-11-05T13:34:20.1167290Z [36;1m  dpkg-deb -c "$deb" | sed -n '1,60p'[0m
+2026-11-05T13:34:20.1167620Z [36;1m  # theos 的 roothide scheme 会把架构写进文件名，统一成 iphoneos-arm64[0m
+2026-11-05T13:34:20.1167890Z [36;1m  case "$deb" in[0m
+2026-11-05T13:34:20.1168080Z [36;1m    *_iphoneos-arm64e.deb)[0m
+2026-11-05T13:34:20.1168360Z [36;1m      fixed="${deb%_iphoneos-arm64e.deb}_iphoneos-arm64.deb"[0m
+2026-11-05T13:34:20.1168640Z [36;1m      mv -f "$deb" "$fixed"[0m
+2026-11-05T13:34:20.1168860Z [36;1m      echo "renamed: $fixed"[0m
+2026-11-05T13:34:20.1169060Z [36;1m      ;;[0m
+2026-11-05T13:34:20.1169200Z [36;1m  esac[0m
+2026-11-05T13:34:20.1169320Z [36;1mdone[0m
+2026-11-05T13:34:20.1169480Z [36;1mecho "=== .deb files ==="[0m
+2026-11-05T13:34:20.1169690Z [36;1mfind ./packages -name "*.deb" -type f[0m
+2026-11-05T13:34:20.1334640Z shell: /bin/bash -e {0}
+2026-11-05T13:34:20.1334840Z env:
+2026-11-05T13:34:20.1335010Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:34:20.1335230Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:34:20.1335520Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:34:20.1335830Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:34:20.1336050Z ##[endgroup]
+2026-11-05T13:34:20.1711770Z 
+2026-11-05T13:34:20.1712820Z Building roothide
+2026-11-05T13:34:24.3019400Z [0;36m==> [1;39mCleaning…[m
+2026-11-05T13:34:24.3343660Z [1;31m> [1;3;39mMaking clean in AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:24.5173750Z [0;36m==> [1;39mCleaning…[m
+2026-11-05T13:34:24.5198720Z [1;31m> [1;3;39mMaking clean in App…[m
+2026-11-05T13:34:24.7060750Z [0;36m==> [1;39mCleaning…[m
+2026-11-05T13:34:25.0857780Z [1;31m> [1;3;39mMaking all for tweak AxsLiquidGlass…[m
+2026-11-05T13:34:26.4101180Z [0;31m==> [1;39mPreprocessing Hooks/AxsLiquidGlassIsland.xm…[m
+2026-11-05T13:34:26.4917700Z [0;32m==> [1;39mCompiling Hooks/AxsLiquidGlassIsland.xm (arm64e)…[m
+2026-11-05T13:34:28.6815350Z [0;31m==> [1;39mPreprocessing Hooks/AxsLiquidGlassMain.xm…[m
+2026-11-05T13:34:28.7491190Z [0;32m==> [1;39mCompiling Hooks/AxsLiquidGlassMain.xm (arm64e)…[m
+2026-11-05T13:34:28.8229780Z [0;31m==> [1;39mPreprocessing Hooks/AxsLiquidGlassWidgets.xm…[m
+2026-11-05T13:34:28.8625440Z [0;32m==> [1;39mCompiling Hooks/AxsLiquidGlassWidgets.xm (arm64e)…[m
+2026-11-05T13:34:28.9135230Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassBackdrop.m (arm64e)…[m
+2026-11-05T13:34:29.7793390Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassConfig.m (arm64e)…[m
+2026-11-05T13:34:29.8638660Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassEffect.m (arm64e)…[m
+2026-11-05T13:34:29.9418410Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassRim.m (arm64e)…[m
+2026-11-05T13:34:29.9994050Z [0;32m==> [1;39mCompiling Sources/AxsLiquidGlassSurface.m (arm64e)…[m
+2026-11-05T13:34:30.0614780Z [0;33m==> [1;39mLinking tweak AxsLiquidGlass (arm64e)…[m
+2026-11-05T13:34:30.1941850Z ld: warning: -multiply_defined is obsolete
+2026-11-05T13:34:30.3191150Z [0;34m==> [1;39mGenerating debug symbols for AxsLiquidGlass…[m
+2026-11-05T13:34:30.4103500Z [0;34m==> [1;39mStripping AxsLiquidGlass (arm64e)…[m
+2026-11-05T13:34:30.4216510Z [0;34m==> [1;39mSigning AxsLiquidGlass…[m
+2026-11-05T13:34:30.5007700Z [1;31m> [1;3;39mMaking all in AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:30.6606640Z [1;31m> [1;3;39mMaking all for bundle AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:30.8644520Z [0;35m==> [1;39mCopying resource directories into the bundle wrapper…[m
+2026-11-05T13:34:31.4442320Z [0;32m==> [1;39mCompiling AxsLiquidGlassRootListController.m (arm64e)…[m
+2026-11-05T13:34:32.3675690Z [0;32m==> [1;39mCompiling AxsLiquidGlassSliderCell.m (arm64e)…[m
+2026-11-05T13:34:32.4439340Z [0;33m==> [1;39mLinking bundle AxsLiquidGlassPrefs (arm64e)…[m
+2026-11-05T13:34:32.4551820Z ld: warning: -multiply_defined is obsolete
+2026-11-05T13:34:32.5604940Z [0;34m==> [1;39mGenerating debug symbols for AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:32.5717900Z [0;34m==> [1;39mStripping AxsLiquidGlassPrefs (arm64e)…[m
+2026-11-05T13:34:32.5791660Z [0;34m==> [1;39mSigning AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:32.5886630Z [1;31m> [1;3;39mMaking all in App…[m
+2026-11-05T13:34:32.7694210Z [1;31m> [1;3;39mMaking all for application Heli…[m
+2026-11-05T13:34:32.9722990Z [0;35m==> [1;39mCopying resource files into the application wrapper…[m
+2026-11-05T13:34:32.9904220Z [0;35m==> [1;39mCopying resource directories into the application wrapper…[m
+2026-11-05T13:34:33.5533240Z [0;32m==> [1;39mCompiling main.m (arm64)…[m
+2026-11-05T13:34:34.3774090Z [0;32m==> [1;39mCompiling HeliAppDelegate.m (arm64)…[m
+2026-11-05T13:34:34.4326570Z [0;32m==> [1;39mCompiling HeliRootViewController.m (arm64)…[m
+2026-11-05T13:34:34.5622890Z [0;32m==> [1;39mCompiling HeliGlass.m (arm64)…[m
+2026-11-05T13:34:34.6417160Z [0;32m==> [1;39mCompiling HeliRows.m (arm64)…[m
+2026-11-05T13:34:34.7461120Z [0;33m==> [1;39mLinking application Heli (arm64)…[m
+2026-11-05T13:34:34.7570720Z ld: warning: -multiply_defined is obsolete
+2026-11-05T13:34:34.8601590Z [0;34m==> [1;39mGenerating debug symbols for Heli…[m
+2026-11-05T13:34:34.8740260Z [0;34m==> [1;39mStripping Heli (arm64)…[m
+2026-11-05T13:34:34.8815350Z [0;34m==> [1;39mSigning Heli…[m
+2026-11-05T13:34:34.9968880Z [1;31m> [1;3;39mMaking stage for tweak AxsLiquidGlass…[m
+2026-11-05T13:34:35.3125410Z [1;31m> [1;3;39mMaking stage in AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:35.5048950Z [1;31m> [1;3;39mMaking stage for bundle AxsLiquidGlassPrefs…[m
+2026-11-05T13:34:35.8617940Z [1;31m> [1;3;39mMaking stage in App…[m
+2026-11-05T13:34:36.0167670Z [1;31m> [1;3;39mMaking stage for application Heli…[m
+2026-11-05T13:34:36.9932650Z dm.pl: building package `com.heli.liquid:iphoneos-arm64e' in `./packages/com.heli.liquid_6.1.0-19_iphoneos-arm64e.deb'
+2026-11-05T13:34:37.3314960Z relocated into var/jb: Applications, Library
+2026-11-05T13:34:37.3373580Z app bundle: /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/tmp.mxZC53xPJg/var/jb/Applications/Heli.app
+2026-11-05T13:34:37.3404670Z total 344
+2026-11-05T13:34:37.3404910Z drwxr-xr-x  6 runner  staff     192 Nov  5 13:34 .
+2026-11-05T13:34:37.3405350Z drwxr-xr-x  3 runner  staff      96 Nov  5 13:34 ..
+2026-11-05T13:34:37.3413990Z -rw-r--r--  1 runner  staff   13705 Nov  5 13:33 AppIcon60x60@2x.png
+2026-11-05T13:34:37.3414360Z -rw-r--r--  1 runner  staff   25182 Nov  5 13:33 AppIcon60x60@3x.png
+2026-11-05T13:34:37.3414690Z -rwxr-xr-x  1 runner  staff  126448 Nov  5 13:34 Heli
+2026-11-05T13:34:37.3414990Z -rw-r--r--  1 runner  staff     885 Nov  5 13:34 Info.plist
+2026-11-05T13:34:37.3580440Z path check: all entries under var/jb
+2026-11-05T13:34:37.3653020Z dpkg-deb: warning: root directory /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/tmp.mxZC53xPJg has unusual owner or group 501:20
+2026-11-05T13:34:37.3653790Z dpkg-deb: hint: you might need to pass --root-owner-group, see <https://wiki.debian.org/Teams/Dpkg/RootlessBuilds> for further details
+2026-11-05T13:34:37.3654560Z dpkg-deb: warning: ignoring 1 warning about the control file(s)
+2026-11-05T13:34:37.3655130Z dpkg-deb: building package 'com.heli.liquid' in 'packages/com.heli.liquid_6.1.0-19_iphoneos-arm64e.deb'.
+2026-11-05T13:34:37.4206630Z --- packages/com.heli.liquid_6.1.0-19_iphoneos-arm64e.deb ---
+2026-11-05T13:34:37.4313890Z Package: com.heli.liquid
+2026-11-05T13:34:37.4314260Z Architecture: iphoneos-arm64
+2026-11-05T13:34:37.4314550Z Version: 6.1.0-19
+2026-11-05T13:34:37.4314870Z Depends: mobilesubstrate | ellekit, preferenceloader, firmware (>= 15.0)
+2026-11-05T13:34:37.4449970Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./
+2026-11-05T13:34:37.4450350Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/
+2026-11-05T13:34:37.4450650Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/
+2026-11-05T13:34:37.4450990Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Applications/
+2026-11-05T13:34:37.4451390Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Applications/Heli.app/
+2026-11-05T13:34:37.4451870Z -rw-r--r-- runner/staff  13705 2026-11-05 13:33 ./var/jb/Applications/Heli.app/AppIcon60x60@2x.png
+2026-11-05T13:34:37.4452350Z -rw-r--r-- runner/staff  25182 2026-11-05 13:33 ./var/jb/Applications/Heli.app/AppIcon60x60@3x.png
+2026-11-05T13:34:37.4452870Z -rwxr-xr-x runner/staff 126448 2026-11-05 13:34 ./var/jb/Applications/Heli.app/Heli
+2026-11-05T13:34:37.4453300Z -rw-r--r-- runner/staff    885 2026-11-05 13:34 ./var/jb/Applications/Heli.app/Info.plist
+2026-11-05T13:34:37.4453720Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Library/
+2026-11-05T13:34:37.4454140Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Library/MobileSubstrate/
+2026-11-05T13:34:37.4454600Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Library/MobileSubstrate/DynamicLibraries/
+2026-11-05T13:34:37.4455170Z -rwxr-xr-x runner/staff 107792 2026-11-05 13:34 ./var/jb/Library/MobileSubstrate/DynamicLibraries/AxsLiquidGlass.dylib
+2026-11-05T13:34:37.4455770Z -rw-r--r-- runner/staff    256 2026-11-05 13:34 ./var/jb/Library/MobileSubstrate/DynamicLibraries/AxsLiquidGlass.plist
+2026-11-05T13:34:37.4456290Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Library/PreferenceBundles/
+2026-11-05T13:34:37.4457210Z drwxr-xr-x runner/staff      0 2026-11-05 13:34 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/
+2026-11-05T13:34:37.4457910Z -rwxr-xr-x runner/staff  89072 2026-11-05 13:34 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/AxsLiquidGlassPrefs
+2026-11-05T13:34:37.4458670Z -rw-r--r-- runner/staff   1718 2026-11-05 13:34 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/AxsLiquidGlassRoot.plist
+2026-11-05T13:34:37.4459520Z -rw-r--r-- runner/staff    336 2026-11-05 13:34 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/Info.plist
+2026-11-05T13:34:37.4460130Z -rw-r--r-- runner/staff   1978 2026-11-05 13:33 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/icon.png
+2026-11-05T13:34:37.4460750Z -rw-r--r-- runner/staff   5734 2026-11-05 13:33 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/icon@2x.png
+2026-11-05T13:34:37.4461410Z -rw-r--r-- runner/staff  10604 2026-11-05 13:33 ./var/jb/Library/PreferenceBundles/AxsLiquidGlassPrefs.bundle/icon@3x.png
+2026-11-05T13:34:37.4461950Z drwxr-xr-x runner/staff      0 2026-11-05 13:33 ./var/jb/Library/PreferenceLoader/
+2026-11-05T13:34:37.4462390Z drwxr-xr-x runner/staff      0 2026-11-05 13:33 ./var/jb/Library/PreferenceLoader/Preferences/
+2026-11-05T13:34:37.4463110Z -rw-r--r-- runner/staff    200 2026-11-05 13:34 ./var/jb/Library/PreferenceLoader/Preferences/AxsLiquidGlassPrefs.plist
+2026-11-05T13:34:37.4467830Z renamed: packages/com.heli.liquid_6.1.0-19_iphoneos-arm64.deb
+2026-11-05T13:34:37.4468360Z === .deb files ===
+2026-11-05T13:34:37.4490060Z ./packages/com.heli.liquid_6.1.0-19_iphoneos-arm64.deb
+2026-11-05T13:34:37.4547540Z ##[group]Run actions/upload-artifact@v4
+2026-11-05T13:34:37.4547770Z with:
+2026-11-05T13:34:37.4547930Z   name: packages-roothide
+2026-11-05T13:34:37.4548110Z   path: ./packages/*.deb
+2026-11-05T13:34:37.4548300Z   if-no-files-found: error
+2026-11-05T13:34:37.4548480Z   compression-level: 6
+2026-11-05T13:34:37.4548660Z   overwrite: false
+2026-11-05T13:34:37.4548810Z   include-hidden-files: false
+2026-11-05T13:34:37.4548980Z env:
+2026-11-05T13:34:37.4549130Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:34:37.4549340Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:34:37.4549640Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:34:37.4549960Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:34:37.4550180Z ##[endgroup]
+2026-11-05T13:34:37.6013370Z (node:4394) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-05T13:34:37.6014140Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-05T13:34:37.6049600Z With the provided path, there will be 1 file uploaded
+2026-11-05T13:34:37.6052260Z Artifact name is valid!
+2026-11-05T13:34:37.6052560Z Root directory input is valid!
+2026-11-05T13:34:37.9869530Z Beginning upload of artifact content to blob storage
+2026-11-05T13:34:38.0057140Z (node:4394) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-05T13:34:38.6827670Z Uploaded bytes 103257
+2026-11-05T13:34:38.8186870Z Finished uploading artifact content to blob storage!
+2026-11-05T13:34:38.8237730Z SHA256 digest of uploaded artifact zip is 9ef4267b906cf7fe16bd939cac3d17cab992daaf52a8addb57c9d1c0c06bb9b8
+2026-11-05T13:34:38.8239820Z Finalizing artifact upload
+2026-11-05T13:34:39.2811030Z Artifact packages-roothide.zip successfully finalized. Artifact ID 13419255698
+2026-11-05T13:34:39.2811730Z Artifact packages-roothide has been successfully uploaded! Final size is 103257 bytes. Artifact ID is 13419255698
+2026-11-05T13:34:39.2816150Z Artifact download URL: https://github.com/Nocebook/LiquidGlass/actions/runs/42036843658/artifacts/13419255698
+2026-11-05T13:34:39.2940170Z ##[group]Run softprops/action-gh-release@v2
+2026-11-05T13:34:39.2940420Z with:
+2026-11-05T13:34:39.2942440Z   token: ***
+2026-11-05T13:34:39.2942600Z   tag_name: v6.1.0-19
+2026-11-05T13:34:39.2942790Z   name: liquid (HL) v6.1.0-19
+2026-11-05T13:34:39.2942990Z   files: ./packages/*.deb
+2026-11-05T13:34:39.2943170Z   overwrite_files: true
+2026-11-05T13:34:39.2943340Z env:
+2026-11-05T13:34:39.2943480Z   HOMEBREW_NO_AUTO_UPDATE: 1
+2026-11-05T13:34:39.2943710Z   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+2026-11-05T13:34:39.2944230Z   THEOS: /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:34:39.2944550Z   MD_APPLE_SDK_ROOT: /Applications/Xcode_15.4.app
+2026-11-05T13:34:39.2944800Z ##[endgroup]
+2026-11-05T13:34:39.6446630Z 👩‍🏭 Creating new GitHub release for tag v6.1.0-19...
+2026-11-05T13:34:41.3070720Z Release 435245765 is not yet discoverable by tag v6.1.0-19, retrying... (2 retries remaining)
+2026-11-05T13:34:43.0524690Z ⬆️ Uploading com.heli.liquid_6.1.0-19_iphoneos-arm64.deb...
+2026-11-05T13:34:43.8179890Z ✅ Uploaded com.heli.liquid_6.1.0-19_iphoneos-arm64.deb
+2026-11-05T13:34:43.8199060Z Finalizing release...
+2026-11-05T13:34:44.9621810Z Getting assets list...
+2026-11-05T13:34:45.2519350Z 🎉 Release ready at https://github.com/Nocebook/LiquidGlass/releases/tag/v6.1.0-19
+2026-11-05T13:34:45.2655910Z Post job cleanup.
+2026-11-05T13:34:45.3787540Z [command]/opt/homebrew/bin/git version
+2026-11-05T13:34:45.3846810Z git version 2.55.0
+2026-11-05T13:34:45.3867080Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/211eb126-3a55-4bb7-89ac-58c7787fbd1a/.gitconfig'
+2026-11-05T13:34:45.3875290Z Temporarily overriding HOME='/Users/runner/work/_temp/211eb126-3a55-4bb7-89ac-58c7787fbd1a' before making global git config changes
+2026-11-05T13:34:45.3876160Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-05T13:34:45.3879520Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide
+2026-11-05T13:34:45.3938110Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-05T13:34:45.3986940Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-05T13:34:45.4602530Z Entering 'vendor/dm.pl'
+2026-11-05T13:34:45.4740480Z Entering 'vendor/include'
+2026-11-05T13:34:45.4882610Z Entering 'vendor/lib'
+2026-11-05T13:34:45.5024910Z Entering 'vendor/logos'
+2026-11-05T13:34:45.5169090Z Entering 'vendor/nic'
+2026-11-05T13:34:45.5338240Z Entering 'vendor/orion'
+2026-11-05T13:34:45.5508910Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:34:45.5683260Z Entering 'vendor/swift-support'
+2026-11-05T13:34:45.5825870Z Entering 'vendor/templates'
+2026-11-05T13:34:45.5969740Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-05T13:34:45.6007740Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.6014950Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-05T13:34:45.6062050Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-05T13:34:45.6579920Z Entering 'vendor/dm.pl'
+2026-11-05T13:34:45.6662020Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.6744950Z Entering 'vendor/include'
+2026-11-05T13:34:45.6827340Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.6912340Z Entering 'vendor/lib'
+2026-11-05T13:34:45.6994480Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.7080820Z Entering 'vendor/logos'
+2026-11-05T13:34:45.7163030Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.7248660Z Entering 'vendor/nic'
+2026-11-05T13:34:45.7331310Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.7421330Z Entering 'vendor/orion'
+2026-11-05T13:34:45.7506680Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.7590940Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:34:45.7675760Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.7764510Z Entering 'vendor/swift-support'
+2026-11-05T13:34:45.7856560Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.7956850Z Entering 'vendor/templates'
+2026-11-05T13:34:45.8041650Z http.https://github.com/.extraheader
+2026-11-05T13:34:45.8168160Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.8231710Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-05T13:34:45.8764070Z Entering 'vendor/dm.pl'
+2026-11-05T13:34:45.8824070Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/dm.pl/config	remote.origin.url
+2026-11-05T13:34:45.8866240Z Entering 'vendor/include'
+2026-11-05T13:34:45.8931270Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/include/config	remote.origin.url
+2026-11-05T13:34:45.8979400Z Entering 'vendor/lib'
+2026-11-05T13:34:45.9039690Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/lib/config	remote.origin.url
+2026-11-05T13:34:45.9080910Z Entering 'vendor/logos'
+2026-11-05T13:34:45.9143000Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/logos/config	remote.origin.url
+2026-11-05T13:34:45.9185020Z Entering 'vendor/nic'
+2026-11-05T13:34:45.9244480Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/nic/config	remote.origin.url
+2026-11-05T13:34:45.9287470Z Entering 'vendor/orion'
+2026-11-05T13:34:45.9348270Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/config	remote.origin.url
+2026-11-05T13:34:45.9389870Z Entering 'vendor/orion/fishhook'
+2026-11-05T13:34:45.9452310Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/modules/fishhook/config	remote.origin.url
+2026-11-05T13:34:45.9496620Z Entering 'vendor/swift-support'
+2026-11-05T13:34:45.9556710Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/swift-support/config	remote.origin.url
+2026-11-05T13:34:45.9599130Z Entering 'vendor/templates'
+2026-11-05T13:34:45.9658310Z file:/Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/templates/config	remote.origin.url
+2026-11-05T13:34:45.9712660Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/dm.pl/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.9756920Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/include/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.9798100Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/lib/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.9838730Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/logos/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.9878600Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/nic/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.9938020Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:45.9972020Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/orion/modules/fishhook/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:46.0026280Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/swift-support/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:46.0055260Z [command]/opt/homebrew/bin/git config --file /Users/runner/work/LiquidGlass/LiquidGlass/theos-roothide/.git/modules/vendor/templates/config --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:46.0194880Z Post job cleanup.
+2026-11-05T13:34:46.0991310Z [command]/opt/homebrew/bin/git version
+2026-11-05T13:34:46.1037060Z git version 2.55.0
+2026-11-05T13:34:46.1055970Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/a816ed73-352c-4794-a664-4565c02ef1aa/.gitconfig'
+2026-11-05T13:34:46.1062580Z Temporarily overriding HOME='/Users/runner/work/_temp/a816ed73-352c-4794-a664-4565c02ef1aa' before making global git config changes
+2026-11-05T13:34:46.1063280Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-05T13:34:46.1066590Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/LiquidGlass/LiquidGlass
+2026-11-05T13:34:46.1124490Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-05T13:34:46.1169860Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-05T13:34:46.1711310Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-05T13:34:46.1747550Z http.https://github.com/.extraheader
+2026-11-05T13:34:46.1754270Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-05T13:34:46.1801780Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-05T13:34:46.2328810Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-05T13:34:46.2373660Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-05T13:34:46.3018500Z Evaluate and set job outputs
+2026-11-05T13:34:46.3022390Z Set output 'package_version'
+2026-11-05T13:34:46.3023690Z Cleaning up orphan processes
+2026-11-05T13:34:46.8503370Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4, softprops/action-gh-release@v2. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

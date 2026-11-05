@@ -1,11 +1,13 @@
 #!/bin/sh
-# 装完立刻让桌面出现 liquid 图标，否则用户只会看到一个"啥也没有"的包。
+# 这一版不再带桌面 App（入口只在 设置 → 越狱插件 → liquid (HL)）。
+# 但旧版本装过 /Applications/Heli.app，升级时 dpkg 不会自动删，
+# 这里主动清掉并注销，免得桌面上留一个点了没用的图标。
+#
 # roothide（隐根）下 /var/jb 只是兼容链接，真实根在
 # /var/containers/Bundle/Application/.jbroot-*，所以三个位置都要探。
 set +e
 
 find_jb() {
-    # dpkg（roothide 打过补丁）通常会给 JBROOT
     if [ -n "${JBROOT:-}" ] && [ -d "$JBROOT/usr" ]; then
         printf '%s' "$JBROOT"
         return 0
@@ -20,10 +22,6 @@ find_jb() {
 }
 
 JB="$(find_jb)"
-APP=""
-for candidate in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app /Applications/Heli.app; do
-    [ -n "$candidate" ] && [ -d "$candidate" ] && APP="$candidate" && break
-done
 
 UICACHE=""
 for candidate in "${JB}/usr/bin/uicache" /var/jb/usr/bin/uicache /usr/bin/uicache; do
@@ -33,9 +31,14 @@ if [ -z "$UICACHE" ]; then
     UICACHE="$(command -v uicache 2>/dev/null)"
 fi
 
-if [ -n "$UICACHE" ] && [ -n "$APP" ]; then
-    "$UICACHE" -p "$APP" >/dev/null 2>&1
-fi
+# 清掉旧版残留的桌面 App
+for app in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app; do
+    [ -n "$app" ] && [ -d "$app" ] || continue
+    rm -rf "$app"
+    if [ -n "$UICACHE" ]; then
+        "$UICACHE" -p "$app" >/dev/null 2>&1
+    fi
+done
 
 KILLALL=""
 for candidate in "${JB}/usr/bin/killall" /var/jb/usr/bin/killall /usr/bin/killall; do

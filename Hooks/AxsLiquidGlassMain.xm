@@ -2,13 +2,16 @@
 #import "AxsLiquidGlassBackdrop.h"
 #import "AxsLiquidGlassConfig.h"
 #import "AxsLiquidGlassEffect.h"
+#import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
 #import "AxsLiquidGlassRim.h"
+#import "AxsLiquidGlassSettings.h"
 #import "AxsLiquidGlassSurface.h"
 
-// 系统所有毛玻璃最终都落在 UIVisualEffectView 上，从这一层切入
-// 比逐个 hook 控制中心/文件夹/Dock 稳，也不会漏掉新系统新增的表面。
-// initWithEffect: / setEffect: 都是 UIVisualEffectView 自己实现的方法，挂在这里不会牵连其他 UIView。
+// 系统所有毛玻璃最终都落在两套实现上：
+//   1. UIVisualEffectView + _UICustomBlurEffect（App 内、部分系统表面）
+//   2. _UIBackdropView + _UIBackdropViewSettings（控制中心 / Dock / 文件夹 / 通知，iOS 15+ 的主力）
+// 只挂第 1 条会给人"装了个空包"的错觉，所以两条都要接。
 //
 // 每个回调都包 @try：在 WidgetRenderer / chronod 这类扩展进程里，一个未捕获的
 // Objective-C 异常不是"少个效果"，而是整个进程被杀 → 桌面小组件直接空白。
@@ -68,13 +71,34 @@
 %end
 
 %ctor {
-    // 自定义 %ctor 后 Logos 不再自动初始化默认组，所有 hook 都必须显式 %init。
-    %init(AxsLiquidGlassEffectGroup);
-
     @autoreleasepool {
+        AxsLog(@"===== liquid (HL) 注入成功 =====");
+        AxsLog(@"进程=%@", [NSProcessInfo processInfo].processName);
+
+        // 自定义 %ctor 后 Logos 不再自动初始化默认组，所有 hook 都必须显式 %init。
+        %init(AxsLiquidGlassEffectGroup);
+
+        // 主力路径：系统玻璃的真实参数在 _UIBackdropViewSettings 上。
+        [AxsLiquidGlassSettings axs_liquidglass_installHooksIfAvailable];
+
+        @try {
+            AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
+            AxsLog(@"配置 enabled=%d blur=%.1f sat=%.2f tint=%.2f rim=%.2f widget=%ld island=%d",
+                   [config axs_liquidglass_isEnabled],
+                   [config axs_liquidglass_blurRadius],
+                   [config axs_liquidglass_saturation],
+                   [config axs_liquidglass_tintAlpha],
+                   [config axs_liquidglass_rimStrength],
+                   (long)[config axs_liquidglass_widgetMode],
+                   [config axs_liquidglass_hideIsland]);
+        } @catch (NSException *exception) {
+            (void)exception;
+        }
+
         // 读取配置快照；这里不写默认值，避免所有进程都去动偏好。
         [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_addReloadHandler:^{
             @try {
+                AxsLog(@"配置变更，刷新已跟踪视图");
                 [AxsLiquidGlassEffect axs_liquidglass_refreshTrackedViews];
                 [AxsLiquidGlassBackdrop axs_liquidglass_refreshTrackedViews];
             } @catch (NSException *exception) {
