@@ -83,7 +83,22 @@ jobs:
 
       - name: Build Package
         run: |
+          set -euo pipefail
           sh build.sh "${{ matrix.build_variant }}"
+          # roothide 环境里 dpkg 的系统架构是 iphoneos-arm64，而 theos 的 roothide
+          # scheme 会把 Architecture 字段写成 iphoneos-arm64e，Sileo 直接判为不兼容。
+          # 这里重打包，把字段改回 iphoneos-arm64（二进制本身已经是单架构 arm64）。
+          for deb in packages/*.deb; do
+            [ -e "$deb" ] || continue
+            stage="$(mktemp -d)"
+            dpkg-deb -R "$deb" "$stage"
+            sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
+            chmod -R go-w "$stage/DEBIAN"
+            dpkg-deb -b "$stage" "$deb"
+            rm -rf "$stage"
+            echo "--- $deb ---"
+            dpkg-deb -f "$deb" Package Architecture Version
+          done
           echo "=== .deb files ==="
           find ./packages -name "*.deb" -type f
 
