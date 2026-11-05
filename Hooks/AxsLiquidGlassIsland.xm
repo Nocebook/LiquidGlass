@@ -198,7 +198,7 @@ static void AxsIslandHookIfPresent(Class cls, NSString *selectorName) {
     IMP original = class_getMethodImplementation(cls, selector);
     MSHookMessageEx(cls, selector, (IMP)AxsIslandHookBody, &original);
     gAxsIslandOrigIMPs[[NSString stringWithFormat:@"%s:%s", class_getName(cls), sel_getName(selector)]] =
-        [NSValue valueWithPointer:original];
+        [NSValue valueWithPointer:(const void *)original];
     gAxsIslandHookCount += 1;
 }
 
