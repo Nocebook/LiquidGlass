@@ -84,7 +84,7 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     }
 
     if (@available(iOS 13.0, *)) {
-        container.cornerCurve = kCALayerCornerCurveContinuous;
+        container.cornerCurve = kCACornerCurveContinuous;
     }
 
     // 1. 玻璃本体：上亮下暗的极淡乳白
