@@ -6,6 +6,9 @@ on:
     branches:
       - main
       - master
+    # 只改文档不必重新出包
+    paths-ignore:
+      - '**.md'
 
 permissions:
   contents: write
