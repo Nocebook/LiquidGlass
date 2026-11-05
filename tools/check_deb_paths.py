@@ -25,7 +25,13 @@ def main():
         parts = rel.split(os.sep)
         if parts[0] == "DEBIAN":
             continue
-        if parts[0] != "var" or len(parts) < 2 or parts[1] != "jb":
+        if parts[0] != "var":
+            bad.append(rel)
+            continue
+        # var 自身和 var/jb 都是合法中间目录
+        if len(parts) == 1:
+            continue
+        if parts[1] != "jb":
             bad.append(rel)
 
     if bad:
