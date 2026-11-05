@@ -1,10 +1,10 @@
-# liquid (HL) (LiquidGlass)
+# liquid (HL)
 
 越狱插件，把系统毛玻璃重做成液态玻璃质感：更厚的模糊、更高的饱和度、一层左上斜向高光加一圈边缘折射线。
 
 - 包名 `com.heli.liquid`
-- 目标设备：**iPhone 14 Pro（A16）/ iOS 16.3 / roothide 隐藏根越狱**
-- 打包方案：`THEOS_PACKAGE_SCHEME = roothide`，产物 `iphoneos-arm64`
+- 目标设备：**iPhone 14 Pro（A16）/ iOS 16.3 / 隐根越狱**
+- 打包方案：`THEOS_PACKAGE_SCHEME = rootless`（设备 rootfs 只读，roothide 布局装不进），产物 `iphoneos-arm64`
 - 注入：SpringBoard、MediaRemoteUI、chronod、WidgetRenderer(默认/CarPlay)、ClockAngel
 - 设置面板：`设置 → liquid (HL)`
 
@@ -89,14 +89,21 @@ roothide 和 rootless 长得像，但根目录不是固定的 `/var/jb`，而是
 
 ## 下载与安装
 
-已发布：<https://github.com/Nocebook/LiquidGlass/releases/latest>
+源地址（推荐，能收到更新）：<https://nocebook.github.io/heli/>
+
+直装：<https://github.com/Nocebook/LiquidGlass/releases/latest>
 
 iPhone 上装（roothide / Sileo）：
 
-1. Safari 打开上面的链接，点最新 Release 里的 `.deb` 文件
+**走源**
+1. Sileo → 源 → 右上角 `+` → 粘贴 `https://nocebook.github.io/heli/`
+2. 提示「未签名」时选继续添加
+3. 进 Heli 源，点 `liquid (HL)` → 获取
+
+**走单个 deb**
+1. Safari 打开 Releases 链接，点最新 Release 里的 `.deb`
 2. 下载完点它，选「用 Sileo 打开」（没弹窗就去「文件」App 里找到它点开）
-3. Sileo 里点「获取」→「排队」→ 安装
-4. 装完点 Sileo 提示的 Restart SpringBoard
+3. Sileo 里点「获取」→ 安装 → Restart SpringBoard
 
 包内 `Architecture` 必须是 `iphoneos-arm64`。theos 的 roothide scheme 默认会写成
 `iphoneos-arm64e`，那样 dpkg 会判架构不匹配直接拒绝安装，所以 CI 在打包后重写这个字段。
