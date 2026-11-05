@@ -21,6 +21,9 @@
 - (BOOL)axs_liquidglass_isWidgetIdentifierBlocked:(NSString *)identifier;
 
 - (BOOL)axs_liquidglass_scopeEnabled:(NSString *)scope;
+
+/// 隐藏灵动岛：为 YES 时把灵动岛容器的 alpha 压到 0。
+- (BOOL)axs_liquidglass_hideIsland;
 /// 每次配置重载自增，页面刷新时可据此判断是否需要重做。
 - (unsigned long long)axs_liquidglass_generation;
 

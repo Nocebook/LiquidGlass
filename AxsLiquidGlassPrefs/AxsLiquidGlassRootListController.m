@@ -2,7 +2,46 @@
 #import "AxsLiquidGlassPreferences.h"
 #import <Preferences/PSSpecifier.h>
 #import <UIKit/UIKit.h>
+#import <spawn.h>
 #import "AxsLiquidGlassSliderCell.h"
+
+extern char **environ;
+
+static NSString * const kAxsLiquidGlassRepositoryURL = @"https://nocebook.github.io/heli/";
+
+static BOOL AxsLiquidGlassSpawn(NSString *path, NSArray<NSString *> *arguments) {
+    if (path.length == 0) return NO;
+    if (![[NSFileManager defaultManager] isExecutableFileAtPath:path]) return NO;
+
+    NSMutableArray<NSString *> *all = [NSMutableArray arrayWithObject:path];
+    [all addObjectsFromArray:arguments ?: @[]];
+
+    NSUInteger count = all.count;
+    char **argv = calloc(count + 1, sizeof(char *));
+    if (!argv) return NO;
+    for (NSUInteger index = 0; index < count; index++) {
+        argv[index] = strdup(all[index].UTF8String);
+    }
+    argv[count] = NULL;
+
+    pid_t pid = 0;
+    int result = posix_spawn(&pid, path.UTF8String, NULL, NULL, argv, environ);
+    for (NSUInteger index = 0; index < count; index++) {
+        free(argv[index]);
+    }
+    free(argv);
+    return result == 0;
+}
+
+static BOOL AxsLiquidGlassRespring(void) {
+    for (NSString *path in @[@"/var/jb/usr/bin/killall", @"/usr/bin/killall"]) {
+        if (AxsLiquidGlassSpawn(path, @[@"-9", @"SpringBoard"])) return YES;
+    }
+    for (NSString *path in @[@"/var/jb/usr/bin/sbreload", @"/usr/bin/sbreload"]) {
+        if (AxsLiquidGlassSpawn(path, @[])) return YES;
+    }
+    return NO;
+}
 
 @interface AxsLiquidGlassRootListController () <AxsLiquidGlassSliderCellHandler>
 @end
@@ -13,11 +52,17 @@
     if (!_specifiers) {
         NSMutableArray *items = [[self loadSpecifiersFromPlistName:@"AxsLiquidGlassRoot"
                                                            target:self] mutableCopy];
-        [items addObject:[PSSpecifier preferenceSpecifierNamed:@"关于我们" target:self
+        [items addObject:[PSSpecifier preferenceSpecifierNamed:@"维护" target:self
                      set:nil get:nil detail:nil cell:PSGroupCell edit:nil]];
-        [self axs_liquidglass_addButton:@"Sileo 越狱源" action:@selector(axs_liquidglass_openRepository:) to:items];
-        [self axs_liquidglass_addButton:@"TG分享频道" action:@selector(axs_liquidglass_openTelegram:) to:items];
-        [self axs_liquidglass_addButton:@"QQ交流群组" action:@selector(axs_liquidglass_openQQ:) to:items];
+        [self axs_liquidglass_addButton:@"重启桌面（效果异常时用）"
+                                 action:@selector(axs_liquidglass_respring:)
+                                     to:items];
+
+        [items addObject:[PSSpecifier preferenceSpecifierNamed:@"关于" target:self
+                     set:nil get:nil detail:nil cell:PSGroupCell edit:nil]];
+        [self axs_liquidglass_addButton:@"打开 Heli 越狱源"
+                                 action:@selector(axs_liquidglass_openRepository:)
+                                     to:items];
         _specifiers = items;
     }
     return _specifiers;
@@ -42,7 +87,7 @@
     NSError *error = nil;
     if (!axs_liquidglass_writePreference(key, value, &error)) {
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"设置未保存"
-            message:error.localizedDescription ?: @"请检查配置文件路径和写入权限。"
+            message:error.localizedDescription ?: @"请检查 cfprefsd 写入权限。"
             preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
         [self presentViewController:alert animated:YES completion:nil];
@@ -58,7 +103,7 @@
             [self axs_liquidglass_openURL:fallback fallback:nil];
         } else {
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"无法打开链接"
-                message:@"请确认已安装对应应用。" preferredStyle:UIAlertControllerStyleAlert];
+                message:@"请确认已安装 Sileo。" preferredStyle:UIAlertControllerStyleAlert];
             [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
             [self presentViewController:alert animated:YES completion:nil];
         }
@@ -66,22 +111,21 @@
 }
 
 - (void)axs_liquidglass_openRepository:(id)sender {
-    NSString *source = @"https://axs66.github.io/pro";
-    // Encode the entire URL as a path component, including its own delimiters.
+    // Sileo 要求整条 URL 作为路径段编码，包括它自己的冒号斜杠。
     NSCharacterSet *allowed = [NSCharacterSet characterSetWithCharactersInString:
                               @"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"];
-    NSString *encoded = [source stringByAddingPercentEncodingWithAllowedCharacters:allowed];
+    NSString *encoded = [kAxsLiquidGlassRepositoryURL stringByAddingPercentEncodingWithAllowedCharacters:allowed];
     NSURL *primary = [NSURL URLWithString:[@"sileo://source/" stringByAppendingString:encoded]];
-    [self axs_liquidglass_openURL:primary fallback:[NSURL URLWithString:source]];
+    [self axs_liquidglass_openURL:primary fallback:[NSURL URLWithString:kAxsLiquidGlassRepositoryURL]];
 }
 
-- (void)axs_liquidglass_openTelegram:(id)sender {
-    [self axs_liquidglass_openURL:[NSURL URLWithString:@"tg://resolve?domain=wxfx8"]
-                   fallback:[NSURL URLWithString:@"https://t.me/wxfx8"]];
-}
-
-- (void)axs_liquidglass_openQQ:(id)sender {
-    [self axs_liquidglass_openURL:[NSURL URLWithString:@"mqqapi://card/show_pslcard?src_type=internal&version=1&uin=678055716&card_type=group&source=qrcode"] fallback:nil];
+- (void)axs_liquidglass_respring:(id)sender {
+    if (AxsLiquidGlassRespring()) return;
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"无法重启桌面"
+        message:@"找不到 killall / sbreload，请用 Filza 或快捷指令手动注销。"
+        preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell

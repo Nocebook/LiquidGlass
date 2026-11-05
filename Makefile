@@ -23,4 +23,5 @@ AxsLiquidGlass_LIBRARIES = substrate
 include $(THEOS_MAKE_PATH)/tweak.mk
 
 SUBPROJECTS += AxsLiquidGlassPrefs
+SUBPROJECTS += App
 include $(THEOS_MAKE_PATH)/aggregate.mk

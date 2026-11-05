@@ -84,6 +84,7 @@ jobs:
       - name: Build Package
         run: |
           set -euo pipefail
+          chmod 755 layout/DEBIAN/postinst layout/DEBIAN/postrm 2>/dev/null || true
           sh build.sh "${{ matrix.build_variant }}"
           # roothide 环境里 dpkg 的系统架构是 iphoneos-arm64，而 theos 的 roothide
           # scheme 会把 Architecture 字段写成 iphoneos-arm64e，Sileo 直接判为不兼容。
@@ -93,7 +94,18 @@ jobs:
             stage="$(mktemp -d)"
             dpkg-deb -R "$deb" "$stage"
             sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
+            chmod 755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/postrm" 2>/dev/null || true
             chmod -R go-w "$stage/DEBIAN"
+
+            app_path="$(find "$stage" -maxdepth 5 -type d -name 'Heli.app' | head -n 1)"
+            if [ -z "$app_path" ]; then
+              echo "ERROR: Heli.app 没有打进包，桌面不会有设置图标"
+              find "$stage" -maxdepth 5 | head -60
+              exit 1
+            fi
+            echo "app bundle: $app_path"
+            ls -la "$app_path"
+
             dpkg-deb -b "$stage" "$deb"
             rm -rf "$stage"
             echo "--- $deb ---"

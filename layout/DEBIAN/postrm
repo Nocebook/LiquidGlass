@@ -1,0 +1,31 @@
+#!/bin/sh
+set +e
+
+JB="/var/jb"
+[ -d "$JB" ] || JB=""
+
+UICACHE=""
+for candidate in "${JB}/usr/bin/uicache" /usr/bin/uicache; do
+    if [ -x "$candidate" ]; then
+        UICACHE="$candidate"
+        break
+    fi
+done
+
+if [ -n "$UICACHE" ]; then
+    "$UICACHE" -p "${JB}/Applications/Heli.app" >/dev/null 2>&1
+fi
+
+KILLALL=""
+for candidate in "${JB}/usr/bin/killall" /usr/bin/killall; do
+    if [ -x "$candidate" ]; then
+        KILLALL="$candidate"
+        break
+    fi
+done
+
+if [ -n "$KILLALL" ]; then
+    "$KILLALL" -9 SpringBoard >/dev/null 2>&1
+fi
+
+exit 0

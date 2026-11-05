@@ -93,8 +93,9 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 }
 
 - (BOOL)axs_liquidglass_isEnabled {
-    id value = [self axs_liquidglass_valueForKey:@"enabled" defaultValue:@(NO)];
-    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
+    // 装完就要能看到效果：缺键时按开启处理，用户主动关掉才写 false。
+    id value = [self axs_liquidglass_valueForKey:@"enabled" defaultValue:@(YES)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
 }
 
 - (double)axs_liquidglass_blurRadius {
@@ -161,6 +162,11 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     id value = [self axs_liquidglass_valueForKey:key defaultValue:nil];
     if (![value isKindOfClass:[NSNumber class]]) return YES;  // 缺键时按开启处理
     return [value boolValue];
+}
+
+- (BOOL)axs_liquidglass_hideIsland {
+    id value = [self axs_liquidglass_valueForKey:@"hideIsland" defaultValue:@(NO)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
 
 - (unsigned long long)axs_liquidglass_generation {

@@ -1,8 +1,8 @@
 Package: com.heli.liquid
 Name: liquid (HL)
-Version: 6.0.0
+Version: 6.1.0
 Architecture: iphoneos-arm64
-Description: 把系统毛玻璃重做成液态玻璃质感，支持控制中心、Dock、文件夹、通知与小组件；小组件按 30~50MB 内存预算分级，默认零图层描边，避免地图类组件被系统杀掉后空白。
+Description: 把系统毛玻璃重做成液态玻璃质感，覆盖控制中心、Dock、文件夹、通知与小组件。装完桌面会出现 liquid 图标，里面可以调模糊半径、饱和度、乳白浓度、边缘高光，以及各场景开关；小组件按 30~50MB 内存预算分级，默认零图层描边，避免地图类组件被系统杀掉后空白。
 Maintainer: Heli
 Author: Heli
 Section: Heli

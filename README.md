@@ -6,7 +6,29 @@
 - 目标设备：**iPhone 14 Pro（A16）/ iOS 16.3 / 隐根越狱**
 - 打包方案：`THEOS_PACKAGE_SCHEME = rootless`（设备 rootfs 只读，roothide 布局装不进），产物 `iphoneos-arm64`
 - 注入：SpringBoard、MediaRemoteUI、chronod、WidgetRenderer(默认/CarPlay)、ClockAngel
-- 设置面板：`设置 → liquid (HL)`
+- 设置入口：**桌面 `liquid` 图标** + **设置 → liquid (HL)**，两处读写同一个 cfg 域
+
+## 两个设置入口
+
+roothide 的隐藏根会随机改名（`.jbroot-xxxx`），Settings.app 又是系统进程，PreferenceLoader 扫不扫得到 `/var/jb/Library/PreferenceLoader/Preferences` 完全看那台机器上装的是哪个版本的 bootstrap。**所以这一版不再赌 Settings 入口**：
+
+| 入口 | 依赖 | 说明 |
+|---|---|---|
+| 桌面 `liquid` 图标（主） | 只需 `uicache` | 独立 App，一定打得开；postinst 装完自动 uicache + 注销一次 |
+| 设置 → liquid (HL) | PreferenceLoader | 走标准 PreferenceBundle，机器上能扫到就出现 |
+
+两边写的是同一个 `com.heli.liquid` 偏好域，改哪边都一样，**改完即时生效，不用注销**（写入后发 Darwin 通知，插件收到就重载并刷新已经在屏幕上的模糊视图）。
+
+App 的内容：总开关、模糊半径、色彩饱和度、乳白浓度、边缘高光、主屏/控制中心/通知/键盘四个范围开关、隐藏灵动岛、小组件四档强度 + 跳过列表、恢复默认、重启桌面。
+
+## 隐藏灵动岛
+
+iOS 16 的灵动岛在 SpringBoard 里由 `SBIslandContainerView` 承载，个别小版本还会出现 `SBIslandChromeView` / `_SBIslandView`。实现是逐个探测类名，存在才挂 hook（不存在整组跳过，非灵动岛机型不留空 hook），把 `alpha` 压到 0 并关掉触摸：
+
+- 只在 SpringBoard 进程生效（tweak 的 Filter 里本来就只有桌面进程）
+- 关掉开关立刻把 `alpha` 还原成 1，不用注销
+- 再加一层兜底：配置变更时遍历所有 window，类名里带 `Island` 的视图一律处理。私有类改名了也还能命中
+
 
 ## roothide 适配（这一版的重点）
 
@@ -125,6 +147,7 @@ sh build.sh all           # 需要时一次出 rootful / rootless / roothide
 
 装完先 respring，然后按顺序看：
 
+0. **桌面出现 `liquid` 图标**（没出现就是 uicache 没跑到，见下面兜底）
 1. 设置里出现入口，打开"启用插件"，**退出设置再进一次，确认开关状态还在**（这一条直接验证 cfprefsd 那条路径通不通）
 2. 控制中心、通知中心有更厚的模糊
 3. Dock 和文件夹背景有变化（走 `_UIBackdropView` 那条备份路径）
@@ -132,8 +155,15 @@ sh build.sh all           # 需要时一次出 rootful / rootless / roothide
 5. 反复下拉通知中心、左右翻页十几轮，小组件不闪白、不消失（内存压力测试）
 6. 旋转屏幕，高光跟着变尺寸
 7. 关掉"启用插件"，模糊回到系统原样（不需要注销）
+8. 打开"隐藏灵动岛"，灵动岛整块消失；关掉立刻回来
 
 第 4 步不通过就把"小组件处理"往下调一档，再逐项排查是不是某个具体组件的问题。第 5 步出现闪白，说明模式 2 的描边加在了过大的视图上，先降到模式 1 确认，再把组件包名填进跳过列表。第 3 步不通过说明 16.3 的 `_UIBackdropView` 不认 `setBlurRadius:`，需要按真机 dump 的类结构再改。
+
+桌面图标没出来（第 0 步）：
+1. 先看设置里有没有 `liquid (HL)`，有的话直接从那儿进，功能完全一样
+2. 都没有就用 Filza 打开 `/var/jb/Applications/`，确认 `Heli.app` 在不在；在的话手动点开一次
+3. 还是没有：`uicache -p /var/jb/Applications/Heli.app` 再注销一次
+
 
 ## 已知限制
 

@@ -15,7 +15,7 @@
             <key>label</key><string>启用插件</string>
             <key>key</key><string>enabled</string>
             <key>defaults</key><string>com.heli.liquid</string>
-            <key>default</key><false/>
+            <key>default</key><true/>
         </dict>
 
         <dict>
@@ -98,6 +98,19 @@
             <key>cell</key><string>PSSwitchCell</string>
             <key>label</key><string>键盘</string>
             <key>key</key><string>scopeKeyboard</string>
+            <key>defaults</key><string>com.heli.liquid</string>
+            <key>default</key><false/>
+        </dict>
+
+        <dict>
+            <key>cell</key><string>PSGroupCell</string>
+            <key>label</key><string>灵动岛</string>
+            <key>footerText</key><string>开启后灵动岛整块透明，来电、音乐、计时器的胶囊动画也不再显示。适合截图或者想要干净顶栏的时候；关掉立刻恢复。</string>
+        </dict>
+        <dict>
+            <key>cell</key><string>PSSwitchCell</string>
+            <key>label</key><string>隐藏灵动岛</string>
+            <key>key</key><string>hideIsland</string>
             <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><false/>
         </dict>
