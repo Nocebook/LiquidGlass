@@ -13,16 +13,16 @@ static BOOL AxsIslandHidden(void) {
     return [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_hideIsland];
 }
 
-static void AxsIslandApply(UIView *view) {
-    if (!view) return;
+// 参数收 id：Logos 生成的 hook 体是 C++ 上下文，把 self（id）显式转成 UIView*
+// 会触发重载匹配失败，这里在函数内部转换。
+static void AxsIslandApply(id rawView) {
+    if (!rawView) return;
+    UIView *view = (UIView *)rawView;
+    if (![view isKindOfClass:[UIView class]]) return;
+
     BOOL hide = AxsIslandHidden();
-    if (hide) {
-        view.alpha = 0.0;
-        view.userInteractionEnabled = NO;
-    } else {
-        view.alpha = 1.0;
-        view.userInteractionEnabled = YES;
-    }
+    view.alpha = hide ? 0.0 : 1.0;
+    view.userInteractionEnabled = !hide;
 }
 
 /// 兜底扫描：类名里带 Island 的视图一律处理，覆盖上面没枚举到的私有类。
@@ -40,7 +40,29 @@ static void AxsIslandScanView(UIView *view, NSInteger depth) {
 static void AxsIslandScanAllWindows(void) {
     @try {
         UIApplication *application = [UIApplication sharedApplication];
-        for (UIWindow *window in application.windows) {
+        NSMutableArray<UIWindow *> *windows = [NSMutableArray array];
+
+        // windows 在 iOS 15 起被标记弃用，这里走 windowScene；拿不到再用 KVC 兜底，
+        // 避免 -Wdeprecated-declarations 在 -Werror 下直接把构建打断。
+        if (@available(iOS 15.0, *)) {
+            for (UIScene *scene in application.connectedScenes) {
+                if (![scene isKindOfClass:[UIWindowScene class]]) continue;
+                UIWindowScene *windowScene = (UIWindowScene *)scene;
+                [windows addObjectsFromArray:windowScene.windows];
+            }
+        }
+        if (windows.count == 0) {
+            id value = [application valueForKey:@"windows"];
+            if ([value isKindOfClass:[NSArray class]]) {
+                for (id item in (NSArray *)value) {
+                    if ([item isKindOfClass:[UIWindow class]]) {
+                        [windows addObject:item];
+                    }
+                }
+            }
+        }
+
+        for (UIWindow *window in windows) {
             AxsIslandScanView(window, 0);
         }
     } @catch (NSException *exception) {

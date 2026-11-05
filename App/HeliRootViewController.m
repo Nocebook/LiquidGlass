@@ -11,7 +11,8 @@ static BOOL HeliReadBoolValue(NSString *key, BOOL fallback) {
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : fallback;
 }
 
-static BOOL HeliSpawn(NSString *path, NSArray<NSString *> *arguments) {    if (path.length == 0) return NO;
+static BOOL HeliSpawn(NSString *path, NSArray<NSString *> *arguments) {
+    if (path.length == 0) return NO;
     if (![[NSFileManager defaultManager] isExecutableFileAtPath:path]) return NO;
 
     NSMutableArray<NSString *> *all = [NSMutableArray arrayWithObject:path];
@@ -187,6 +188,7 @@ static NSArray<NSString *> *HeliAllKeys(void) {
         [title.topAnchor constraintEqualToAnchor:container.topAnchor],
         [badge.leadingAnchor constraintEqualToAnchor:title.trailingAnchor constant:8.0],
         [badge.centerYAnchor constraintEqualToAnchor:title.centerYAnchor constant:-2.0],
+        [badge.trailingAnchor constraintLessThanOrEqualToAnchor:container.trailingAnchor],
         [badge.widthAnchor constraintEqualToConstant:30.0],
         [badge.heightAnchor constraintEqualToConstant:19.0],
 
