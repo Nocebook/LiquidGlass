@@ -4,7 +4,6 @@
 #import "AxsLiquidGlassEffect.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
-#import "AxsLiquidGlassRim.h"
 #import "AxsLiquidGlassSettings.h"
 #import "AxsLiquidGlassSurface.h"
 
@@ -83,12 +82,16 @@
 
         @try {
             AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
-            AxsLog(@"配置 enabled=%d blur=%.1f sat=%.2f tint=%.2f rim=%.2f widget=%ld island=%d",
+            AxsLog(@"配置 enabled=%d blur=%.1f sat=%.2f tint=%.2f 描边=%.2f 折射=%.2f 膜=%.2f 高光=%.2f 档位=%ld widget=%ld island=%d",
                    [config axs_liquidglass_isEnabled],
                    [config axs_liquidglass_blurRadius],
                    [config axs_liquidglass_saturation],
                    [config axs_liquidglass_tintAlpha],
                    [config axs_liquidglass_rimStrength],
+                   [config axs_liquidglass_meshStrength],
+                   [config axs_liquidglass_fillAlpha],
+                   [config axs_liquidglass_specularStrength],
+                   (long)[config axs_liquidglass_perfMode],
                    (long)[config axs_liquidglass_widgetMode],
                    [config axs_liquidglass_hideIsland]);
         } @catch (NSException *exception) {

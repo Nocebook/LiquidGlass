@@ -1,7 +1,8 @@
 #import "AxsLiquidGlassEffect.h"
 #import "AxsLiquidGlassConfig.h"
 #import "AxsLiquidGlassPrivate.h"
-#import "AxsLiquidGlassRim.h"
+#import "AxsLiquidGlassLens.h"
+#import "AxsLiquidGlassMesh.h"
 #import "AxsLiquidGlassSurface.h"
 
 static char kAxsLiquidGlassApplyingKey;
@@ -9,6 +10,12 @@ static char kAxsLiquidGlassOriginalKey;
 static char kAxsLiquidGlassTrackedKey;
 static char kAxsLiquidGlassRetryKey;
 static char kAxsLiquidGlassWidgetEdgeKey;
+
+@interface AxsLiquidGlassEffect ()
+/// 从自身或最近的祖先上取真实圆角：系统大量卡片是"父视图裁圆角、子视图 0"。
+/// 只看自己会判成直角，玻璃膜和折射网格都会画歪。
++ (CGFloat)axs_liquidglass_radiusForView:(UIView *)view;
+@end
 
 // 小组件进程里唯一的"玻璃感"来源：零新增图层。
 // border 只是 CALayer 的绘制属性，不占额外缓冲区、不新增合成层、也不会让快照失败，
@@ -39,6 +46,19 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
 }
 
 @implementation AxsLiquidGlassEffect
+
++ (CGFloat)axs_liquidglass_radiusForView:(UIView *)view {
+    if (!view) return 0.0;
+    if (view.layer.cornerRadius >= 1.0) return view.layer.cornerRadius;
+    UIView *current = view.superview;
+    for (NSInteger depth = 0; current && depth < 6; depth++) {
+        if (current.layer.cornerRadius >= 1.0 && current.layer.masksToBounds) {
+            return current.layer.cornerRadius;
+        }
+        current = current.superview;
+    }
+    return 0.0;
+}
 
 + (NSHashTable<UIView *> *)axs_liquidglass_registry {
     static NSHashTable<UIView *> *registry;
@@ -89,7 +109,8 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
         objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         objc_setAssociatedObject(view, &kAxsLiquidGlassOriginalKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    [AxsLiquidGlassRim axs_liquidglass_removeFromView:view];
+    [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
+    [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];
     axs_liquidglass_clearWidgetEdge(view);
     [self axs_liquidglass_untrackView:view];
 }
@@ -156,23 +177,38 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
     objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     double rim = [config axs_liquidglass_rimStrength];
+    double fill = [config axs_liquidglass_fillAlpha];
+    double specular = [config axs_liquidglass_specularStrength];
+    double mesh = [config axs_liquidglass_meshStrength];
+    NSInteger perfMode = [config axs_liquidglass_perfMode];
+    CGFloat radius = [self axs_liquidglass_radiusForView:view];
+
     if (isWidget) {
-        // 三档语义要严格区分：1 只调参数、2 加零 layer 描边、3 才允许真正的图层高光。
+        // 三档语义要严格区分：1 只调参数、2 加零 layer 描边、3 才允许真正的图层。
+        // 小组件进程只有 30~50MB 预算，档位 3 也强制走省电参数，不给它上折射网格。
         NSInteger widgetMode = [config axs_liquidglass_widgetMode];
         if (widgetMode >= 3 && rim > 0.001) {
-            [AxsLiquidGlassRim axs_liquidglass_installOnView:view strength:rim];
+            [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:radius
+                                                       fill:fill * 0.55 border:rim
+                                                   specular:specular * 0.5 perfMode:0];
             axs_liquidglass_clearWidgetEdge(view);
         } else if (widgetMode == 2 && rim > 0.001) {
-            [AxsLiquidGlassRim axs_liquidglass_removeFromView:view];
+            [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
             axs_liquidglass_applyWidgetEdge(view, rim);
         } else {
-            [AxsLiquidGlassRim axs_liquidglass_removeFromView:view];
+            [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
             axs_liquidglass_clearWidgetEdge(view);
         }
-    } else if ([AxsLiquidGlassSurface axs_liquidglass_allowsDecorativeLayersForKind:kind] && rim > 0.001) {
-        [AxsLiquidGlassRim axs_liquidglass_installOnView:view strength:rim];
+    } else if ([AxsLiquidGlassSurface axs_liquidglass_allowsDecorativeLayersForKind:kind]) {
+        // 主屏 / 控制中心 / 通知：玻璃膜 + 边缘折射，这一组才是"液态"观感的来源。
+        [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:radius
+                                                   fill:fill border:rim
+                                               specular:specular perfMode:perfMode];
+        [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToView:view radius:radius
+                                                          strength:mesh perfMode:perfMode];
     } else {
-        [AxsLiquidGlassRim axs_liquidglass_removeFromView:view];
+        [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
+        [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];
     }
 
     objc_setAssociatedObject(view, &kAxsLiquidGlassTrackedKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -181,18 +217,18 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
     // 模糊效果设完时视图可能还没排过版，补一次几何同步。
     // 小组件必须同步补齐：渲染窗口只有 8~10 秒，延迟到下一个 runloop 很可能赶不上出快照。
     if (isWidget) {
-        [AxsLiquidGlassRim axs_liquidglass_layoutInView:view];
+        [AxsLiquidGlassLens axs_liquidglass_layoutView:view radius:[self axs_liquidglass_radiusForView:view]];
     } else {
         __weak UIView *weakView = view;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [AxsLiquidGlassRim axs_liquidglass_layoutInView:weakView];
+            [AxsLiquidGlassLens axs_liquidglass_layoutView:weakView radius:[self axs_liquidglass_radiusForView:weakView]];
         });
     }
 }
 
 + (void)axs_liquidglass_layoutTrackedView:(UIView *)view {
     if (![self axs_liquidglass_isTrackedView:view]) return;
-    [AxsLiquidGlassRim axs_liquidglass_layoutInView:view];
+    [AxsLiquidGlassLens axs_liquidglass_layoutView:view radius:[self axs_liquidglass_radiusForView:view]];
 }
 
 + (void)axs_liquidglass_handleEffectChange:(UIVisualEffectView *)view {
@@ -216,7 +252,8 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
 + (void)axs_liquidglass_stripDecorativeLayers {
     NSArray<UIView *> *views = [[self axs_liquidglass_registry] allObjects];
     for (UIView *view in views) {
-        [AxsLiquidGlassRim axs_liquidglass_removeFromView:view];
+        [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
+        [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];
     }
 }
 

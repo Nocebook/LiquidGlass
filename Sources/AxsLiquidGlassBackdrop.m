@@ -1,7 +1,10 @@
 #import "AxsLiquidGlassBackdrop.h"
 #import "AxsLiquidGlassConfig.h"
+#import "AxsLiquidGlassLens.h"
 #import "AxsLiquidGlassLog.h"
+#import "AxsLiquidGlassMesh.h"
 #import "AxsLiquidGlassPrivate.h"
+#import "AxsLiquidGlassSurface.h"
 
 #import <substrate.h>
 #import <QuartzCore/QuartzCore.h>
@@ -11,12 +14,12 @@ static char kAxsLiquidGlassBackdropAppliedKey;
 static void (*axs_liquidglass_origDidMoveToSuperview)(id, SEL);
 static void (*axs_liquidglass_origLayoutSubviews)(id, SEL);
 
-static NSInteger gAxsRimAppliedCount = 0;
-static NSInteger gAxsRimSkippedCount = 0;
-static BOOL gAxsRimLogged = NO;
+static NSInteger gAxsBackdropAppliedCount = 0;
+static NSInteger gAxsBackdropSkippedCount = 0;
+static BOOL gAxsBackdropLogged = NO;
 
 @interface AxsLiquidGlassBackdrop ()
-+ (void)axs_liquidglass_clearRim:(UIView *)view;
++ (void)axs_liquidglass_clear:(UIView *)view;
 @end
 
 static BOOL axs_liquidglass_isWidgetProcess(void) {
@@ -27,7 +30,7 @@ static BOOL axs_liquidglass_isWidgetProcess(void) {
 }
 
 /// 从自身或最近的祖先上找出真实的圆角：系统大量卡片是"父视图裁圆角、
-/// 子视图 cornerRadius=0"，只看自己会判成直角，画出来就是四个硬角。
+/// 子视图 cornerRadius=0"，只看自己会判成直角，玻璃膜和折射网格都会画歪。
 static CGFloat axs_liquidglass_effectiveRadius(UIView *view) {
     if (view.layer.cornerRadius >= 1.0) return view.layer.cornerRadius;
     UIView *current = view.superview;
@@ -95,69 +98,86 @@ static void axs_liquidglass_hookLayoutSubviews(id self, SEL _cmd) {
 
 + (void)axs_liquidglass_applyIfNeeded:(UIView *)view {
     if (!view || ![NSThread isMainThread]) return;
-    // 主线已经处理 UIVisualEffectView，这里避免重复设值。
+    // 主线已经处理 UIVisualEffectView，这里避免重复处理。
+    // UIVisualEffectView 内部那个 _UIVisualEffectBackdropView 本身就是 _UIBackdropView 子类，
+    // 不挡掉就会同一块玻璃被贴两遍膜（既费电又发白）。
     if ([view isKindOfClass:[UIVisualEffectView class]]) return;
+    UIView *ancestor = view.superview;
+    for (NSInteger depth = 0; ancestor && depth < 3; depth++) {
+        if ([ancestor isKindOfClass:[UIVisualEffectView class]]) return;
+        ancestor = ancestor.superview;
+    }
     if (axs_liquidglass_isWidgetProcess()) return;
 
     AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
     if (![config axs_liquidglass_isEnabled]) {
-        [self axs_liquidglass_clearRim:view];
+        [self axs_liquidglass_clear:view];
         return;
     }
 
     double rim = [config axs_liquidglass_rimStrength];
-    if (rim <= 0.01) {
-        [self axs_liquidglass_clearRim:view];
+    double fill = [config axs_liquidglass_fillAlpha];
+    double specular = [config axs_liquidglass_specularStrength];
+    double mesh = [config axs_liquidglass_meshStrength];
+    NSInteger perfMode = [config axs_liquidglass_perfMode];
+
+    if (rim <= 0.001 && fill <= 0.001 && specular <= 0.001) {
+        [self axs_liquidglass_clear:view];
         return;
     }
     if (axs_liquidglass_isKeyboardSurface(view) && ![config axs_liquidglass_scopeEnabled:@"keyboard"]) {
         return;
     }
 
-    NSNumber *applied = objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey);
-    if (applied && fabs([applied doubleValue] - rim) < 0.01) return;
+    // 签名比对：布局回调非常频繁，参数没变就直接返回，避免每帧重建图层。
+    NSString *signature = [NSString stringWithFormat:@"%.1f|%.1f|%.1f|%.1f|%.1f|%ld",
+                           rim, fill, specular, mesh, axs_liquidglass_effectiveRadius(view),
+                           (long)perfMode];
+    NSString *previous = objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey);
+    if ([previous isEqualToString:signature]) {
+        [AxsLiquidGlassLens axs_liquidglass_layoutView:view radius:axs_liquidglass_effectiveRadius(view)];
+        return;
+    }
 
-    // 6.1.0-21 这里找的是 _UIBackdropView 上的 setBlurRadius: —— 那个 selector
-    // 在视图上并不存在（参数在 _UIBackdropViewSettings 上），respondsToSelector
-    // 每次都是 NO，于是整条描边路径从来没跑过。模糊改由 Settings 那边统一处理，
-    // 这里只负责一件在视图层面一定能做到的事：给玻璃加一圈高光边。
     CGFloat radius = axs_liquidglass_effectiveRadius(view);
     if (radius < 4.0) {
-        gAxsRimSkippedCount += 1;
-        if (!gAxsRimLogged && gAxsRimSkippedCount >= 40) {
-            gAxsRimLogged = YES;
-            AxsLog(@"高光：跳过 %ld 个直角表面（累积），已应用 %ld 个",
-                   (long)gAxsRimSkippedCount, (long)gAxsRimAppliedCount);
+        // 直角表面不加描边，否则会在方角上画出一圈硬边。
+        gAxsBackdropSkippedCount += 1;
+        if (!gAxsBackdropLogged && gAxsBackdropSkippedCount >= 40) {
+            gAxsBackdropLogged = YES;
+            AxsLog(@"玻璃膜：跳过 %ld 个直角表面（累积），已应用 %ld 个",
+                   (long)gAxsBackdropSkippedCount, (long)gAxsBackdropAppliedCount);
         }
         return;
     }
 
     @try {
-        view.layer.borderWidth = rim * 1.6;
-        view.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.30 + 0.35 * rim].CGColor;
+        [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:radius
+                                                  fill:fill border:rim
+                                              specular:specular perfMode:perfMode];
+        // Dock / 文件夹的玻璃本体就是这个 backdrop 层，网格直接挂在它上面，
+        // 背景内容会在圆角处真的被弯折 —— 这是"液态"和"调个模糊"的分界线。
+        [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToView:view radius:radius
+                                                          strength:mesh perfMode:perfMode];
     } @catch (NSException *exception) {
         (void)exception;
+        return;
     }
 
-    objc_setAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey, @(rim),
+    objc_setAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey, signature,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [[self axs_liquidglass_registry] addObject:view];
-    gAxsRimAppliedCount += 1;
-    if (gAxsRimAppliedCount == 1) {
-        AxsLog(@"高光：首次应用 %@（半径 %.1f，线宽 %.2f）",
-               NSStringFromClass([view class]), radius, rim * 1.6);
+    gAxsBackdropAppliedCount += 1;
+    if (gAxsBackdropAppliedCount == 1) {
+        AxsLog(@"玻璃膜：首次应用 %@（半径 %.1f，膜 %.2f，边 %.2f，折射 %.2f）",
+               NSStringFromClass([view class]), radius, fill, rim, mesh);
     }
 }
 
-+ (void)axs_liquidglass_clearRim:(UIView *)view {
-    NSNumber *applied = objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey);
-    if (!applied) return;
-    @try {
-        view.layer.borderWidth = 0.0;
-        view.layer.borderColor = NULL;
-    } @catch (NSException *exception) {
-        (void)exception;
-    }
++ (void)axs_liquidglass_clear:(UIView *)view {
+    if (!objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey)) return;
+    [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
+    [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];
     objc_setAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey, nil,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

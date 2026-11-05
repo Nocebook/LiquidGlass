@@ -11,6 +11,13 @@ static const double kAxsLiquidGlassDefaultTintAlpha = 0.28;
 static const double kAxsLiquidGlassDefaultRimStrength = 0.65;
 static const NSInteger kAxsLiquidGlassDefaultWidgetMode = 2;
 
+// 液态层：这一组参数来自 88 液态玻璃（Liquidify）的观感拆解 + LiquidGlassKit 的
+// 折射/菲涅尔取值。目标是"装完就看得出是液态玻璃"，而不是只把模糊调厚一点。
+static const double kAxsLiquidGlassDefaultMeshStrength = 0.60;
+static const double kAxsLiquidGlassDefaultFillAlpha = 0.16;
+static const double kAxsLiquidGlassDefaultSpecular = 0.55;
+static const NSInteger kAxsLiquidGlassDefaultPerfMode = 1;
+
 // 旧默认值：用户没手动调过就原地升级，避免"装了新版本还是没变化"。
 static const double kAxsLiquidGlassLegacyBlurRadius = 46.0;
 static const double kAxsLiquidGlassLegacySaturation = 1.70;
@@ -165,6 +172,28 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 - (double)axs_liquidglass_rimStrength {
     return [self axs_liquidglass_doubleForKey:@"rimStrength" fallback:kAxsLiquidGlassDefaultRimStrength
                                       minimum:0.0 maximum:1.0];
+}
+
+- (double)axs_liquidglass_meshStrength {
+    return [self axs_liquidglass_doubleForKey:@"meshStrength" fallback:kAxsLiquidGlassDefaultMeshStrength
+                                      minimum:0.0 maximum:1.0];
+}
+
+- (double)axs_liquidglass_fillAlpha {
+    return [self axs_liquidglass_doubleForKey:@"fillAlpha" fallback:kAxsLiquidGlassDefaultFillAlpha
+                                      minimum:0.0 maximum:0.40];
+}
+
+- (double)axs_liquidglass_specularStrength {
+    return [self axs_liquidglass_doubleForKey:@"specularStrength" fallback:kAxsLiquidGlassDefaultSpecular
+                                      minimum:0.0 maximum:1.0];
+}
+
+- (NSInteger)axs_liquidglass_perfMode {
+    id value = [self axs_liquidglass_valueForKey:@"perfMode" defaultValue:nil];
+    NSInteger mode = [value isKindOfClass:[NSNumber class]] ? [value integerValue] : kAxsLiquidGlassDefaultPerfMode;
+    if (mode < 0 || mode > 2) mode = kAxsLiquidGlassDefaultPerfMode;
+    return mode;
 }
 
 - (NSInteger)axs_liquidglass_widgetMode {

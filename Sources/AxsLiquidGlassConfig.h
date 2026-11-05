@@ -15,6 +15,15 @@
 - (double)axs_liquidglass_tintAlpha;
 - (double)axs_liquidglass_rimStrength;
 
+/// 边缘折射强度（0~1）：给真实 CABackdropLayer 挂网格，让背景在圆角处被弯折。
+- (double)axs_liquidglass_meshStrength;
+/// 玻璃膜浓度（0~0.4）：整片极淡的乳白，决定"有没有玻璃本体"。
+- (double)axs_liquidglass_fillAlpha;
+/// 镜面高光强度（0~1）：左上角那团柔光。
+- (double)axs_liquidglass_specularStrength;
+/// 性能档位：0 省电（只描边+膜）、1 标准（默认，折射只给小表面）、2 极致（全尺寸折射）。
+- (NSInteger)axs_liquidglass_perfMode;
+
 /// 0 完全跳过小组件，1 只调模糊参数（默认），2 连高光层一起加。
 - (NSInteger)axs_liquidglass_widgetMode;
 /// 命中任一子串就跳过该小组件；只在小组件进程里生效。
