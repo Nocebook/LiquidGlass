@@ -12,6 +12,7 @@ static char kAxsLensBorderKey;
 static char kAxsLensBorderMaskKey;
 static char kAxsLensShadowKey;
 static char kAxsLensSignatureKey;
+static char kAxsLensGeometryKey;
 
 static NSInteger gAxsLensAppliedCount = 0;
 
@@ -189,6 +190,12 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     CGFloat height = CGRectGetHeight(bounds);
     if (width < 1.0 || height < 1.0) return;
 
+    // 尺寸和圆角都没变就直接返回：layoutSubviews 在滚动/展开动画里每帧都调，
+    // 重建描边路径是这个模块里最没必要的一笔开销。
+    NSString *geometry = [NSString stringWithFormat:@"%.1fx%.1f|%.1f", width, height, radius];
+    if ([objc_getAssociatedObject(view, &kAxsLensGeometryKey) isEqual:geometry]) return;
+    objc_setAssociatedObject(view, &kAxsLensGeometryKey, geometry, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     // 用图层自己的坐标（从 0 开始），跟 bounds.origin 解耦，滚动时不会二次偏移。
     container.frame = CGRectMake(0.0, 0.0, width, height);
     container.cornerRadius = MAX(0.0, radius);
@@ -231,6 +238,7 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     objc_setAssociatedObject(view, &kAxsLensBorderMaskKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsLensShadowKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsLensSignatureKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(view, &kAxsLensGeometryKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 @end

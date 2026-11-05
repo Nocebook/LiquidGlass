@@ -45,16 +45,27 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
     objc_setAssociatedObject(view, &kAxsLiquidGlassWidgetEdgeKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+/// 这块表面占窗口面积多少：用来把"药丸级玻璃"和"整屏模糊底"分开。
+static double axs_liquidglass_areaRatio(UIView *view) {
+    UIView *reference = view.window ?: view;
+    CGRect referenceBounds = reference.bounds;
+    double referenceArea = (double)CGRectGetWidth(referenceBounds) * (double)CGRectGetHeight(referenceBounds);
+    if (referenceArea <= 0.0) return 0.0;
+    CGRect bounds = view.bounds;
+    return ((double)CGRectGetWidth(bounds) * (double)CGRectGetHeight(bounds)) / referenceArea;
+}
+
 @implementation AxsLiquidGlassEffect
 
 + (CGFloat)axs_liquidglass_radiusForView:(UIView *)view {
     if (!view) return 0.0;
     if (view.layer.cornerRadius >= 1.0) return view.layer.cornerRadius;
+    // 不少系统卡片把圆角放在祖先上，且不一定设 masksToBounds（用 mask 图层裁）。
+    // 早期版本要求 masksToBounds 才认，结果控制中心里的 UIVisualEffectView 全被判成直角，
+    // 玻璃膜按 0 圆角铺满整块 → 方角上一圈白雾。这里放宽到只看 cornerRadius。
     UIView *current = view.superview;
-    for (NSInteger depth = 0; current && depth < 6; depth++) {
-        if (current.layer.cornerRadius >= 1.0 && current.layer.masksToBounds) {
-            return current.layer.cornerRadius;
-        }
+    for (NSInteger depth = 0; current && depth < 8; depth++) {
+        if (current.layer.cornerRadius >= 1.0) return current.layer.cornerRadius;
         current = current.superview;
     }
     return 0.0;
@@ -187,7 +198,7 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
         // 三档语义要严格区分：1 只调参数、2 加零 layer 描边、3 才允许真正的图层。
         // 小组件进程只有 30~50MB 预算，档位 3 也强制走省电参数，不给它上折射网格。
         NSInteger widgetMode = [config axs_liquidglass_widgetMode];
-        if (widgetMode >= 3 && rim > 0.001) {
+        if (widgetMode >= 3 && rim > 0.001 && cornerRadius >= 4.0) {
             [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                        fill:fill * 0.55 border:rim
                                                    specular:specular * 0.5 perfMode:0];
@@ -201,11 +212,28 @@ static void axs_liquidglass_clearWidgetEdge(UIView *view) {
         }
     } else if ([AxsLiquidGlassSurface axs_liquidglass_allowsDecorativeLayersForKind:kind]) {
         // 主屏 / 控制中心 / 通知：玻璃膜 + 边缘折射，这一组才是"液态"观感的来源。
-        [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
-                                                   fill:fill border:rim
-                                               specular:specular perfMode:perfMode];
-        [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToView:view radius:cornerRadius
-                                                          strength:mesh perfMode:perfMode];
+        // 两条硬约束：
+        //   · 圆角 < 4 的表面不铺膜 —— 方角上铺一层白雾就是"看着很脏"的元凶；
+        //   · 超过窗口 62% 面积的表面是整屏模糊底，铺膜会把整屏洗白，只留模糊。
+        double ratio = axs_liquidglass_areaRatio(view);
+        BOOL tooLarge = ratio > 0.62;
+        if (cornerRadius >= 4.0 && !tooLarge) {
+            [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
+                                                       fill:fill border:rim
+                                                   specular:specular perfMode:perfMode];
+            [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToView:view radius:cornerRadius
+                                                              strength:mesh perfMode:perfMode];
+        } else {
+            [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
+            [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];
+            if (cornerRadius < 4.0) {
+                static BOOL loggedRightAngle = NO;
+                if (!loggedRightAngle) {
+                    loggedRightAngle = YES;
+                    AxsLog(@"玻璃膜：%@ 判定为直角（圆角 %.1f），只保留模糊", NSStringFromClass([view class]), cornerRadius);
+                }
+            }
+        }
     } else {
         [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
         [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];

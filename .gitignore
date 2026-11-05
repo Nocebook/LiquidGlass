@@ -4,3 +4,4 @@ obj/
 *.deb
 .DS_Store
 icon-build/
+art*.zip

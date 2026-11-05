@@ -9,8 +9,22 @@
 static char kAxsMeshAppliedKey;
 static char kAxsMeshOriginalKey;
 static NSInteger gAxsMeshAppliedCount = 0;
-static NSInteger gAxsMeshMissCount = 0;
-static BOOL gAxsMeshLogged = NO;
+
+/// 每一条失败原因只打一次：既能定位问题，又不会把日志刷满。
+/// 6.1.0-26 的日志里整段没有"折射"字样，就是因为下面几个 return 全是静默的。
+static void AxsMeshNote(NSString *reason) {
+    if (reason.length == 0) return;
+    static NSMutableSet<NSString *> *seen;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        seen = [NSMutableSet set];
+    });
+    @synchronized (seen) {
+        if (seen.count >= 12 || [seen containsObject:reason]) return;
+        [seen addObject:reason];
+    }
+    AxsLog(@"折射：%@", reason);
+}
 
 #pragma mark - CAMeshTransform 运行时桥
 
@@ -208,7 +222,11 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
     CGRect bounds = view.bounds;
     CGFloat width = CGRectGetWidth(bounds);
     CGFloat height = CGRectGetHeight(bounds);
-    if (width < 60.0 || height < 60.0 || radius < 6.0) return NO;
+    if (width < 60.0 || height < 60.0) return NO;
+    if (radius < 6.0) {
+        AxsMeshNote(@"表面圆角太小（<6），网格边界无法贴合，跳过");
+        return NO;
+    }
 
     // 省电档位 1：只处理不超过屏幕一半面积的表面。
     // 全屏级别的 backdrop（通知中心整页、锁屏壁纸层）本身已经很贵，再加网格会把 GPU 拉满。
@@ -220,25 +238,48 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
         if (referenceArea > 0.0 && area > referenceArea * 0.55) return NO;
     }
 
-    CALayer *backdrop = AxsFindBackdropLayer(view.layer, 0);
-    if (!backdrop) {
-        gAxsMeshMissCount += 1;
-        if (!gAxsMeshLogged && gAxsMeshMissCount >= 20) {
-            gAxsMeshLogged = YES;
-            AxsLog(@"折射：%ld 个表面没找到 CABackdropLayer（背景层不在预期层级），跳过",
-                   (long)gAxsMeshMissCount);
-        }
+    if (!NSClassFromString(@"CAMeshTransform")) {
+        AxsMeshNote(@"CAMeshTransform 不可用，本系统不支持边缘弯折");
         return NO;
     }
 
+    // 优先挂真实背景层：只有 CABackdropLayer 上的网格才是"把背景折弯"。
+    // 找不到就退回视图自己的图层 —— 网格会作用于整棵子树，视觉上仍然是边缘折射，
+    // 代价只是内容层一起轻微弯折，比"什么都不发生"好得多。
+    CALayer *backdrop = AxsFindBackdropLayer(view.layer, 0);
+    CALayer *target = backdrop;
+    NSString *targetName = nil;
+
+    if (!target) {
+        // 回退只给小块表面用：网格会作用于整棵子树，大面板（尤其带文字输入的）
+        // 弯折后观感容易失控，宁可这一块不折。
+        UIView *reference = view.window ?: view;
+        double referenceArea = (double)CGRectGetWidth(reference.bounds) * (double)CGRectGetHeight(reference.bounds);
+        double area = (double)width * (double)height;
+        if (referenceArea > 0.0 && area > referenceArea * 0.25) {
+            AxsMeshNote([NSString stringWithFormat:
+                         @"%@ 没有 CABackdropLayer 且面积过大，不做弯折", NSStringFromClass([view class])]);
+            return NO;
+        }
+        target = view.layer;
+        targetName = @"自身图层";
+        AxsMeshNote([NSString stringWithFormat:
+                     @"未找到 CABackdropLayer（%@ 有 %lu 个子层），改为挂在视图自身图层",
+                     NSStringFromClass([view class]),
+                     (unsigned long)view.layer.sublayers.count]);
+    }
+
     id mesh = AxsMeshForGeometry(width, height, radius, strength);
-    if (!mesh) return NO;
+    if (!mesh) {
+        AxsMeshNote(@"CAMeshTransform 创建失败（私有构造器不可用或参数被拒）");
+        return NO;
+    }
 
     // 记住原始 grid，关闭功能时原样还回去。
     if (!objc_getAssociatedObject(view, &kAxsMeshOriginalKey)) {
         id original = nil;
         @try {
-            original = [backdrop valueForKey:@"meshTransform"];
+            original = [target valueForKey:@"meshTransform"];
         } @catch (NSException *exception) {
             (void)exception;
         }
@@ -248,14 +289,17 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
         }
     }
 
-    if (!AxsSetMeshTransform(backdrop, mesh)) return NO;
+    if (!AxsSetMeshTransform(target, mesh)) {
+        AxsMeshNote([NSString stringWithFormat:@"%@ 拒绝 meshTransform", NSStringFromClass([target class])]);
+        return NO;
+    }
 
     objc_setAssociatedObject(view, &kAxsMeshAppliedKey, @(strength), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     gAxsMeshAppliedCount += 1;
     if (gAxsMeshAppliedCount == 1) {
-        AxsLog(@"折射：首次生效 %@（%.0fx%.0f，圆角 %.0f，强度 %.2f，层级 %@）",
+        AxsLog(@"折射：首次生效 %@（%.0fx%.0f，圆角 %.0f，强度 %.2f，挂在 %@／%@）",
                NSStringFromClass([view class]), width, height, radius, strength,
-               NSStringFromClass([backdrop class]));
+               targetName ?: @"CABackdropLayer", NSStringFromClass([target class]));
     }
     return YES;
 }
@@ -264,10 +308,14 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
     if (!view) return;
     if (!objc_getAssociatedObject(view, &kAxsMeshAppliedKey)) return;
 
+    // 应用时可能挂在 backdrop 上，也可能退回视图自身图层，还原两边都要试。
     CALayer *backdrop = AxsFindBackdropLayer(view.layer, 0);
     id original = objc_getAssociatedObject(view, &kAxsMeshOriginalKey);
     if (backdrop) {
         AxsSetMeshTransform(backdrop, original);
+    }
+    if (view.layer != backdrop) {
+        AxsSetMeshTransform(view.layer, nil);
     }
     objc_setAssociatedObject(view, &kAxsMeshAppliedKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsMeshOriginalKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);

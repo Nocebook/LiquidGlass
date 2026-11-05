@@ -8,6 +8,7 @@
         <array>
             <string>com.apple.springboard</string>
             <string>com.apple.MediaRemoteUI</string>
+            <string>com.apple.InCallService</string>
             <string>com.apple.chronod</string>
             <string>com.apple.chrono.WidgetRenderer-Default</string>
             <string>com.apple.chrono.WidgetRenderer-CarPlay</string>

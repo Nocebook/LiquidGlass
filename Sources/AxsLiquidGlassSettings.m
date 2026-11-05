@@ -27,15 +27,19 @@ static BOOL AxsSettingsActive(void) {
 }
 
 /// 系统给自己的玻璃表面填的原始半径：控制中心 / Dock / 文件夹 实测是 46。
-/// 直接填 46 等于没改，所以这里取"配置值"和"原始值 × 2.2"里更大的那个。
-/// 小于 8 的一律放行：那是系统本来就不打算模糊的表面（分隔线、纯色底），
-/// 硬加模糊会把不该糊的地方糊掉。
+/// 直接填 46 等于没改，所以把"比配置值小的表面"统一抬到配置值。
+///
+/// 这个函数必须幂等：setter 会被反复调用，早期版本写成 max(配置, 原值 × 2.2)，
+/// 同一块表面第二轮就 46 → 120 → 264，半径一轮轮乘上去，GPU 直接被打满
+/// —— 日志里那句 "blur: 120.0 -> 220.0" 就是这么来的。
+/// 现在只做"抬到下限"，再调多少次结果都一样；上限 176 保住画质与耗电的平衡。
+/// 小于 8 的一律放行：那是系统本来就不打算模糊的表面（分隔线、纯色底）。
 static double AxsTargetBlur(double original) {
     if (original < 8.0) return original;
     double configured = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_blurRadius];
-    double floor = original * 2.2;
-    double target = configured > floor ? configured : floor;
-    return target > 220.0 ? 220.0 : target;
+    if (configured < 8.0) return original;
+    double target = configured > original ? configured : original;
+    return target > 176.0 ? 176.0 : target;
 }
 
 static void AxsLogOnceForClass(id settings, double before, double after) {
