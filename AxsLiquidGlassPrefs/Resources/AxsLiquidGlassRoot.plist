@@ -368,7 +368,7 @@
 			<key>label</key>
 			<string>小组件</string>
 			<key>footerText</key>
-			<string>小组件进程内存只有 30~50MB、渲染窗口 8~10 秒，超限会被系统杀掉并直接空白。默认「边缘折光」不新增任何图层，只改模糊参数和描边；「完整效果」会加高光图层，少数组件可能撑不住，出问题就退回上一档，或把包名填进跳过列表。</string>
+			<string>小组件的模糊一律交给系统原样渲染：快照进程里背景是空的，替换模糊会直接渲成白块（白屏就是这么来的）。档位只控制装饰：跳过 / 无装饰 / 零图层描边（推荐）/ 描边加高光图层（实验）。某个组件出问题就退回上一档，或把包名填进跳过列表。</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -391,8 +391,8 @@
 			<key>validTitles</key>
 			<array>
 				<string>完全跳过</string>
-				<string>仅调参数</string>
-				<string>边缘折光（推荐）</string>
+				<string>无装饰</string>
+				<string>边缘描边（推荐）</string>
 				<string>完整效果（实验）</string>
 			</array>
 		</dict>

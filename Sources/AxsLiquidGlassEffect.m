@@ -173,34 +173,36 @@ static double axs_liquidglass_areaRatio(UIView *view) {
     }
 
     AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
-    double radius = [config axs_liquidglass_blurRadius];
-    double saturation = [config axs_liquidglass_saturation];
-    double tintAlpha = [config axs_liquidglass_tintAlpha];
-    if (isWidget) {
-        // widget 进程只有 30~50MB 可用，模糊半径直接决定 backdrop 的采样缓冲区大小。
-        // 主屏 46 在这里太贵，压到 28 并收窄饱和度，视觉仍成立但内存留出余量。
-        radius = MIN(radius, 28.0);
-        saturation = MIN(saturation, 1.5);
-        tintAlpha = MIN(tintAlpha, 0.06);
-    }
 
-    // 通知与弹窗的底色透明度：跟 Liquidify 的"通知中心透明度"同语义，
-    // 1.0 原样，调低后通知底更透、壁纸更明显。只作用于通知和上下文菜单。
-    if (kind == AxsLiquidGlassSurfaceKindAlert || kind == AxsLiquidGlassSurfaceKindContextMenu) {
-        tintAlpha *= [config axs_liquidglass_alertsOpacity];
-    }
+    // 小组件进程一律不动 effect。白屏的根因就在这：
+    // WidgetKit 出快照时背景是空的，_UICustomBlurEffect 会在快照进程里新建一条
+    // backdrop 渲染链 —— 没有壁纸可采样，直接渲成白块；同时 30~50MB 的内存预算
+    // 也扛不住这条链，超限进程被杀，系统拿不到快照，同样渲染成白块。
+    // 所以小组件档位全部改成纯装饰语义：描边与高光都是零 backdrop 成本的。
+    if (!isWidget) {
+        double radius = [config axs_liquidglass_blurRadius];
+        double saturation = [config axs_liquidglass_saturation];
+        double tintAlpha = [config axs_liquidglass_tintAlpha];
 
-    UIVisualEffect *effect = [self axs_liquidglass_makeEffectWithRadius:radius
-                                                            saturation:saturation
-                                                             tintAlpha:tintAlpha];
-    if (!effect) return;    if (!objc_getAssociatedObject(view, &kAxsLiquidGlassOriginalKey)) {
-        id original = view.effect ?: (id)[NSNull null];
-        objc_setAssociatedObject(view, &kAxsLiquidGlassOriginalKey, original, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
+        // 通知与弹窗的底色透明度：跟 Liquidify 的"通知中心透明度"同语义，
+        // 1.0 原样，调低后通知底更透、壁纸更明显。只作用于通知和上下文菜单。
+        if (kind == AxsLiquidGlassSurfaceKindAlert || kind == AxsLiquidGlassSurfaceKindContextMenu) {
+            tintAlpha *= [config axs_liquidglass_alertsOpacity];
+        }
 
-    objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    view.effect = effect;
-    objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        UIVisualEffect *effect = [self axs_liquidglass_makeEffectWithRadius:radius
+                                                                 saturation:saturation
+                                                                  tintAlpha:tintAlpha];
+        if (!effect) return;
+        if (!objc_getAssociatedObject(view, &kAxsLiquidGlassOriginalKey)) {
+            id original = view.effect ?: (id)[NSNull null];
+            objc_setAssociatedObject(view, &kAxsLiquidGlassOriginalKey, original, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+
+        objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        view.effect = effect;
+        objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
 
     double rim = [config axs_liquidglass_rimStrength];
     double fill = [config axs_liquidglass_fillAlpha];
@@ -210,15 +212,23 @@ static double axs_liquidglass_areaRatio(UIView *view) {
     CGFloat cornerRadius = [self axs_liquidglass_radiusForView:view];
 
     if (isWidget) {
-        // 三档语义要严格区分：1 只调参数、2 加零 layer 描边、3 才允许真正的图层。
-        // 小组件进程只有 30~50MB 预算，档位 3 也强制走省电参数，不给它上折射网格。
+        // 旧版本可能在小组件进程里换过 effect：还回去，清掉白屏残留。
+        id originalEffect = objc_getAssociatedObject(view, &kAxsLiquidGlassOriginalKey);
+        if (originalEffect) {
+            objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+            view.effect = (originalEffect == [NSNull null]) ? nil : (UIVisualEffect *)originalEffect;
+            objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+            objc_setAssociatedObject(view, &kAxsLiquidGlassOriginalKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+        // 档位语义（effect 一律不替换）：1 无装饰、2 零 layer 描边、3 描边 + 高光图层。
+        // 档位 3 也强制走省电参数，不给它上折射网格。
         NSInteger widgetMode = [config axs_liquidglass_widgetMode];
         if (widgetMode >= 3 && rim > 0.001 && cornerRadius >= 4.0) {
             [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                        fill:fill * 0.55 border:rim
                                                    specular:specular * 0.5 perfMode:0];
             axs_liquidglass_clearWidgetEdge(view);
-        } else if (widgetMode == 2 && rim > 0.001) {
+        } else if (widgetMode >= 2 && rim > 0.001) {
             [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
             axs_liquidglass_applyWidgetEdge(view, rim);
         } else {
