@@ -1,4 +1,8 @@
 include ../AxsLiquidGlassBuild.mk
+# 注入型组件（tweak / PreferenceBundle）必须是 arm64e，因为 SpringBoard、
+# Preferences.app 都是 arm64e 进程，加载不了 arm64。但桌面 App 本身是
+# 独立进程，保持 arm64 更稳（arm64e 应用对签名更挑剔，容易点不开）。
+ARCHS = arm64
 include $(THEOS)/makefiles/common.mk
 
 APPLICATION_NAME = Heli
