@@ -49,7 +49,9 @@ jobs:
       - name: Bump Package Version
         id: bump
         run: |
-          VERSION="1.0.0-${{ github.run_number }}"
+          BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
+          [ -n "$BASE" ] || BASE="6.1.0"
+          VERSION="${BASE}-${{ github.run_number }}"
           echo "Using version: $VERSION"
           sed -i '' "s/^Version: .*/Version: ${VERSION}/" control
           echo "package_version=${VERSION}" >> "$GITHUB_OUTPUT"
