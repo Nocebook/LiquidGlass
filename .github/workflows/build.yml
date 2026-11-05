@@ -25,11 +25,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 设备上 dpkg 的 rootfs 只读，roothide 布局装不进去。
-          # 改打 rootless 布局（var/jb/...），RootHide 有兼容层且 var 分区可写。
-          - build_variant: rootless
-          # - build_variant: roothide
-          # - build_variant: rootful
+          # 目标设备是 roothide（隐根）：必须用 roothide scheme 编译，
+          # 让 Theos 跑一遍 roothide patcher，dylib 里的依赖路径才会指向 jbroot。
+          # 用 rootless scheme 编出来的包在 roothide 上虽然能装，
+          # 但 dylib 没打过补丁，注入器加载不到真正的隐藏根。
+          - build_variant: roothide
 
     steps:
       - name: Setup Xcode
@@ -108,10 +108,33 @@ jobs:
             echo "app bundle: $app_path"
             ls -la "$app_path"
 
+            # 隐根硬校验：roothide 的 rootfs 是只读的，
+            # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。
+            python3 - "$stage" <<'PY'
+import os, sys
+stage = sys.argv[1]
+bad = []
+for root, dirs, files in os.walk(stage):
+    rel = os.path.relpath(root, stage)
+    if rel == ".":
+        continue
+    if rel.split(os.sep)[0] not in ("var", "DEBIAN"):
+        bad.append(rel)
+    if rel.split(os.sep)[0] == "var" and not rel.startswith(os.path.join("var", "jb")):
+        bad.append(rel)
+if bad:
+    print("ERROR: 以下路径不在 var/jb 下，roothide 装不进只读 rootfs：")
+    for b in bad:
+        print("   !", b)
+    sys.exit(1)
+print("path check: all entries under var/jb")
+PY
+
             dpkg-deb -b "$stage" "$deb"
             rm -rf "$stage"
             echo "--- $deb ---"
-            dpkg-deb -f "$deb" Package Architecture Version
+            dpkg-deb -f "$deb" Package Architecture Version Depends
+            dpkg-deb -c "$deb" | sed -n '1,60p'
           done
           echo "=== .deb files ==="
           find ./packages -name "*.deb" -type f

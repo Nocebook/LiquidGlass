@@ -1,27 +1,39 @@
 #!/bin/sh
 set +e
 
-JB="/var/jb"
-[ -d "$JB" ] || JB=""
+find_jb() {
+    if [ -n "${JBROOT:-}" ] && [ -d "$JBROOT/usr" ]; then
+        printf '%s' "$JBROOT"
+        return 0
+    fi
+    for candidate in /var/jb /var/containers/Bundle/Application/.jbroot-*; do
+        if [ -d "$candidate/usr" ] || [ -d "$candidate/Library/MobileSubstrate" ]; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+    printf ''
+}
+
+JB="$(find_jb)"
 
 UICACHE=""
-for candidate in "${JB}/usr/bin/uicache" /usr/bin/uicache; do
-    if [ -x "$candidate" ]; then
-        UICACHE="$candidate"
-        break
-    fi
+for candidate in "${JB}/usr/bin/uicache" /var/jb/usr/bin/uicache /usr/bin/uicache; do
+    [ -n "$candidate" ] && [ -x "$candidate" ] && UICACHE="$candidate" && break
 done
+if [ -z "$UICACHE" ]; then
+    UICACHE="$(command -v uicache 2>/dev/null)"
+fi
 
 if [ -n "$UICACHE" ]; then
-    "$UICACHE" -p "${JB}/Applications/Heli.app" >/dev/null 2>&1
+    for app in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app; do
+        [ -n "$app" ] && "$UICACHE" -p "$app" >/dev/null 2>&1
+    done
 fi
 
 KILLALL=""
-for candidate in "${JB}/usr/bin/killall" /usr/bin/killall; do
-    if [ -x "$candidate" ]; then
-        KILLALL="$candidate"
-        break
-    fi
+for candidate in "${JB}/usr/bin/killall" /var/jb/usr/bin/killall /usr/bin/killall; do
+    [ -n "$candidate" ] && [ -x "$candidate" ] && KILLALL="$candidate" && break
 done
 
 if [ -n "$KILLALL" ]; then
