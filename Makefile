@@ -6,7 +6,7 @@ FINALPACKAGE = 1
 # build.sh 会用命令行变量覆盖这里，直接 make 时默认出 roothide 包。
 THEOS_PACKAGE_SCHEME ?= roothide
 
-ARCHS = arm64 arm64e
+ARCHS = arm64
 
 # Share the SDK and deployment targets with the PreferenceBundle.
 include AxsLiquidGlassBuild.mk
