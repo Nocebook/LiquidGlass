@@ -79,13 +79,27 @@ static NSString *axs_liquidglass_processName(void) {
             [name containsString:@"moduleview"] || [name containsString:@"sbcc"]) {
             return AxsLiquidGlassSurfaceKindControlCenter;
         }
+        // 上下文菜单在 alert 之前判定：长按菜单的类名同时能命中下面的 platter。
+        if ([name containsString:@"contextmenu"]) {
+            return AxsLiquidGlassSurfaceKindContextMenu;
+        }
+        if ([name containsString:@"searchpill"] || [name containsString:@"sbsearch"]) {
+            return AxsLiquidGlassSurfaceKindSearchPill;
+        }
+        if ([name containsString:@"applibrary"]) {
+            return AxsLiquidGlassSurfaceKindAppLibrary;
+        }
+        if ([name containsString:@"dock"]) {
+            return AxsLiquidGlassSurfaceKindDock;
+        }
+        if ([name containsString:@"folder"]) {
+            return AxsLiquidGlassSurfaceKindFolder;
+        }
         if ([name containsString:@"notification"] || [name containsString:@"banner"] ||
-            [name containsString:@"contextmenu"] ||
             [name containsString:@"platter"] || [name containsString:@"alertcontroller"]) {
             return AxsLiquidGlassSurfaceKindAlert;
         }
-        if ([name containsString:@"dock"] || [name containsString:@"folder"] ||
-            [name containsString:@"sbicon"] || [name containsString:@"homescreen"]) {
+        if ([name containsString:@"sbicon"] || [name containsString:@"homescreen"]) {
             return AxsLiquidGlassSurfaceKindHome;
         }
         current = current.superview;
@@ -96,6 +110,11 @@ static NSString *axs_liquidglass_processName(void) {
 + (NSString *)axs_liquidglass_scopeForKey:(AxsLiquidGlassSurfaceKind)kind {
     switch (kind) {
         case AxsLiquidGlassSurfaceKindHome: return @"home";
+        case AxsLiquidGlassSurfaceKindDock: return @"dock";
+        case AxsLiquidGlassSurfaceKindFolder: return @"folder";
+        case AxsLiquidGlassSurfaceKindSearchPill: return @"searchPill";
+        case AxsLiquidGlassSurfaceKindAppLibrary: return @"appLibrary";
+        case AxsLiquidGlassSurfaceKindContextMenu: return @"contextMenu";
         case AxsLiquidGlassSurfaceKindControlCenter: return @"controlCenter";
         case AxsLiquidGlassSurfaceKindAlert: return @"alerts";
         case AxsLiquidGlassSurfaceKindKeyboard: return @"keyboard";

@@ -169,6 +169,11 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
                                       minimum:0.0 maximum:0.60];
 }
 
+- (double)axs_liquidglass_alertsOpacity {
+    return [self axs_liquidglass_doubleForKey:@"alertsOpacity" fallback:1.0
+                                      minimum:0.2 maximum:1.0];
+}
+
 - (double)axs_liquidglass_rimStrength {
     return [self axs_liquidglass_doubleForKey:@"rimStrength" fallback:kAxsLiquidGlassDefaultRimStrength
                                       minimum:0.0 maximum:1.0];

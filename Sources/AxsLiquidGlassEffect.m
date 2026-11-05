@@ -184,12 +184,16 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         tintAlpha = MIN(tintAlpha, 0.06);
     }
 
+    // 通知与弹窗的底色透明度：跟 Liquidify 的"通知中心透明度"同语义，
+    // 1.0 原样，调低后通知底更透、壁纸更明显。只作用于通知和上下文菜单。
+    if (kind == AxsLiquidGlassSurfaceKindAlert || kind == AxsLiquidGlassSurfaceKindContextMenu) {
+        tintAlpha *= [config axs_liquidglass_alertsOpacity];
+    }
+
     UIVisualEffect *effect = [self axs_liquidglass_makeEffectWithRadius:radius
                                                             saturation:saturation
                                                              tintAlpha:tintAlpha];
-    if (!effect) return;
-
-    if (!objc_getAssociatedObject(view, &kAxsLiquidGlassOriginalKey)) {
+    if (!effect) return;    if (!objc_getAssociatedObject(view, &kAxsLiquidGlassOriginalKey)) {
         id original = view.effect ?: (id)[NSNull null];
         objc_setAssociatedObject(view, &kAxsLiquidGlassOriginalKey, original, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }

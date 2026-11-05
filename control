@@ -1,8 +1,8 @@
 Package: com.heli.liquid
 Name: liquid (HL)
-Version: 6.2.1
+Version: 6.3.0
 Architecture: iphoneos-arm64
-Description: 把系统毛玻璃重做成液态玻璃：更强的模糊与饱和度、整片玻璃膜、定向描边与圆角边缘折射，覆盖控制中心、Dock、文件夹、通知、弹窗与小组件。锁屏与整屏背景虚化完全交给系统，动画期间不改半径，避免上滑解锁卡死。设置里可调全部参数、按场景开关、隐藏灵动岛。
+Description: 把系统毛玻璃重做成液态玻璃：更强的模糊与饱和度、整片玻璃膜、定向描边与圆角边缘折射，覆盖主屏、Dock、文件夹、搜索胶囊、资源库、上下文菜单、控制中心、通知、弹窗与小组件，全部场景独立开关，通知底色可调透明度。锁屏与整屏背景虚化完全交给系统，动画期间不改半径，避免上滑解锁卡死。完全免费，无需任何激活码。
 Maintainer: Heli
 Author: Heli
 Section: Heli

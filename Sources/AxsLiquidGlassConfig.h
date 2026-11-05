@@ -23,6 +23,8 @@
 - (double)axs_liquidglass_specularStrength;
 /// 性能档位：0 省电（只描边+膜）、1 标准（默认，折射只给小表面）、2 极致（全尺寸折射）。
 - (NSInteger)axs_liquidglass_perfMode;
+/// 通知与弹窗的底色透明度（0.2~1.0）：1.0 原样，越低通知底越透。
+- (double)axs_liquidglass_alertsOpacity;
 
 /// 0 完全跳过小组件，1 只调模糊参数（默认），2 连高光层一起加。
 - (NSInteger)axs_liquidglass_widgetMode;

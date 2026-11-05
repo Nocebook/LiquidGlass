@@ -4,9 +4,14 @@
 
 typedef NS_ENUM(NSInteger, AxsLiquidGlassSurfaceKind) {
     AxsLiquidGlassSurfaceKindNone = 0,
-    AxsLiquidGlassSurfaceKindHome,          // 主屏、Dock、文件夹
+    AxsLiquidGlassSurfaceKindHome,          // 主屏图标层
+    AxsLiquidGlassSurfaceKindDock,
+    AxsLiquidGlassSurfaceKindFolder,
+    AxsLiquidGlassSurfaceKindSearchPill,    // 主屏搜索胶囊
+    AxsLiquidGlassSurfaceKindAppLibrary,    // 资源库
     AxsLiquidGlassSurfaceKindControlCenter, // 控制中心模块
     AxsLiquidGlassSurfaceKindAlert,         // 通知、弹窗、上下文菜单、锁屏播放器
+    AxsLiquidGlassSurfaceKindContextMenu,   // 长按弹出的上下文菜单
     AxsLiquidGlassSurfaceKindKeyboard,
     AxsLiquidGlassSurfaceKindWidget,
     /// 锁屏。它的模糊是被"上滑进度"逐帧驱动的：改它的半径等于把解锁动画按死在每一帧上，

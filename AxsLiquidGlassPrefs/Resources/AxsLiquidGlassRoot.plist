@@ -212,15 +212,75 @@
 			<key>label</key>
 			<string>作用范围</string>
 			<key>footerText</key>
-			<string>键盘默认关闭：高光会压住候选字。</string>
+			<string>键盘默认关闭：高光会压住候选字。锁屏的模糊是解锁动画的时间轴，固定交给系统，不提供开关。</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>主屏、Dock 与文件夹</string>
+			<string>主屏</string>
 			<key>key</key>
 			<string>scopeHome</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Dock</string>
+			<key>key</key>
+			<string>scopeDock</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>文件夹</string>
+			<key>key</key>
+			<string>scopeFolder</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>搜索胶囊</string>
+			<key>key</key>
+			<string>scopeSearchPill</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>资源库</string>
+			<key>key</key>
+			<string>scopeAppLibrary</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>上下文菜单</string>
+			<key>key</key>
+			<string>scopeContextMenu</string>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
 			<key>default</key>
@@ -249,6 +309,26 @@
 			<string>com.heli.liquid</string>
 			<key>default</key>
 			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSTitleValueCell</string>
+			<key>cellClass</key>
+			<string>AxsLiquidGlassSliderCell</string>
+			<key>label</key>
+			<string>通知底色透明度</string>
+			<key>key</key>
+			<string>alertsOpacity</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.2</real>
+			<key>max</key>
+			<real>1.0</real>
+			<key>decimals</key>
+			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>cell</key>
