@@ -12,6 +12,7 @@
 //
 // 每个回调都包 @try：在 WidgetRenderer / chronod 这类扩展进程里，一个未捕获的
 // Objective-C 异常不是"少个效果"，而是整个进程被杀 → 桌面小组件直接空白。
+%group AxsLiquidGlassEffectGroup
 %hook UIVisualEffectView
 
 - (id)initWithEffect:(UIVisualEffect *)effect {
@@ -35,6 +36,7 @@
     }
 }
 
+%end
 %end
 
 // layoutSubviews / didMoveToSuperview 是 UIView 的实现，UIVisualEffectView 不一定覆写。
@@ -66,6 +68,9 @@
 %end
 
 %ctor {
+    // 自定义 %ctor 后 Logos 不再自动初始化默认组，所有 hook 都必须显式 %init。
+    %init(AxsLiquidGlassEffectGroup);
+
     @autoreleasepool {
         // 读取配置快照；这里不写默认值，避免所有进程都去动偏好。
         [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_addReloadHandler:^{
