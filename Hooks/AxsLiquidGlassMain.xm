@@ -7,8 +7,16 @@
 
 // 系统所有毛玻璃最终都落在 UIVisualEffectView 上，从这一层切入
 // 比逐个 hook 控制中心/文件夹/Dock 稳，也不会漏掉新系统新增的表面。
-// setEffect: 是 UIVisualEffectView 自己实现的方法，挂在这里不会牵连其他 UIView。
+// initWithEffect: / setEffect: 都是 UIVisualEffectView 自己实现的方法，挂在这里不会牵连其他 UIView。
 %hook UIVisualEffectView
+
+- (id)initWithEffect:(UIVisualEffect *)effect {
+    self = %orig;
+    if (self) {
+        [AxsLiquidGlassEffect axs_liquidglass_handleEffectChange:self];
+    }
+    return self;
+}
 
 - (void)setEffect:(UIVisualEffect *)effect {
     %orig;

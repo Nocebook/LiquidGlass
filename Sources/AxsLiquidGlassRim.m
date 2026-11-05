@@ -3,7 +3,6 @@
 
 static char kAxsLiquidGlassSheenKey;
 static char kAxsLiquidGlassEdgeKey;
-static char kAxsLiquidGlassStrengthKey;
 
 @implementation AxsLiquidGlassRim
 
@@ -25,7 +24,7 @@ static char kAxsLiquidGlassStrengthKey;
         [view.layer addSublayer:sheen];
         objc_setAssociatedObject(view, &kAxsLiquidGlassSheenKey, sheen, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    // 高光从左上下压，到中段就散掉；alpha 跟着强度走，不做整块蒙白。
+    // 光从左上进来，到中段就散干净；alpha 跟着强度走，不做整块蒙白。
     CGFloat highlight = (CGFloat)(0.16 * clamped);
     sheen.colors = @[
         (id)[UIColor colorWithWhite:1.0 alpha:highlight].CGColor,
@@ -46,7 +45,6 @@ static char kAxsLiquidGlassStrengthKey;
     edge.strokeColor = [UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.22 * clamped)].CGColor;
     edge.lineWidth = 1.0;
 
-    objc_setAssociatedObject(view, &kAxsLiquidGlassStrengthKey, @(clamped), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [self axs_liquidglass_layoutInView:view];
 }
 
@@ -62,7 +60,6 @@ static char kAxsLiquidGlassStrengthKey;
         [edge removeFromSuperlayer];
         objc_setAssociatedObject(view, &kAxsLiquidGlassEdgeKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    objc_setAssociatedObject(view, &kAxsLiquidGlassStrengthKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 + (BOOL)axs_liquidglass_hasRim:(UIView *)view {
@@ -76,18 +73,19 @@ static char kAxsLiquidGlassStrengthKey;
     if (!sheen && !edge) return;
 
     CGRect bounds = view.bounds;
-    if (CGRectGetWidth(bounds) < 1.0 || CGRectGetHeight(bounds) < 1.0) return;
+    CGFloat width = CGRectGetWidth(bounds);
+    CGFloat height = CGRectGetHeight(bounds);
+    if (width < 1.0 || height < 1.0) return;
 
-    // 高光跟着 bounds 走，但只铺上半部分，避免整块玻璃发白。
-    CGRect sheenFrame = CGRectMake(0.0, 0.0, CGRectGetWidth(bounds), CGRectGetHeight(bounds));
-    sheen.frame = sheenFrame;
+    // 图层坐标从 0 开始，跟 bounds.origin 解耦，避免二次偏移。
+    CGRect localRect = CGRectMake(0.0, 0.0, width, height);
+    sheen.frame = localRect;
 
     CGFloat radius = view.layer.cornerRadius;
-    if (radius <= 0.0) radius = 0.0;
-    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(bounds, 0.5, 0.5)
+    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectInset(localRect, 0.5, 0.5)
                                                     cornerRadius:MAX(0.0, radius - 0.5)];
+    edge.frame = localRect;
     edge.path = path.CGPath;
-    edge.frame = bounds;
 }
 
 @end
