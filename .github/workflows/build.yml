@@ -99,6 +99,11 @@ jobs:
             chmod 755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/postrm" 2>/dev/null || true
             chmod -R go-w "$stage/DEBIAN"
 
+            # roothide scheme 出的是 rootfs 布局（/Library、/Applications），
+            # 而 RootHide Bootstrap 是 rootless 布局，rootfs 只读装不进。
+            # 这里统一挪进 var/jb，dylib 的 jbroot 解析不受移动影响。
+            python3 tools/relocate_to_jbroot.py "$stage"
+
             app_path="$(find "$stage" -maxdepth 5 -type d -name 'Heli.app' | head -n 1)"
             if [ -z "$app_path" ]; then
               echo "ERROR: Heli.app 没有打进包，桌面不会有设置图标"
@@ -117,6 +122,14 @@ jobs:
             echo "--- $deb ---"
             dpkg-deb -f "$deb" Package Architecture Version Depends
             dpkg-deb -c "$deb" | sed -n '1,60p'
+            # theos 的 roothide scheme 会把架构写进文件名，统一成 iphoneos-arm64
+            case "$deb" in
+              *_iphoneos-arm64e.deb)
+                fixed="${deb%_iphoneos-arm64e.deb}_iphoneos-arm64.deb"
+                mv -f "$deb" "$fixed"
+                echo "renamed: $fixed"
+                ;;
+            esac
           done
           echo "=== .deb files ==="
           find ./packages -name "*.deb" -type f
