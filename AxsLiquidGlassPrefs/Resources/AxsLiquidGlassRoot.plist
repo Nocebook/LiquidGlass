@@ -26,12 +26,12 @@
         <dict>
             <key>cell</key><string>PSTitleValueCell</string>
             <key>cellClass</key><string>AxsLiquidGlassSliderCell</string>
-            <key>label</key><string>模糊半径</string>
+            <key>label</key><string>模糊强度</string>
             <key>key</key><string>blurRadius</string>
             <key>defaults</key><string>com.heli.liquid</string>
-            <key>default</key><real>46.0</real>
-            <key>min</key><real>12.0</real>
-            <key>max</key><real>80.0</real>
+            <key>default</key><real>120.0</real>
+            <key>min</key><real>40.0</real>
+            <key>max</key><real>200.0</real>
             <key>decimals</key><integer>0</integer>
         </dict>
         <dict>
@@ -40,9 +40,9 @@
             <key>label</key><string>色彩饱和度</string>
             <key>key</key><string>saturation</string>
             <key>defaults</key><string>com.heli.liquid</string>
-            <key>default</key><real>1.7</real>
+            <key>default</key><real>1.9</real>
             <key>min</key><real>1.0</real>
-            <key>max</key><real>2.2</real>
+            <key>max</key><real>2.5</real>
             <key>decimals</key><integer>1</integer>
         </dict>
         <dict>
@@ -51,18 +51,18 @@
             <key>label</key><string>乳白浓度</string>
             <key>key</key><string>tintAlpha</string>
             <key>defaults</key><string>com.heli.liquid</string>
-            <key>default</key><real>0.06</real>
+            <key>default</key><real>0.28</real>
             <key>min</key><real>0.0</real>
-            <key>max</key><real>0.2</real>
+            <key>max</key><real>0.6</real>
             <key>decimals</key><integer>2</integer>
         </dict>
         <dict>
             <key>cell</key><string>PSTitleValueCell</string>
             <key>cellClass</key><string>AxsLiquidGlassSliderCell</string>
-            <key>label</key><string>高光强度</string>
+            <key>label</key><string>边缘高光</string>
             <key>key</key><string>rimStrength</string>
             <key>defaults</key><string>com.heli.liquid</string>
-            <key>default</key><real>0.35</real>
+            <key>default</key><real>0.65</real>
             <key>min</key><real>0.0</real>
             <key>max</key><real>1.0</real>
             <key>decimals</key><integer>2</integer>

@@ -14,21 +14,49 @@ static void (*axs_liquidglass_origSetColorTint)(id, SEL, id);
 static void (*axs_liquidglass_origApplySettings)(id, SEL, id);
 
 static BOOL gAxsSettingsInstalled = NO;
-static BOOL gAxsLoggedFirstApply = NO;
+
+// 每个 settings 对象只做一次"整体改写"，避免 applySettings 反复调用导致
+// 模糊半径被一轮轮乘上去（46 → 120 → 260 → …）。
+static char kAxsSettingsTouchedKey;
+
+// 记录日志用：前若干个不同 settings 类的实测数值，数量够了就停，避免刷爆日志。
+static NSMutableSet<NSString *> *gAxsLoggedClasses;
 
 static BOOL AxsSettingsActive(void) {
     return [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_isEnabled];
 }
 
+/// 系统给自己的玻璃表面填的原始半径：控制中心 / Dock / 文件夹 实测是 46。
+/// 直接填 46 等于没改，所以这里取"配置值"和"原始值 × 2.2"里更大的那个。
+/// 小于 8 的一律放行：那是系统本来就不打算模糊的表面（分隔线、纯色底），
+/// 硬加模糊会把不该糊的地方糊掉。
+static double AxsTargetBlur(double original) {
+    if (original < 8.0) return original;
+    double configured = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_blurRadius];
+    double floor = original * 2.2;
+    double target = configured > floor ? configured : floor;
+    return target > 220.0 ? 220.0 : target;
+}
+
+static void AxsLogOnceForClass(id settings, double before, double after) {
+    if (!settings) return;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        gAxsLoggedClasses = [NSMutableSet set];
+    });
+    NSString *name = NSStringFromClass([settings class]);
+    @synchronized (gAxsLoggedClasses) {
+        if (gAxsLoggedClasses.count >= 8 || [gAxsLoggedClasses containsObject:name]) return;
+        [gAxsLoggedClasses addObject:name];
+    }
+    AxsLog(@"settings %@ blur: %.1f -> %.1f", name, before, after);
+}
+
 static void AxsHookSetBlurRadius(id self, SEL _cmd, double radius) {
     double value = radius;
-    // 系统原本不模糊的表面（radius≈0）原样放行，避免给不该模糊的区域硬加模糊。
-    if (radius > 0.5 && AxsSettingsActive()) {
-        value = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_blurRadius];
-        if (!gAxsLoggedFirstApply) {
-            gAxsLoggedFirstApply = YES;
-            AxsLog(@"settings apply blur: %.1f -> %.1f", radius, value);
-        }
+    if (AxsSettingsActive()) {
+        value = AxsTargetBlur(radius);
+        if (value != radius) AxsLogOnceForClass(self, radius, value);
     }
     if (axs_liquidglass_origSetBlurRadius) {
         axs_liquidglass_origSetBlurRadius(self, _cmd, value);
@@ -38,7 +66,9 @@ static void AxsHookSetBlurRadius(id self, SEL _cmd, double radius) {
 static void AxsHookSetSaturation(id self, SEL _cmd, double factor) {
     double value = factor;
     if (factor > 0.0 && AxsSettingsActive()) {
-        value = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_saturation];
+        // 只提高不降低：有些表面本来就带 0 以外的饱和度，压低会让颜色发灰。
+        double wanted = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_saturation];
+        value = factor > wanted ? factor : wanted;
     }
     if (axs_liquidglass_origSetSaturation) {
         axs_liquidglass_origSetSaturation(self, _cmd, value);
@@ -49,7 +79,7 @@ static void AxsHookSetTintAlpha(id self, SEL _cmd, double alpha) {
     double value = alpha;
     if (alpha > 0.0 && AxsSettingsActive()) {
         double wanted = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_tintAlpha];
-        value = fmax(alpha, wanted);
+        value = alpha > wanted ? alpha : wanted;
     }
     if (axs_liquidglass_origSetTintAlpha) {
         axs_liquidglass_origSetTintAlpha(self, _cmd, value);
@@ -59,6 +89,7 @@ static void AxsHookSetTintAlpha(id self, SEL _cmd, double alpha) {
 static void AxsHookSetColorTint(id self, SEL _cmd, id color) {
     id value = color;
     if (color && AxsSettingsActive()) {
+        // 统一成纯白：系统自带的是偏蓝的灰，染出来像"脏玻璃"，白色才是乳浊质感。
         value = [UIColor whiteColor];
     }
     if (axs_liquidglass_origSetColorTint) {
@@ -67,12 +98,19 @@ static void AxsHookSetColorTint(id self, SEL _cmd, id color) {
 }
 
 // 兜底：有些路径不经过 setter，而是整份 settings 直接交给 _UIBackdropView。
-// 在应用前把参数改掉，效果和 setter 路径一致。
 static void AxsModifySettingsObject(id settings) {
     if (!settings || !AxsSettingsActive()) return;
+    if (objc_getAssociatedObject(settings, &kAxsSettingsTouchedKey)) return;
+    objc_setAssociatedObject(settings, &kAxsSettingsTouchedKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
     @try {
-        [settings setValue:@([config axs_liquidglass_blurRadius]) forKey:@"blurRadius"];
+        double before = [[settings valueForKey:@"blurRadius"] doubleValue];
+        double after = AxsTargetBlur(before);
+        if (after != before) {
+            [settings setValue:@(after) forKey:@"blurRadius"];
+            AxsLogOnceForClass(settings, before, after);
+        }
         [settings setValue:@([config axs_liquidglass_saturation]) forKey:@"saturationDeltaFactor"];
         [settings setValue:@([config axs_liquidglass_tintAlpha]) forKey:@"colorTintAlpha"];
         [settings setValue:[UIColor whiteColor] forKey:@"colorTint"];

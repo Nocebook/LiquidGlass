@@ -2,11 +2,58 @@
 #import "AxsLiquidGlassPreferences.h"
 #import "AxsLiquidGlassPrivate.h"
 
-static const double kAxsLiquidGlassDefaultBlurRadius = 46.0;
-static const double kAxsLiquidGlassDefaultSaturation = 1.70;
-static const double kAxsLiquidGlassDefaultTintAlpha = 0.06;
-static const double kAxsLiquidGlassDefaultRimStrength = 0.35;
+// 6.1.0-21 的默认值是 46/1.70/0.06 —— 实测系统自己的 _UIBackdropViewSettings
+// 默认 blurRadius 就是 46，等于我们把它设成了原值，视觉上零变化。
+// 新的默认值必须拉开差距：模糊翻倍、乳白明显、饱和度更高。
+static const double kAxsLiquidGlassDefaultBlurRadius = 120.0;
+static const double kAxsLiquidGlassDefaultSaturation = 1.90;
+static const double kAxsLiquidGlassDefaultTintAlpha = 0.28;
+static const double kAxsLiquidGlassDefaultRimStrength = 0.65;
 static const NSInteger kAxsLiquidGlassDefaultWidgetMode = 2;
+
+// 旧默认值：用户没手动调过就原地升级，避免"装了新版本还是没变化"。
+static const double kAxsLiquidGlassLegacyBlurRadius = 46.0;
+static const double kAxsLiquidGlassLegacySaturation = 1.70;
+static const NSInteger kAxsLiquidGlassPreferencesVersion = 2;
+
+// 只在升级后第一次加载时执行一次。之后用户怎么调都不再覆盖。
+static void axs_liquidglass_migratePreferencesIfNeeded(void) {
+    @try {
+        NSDictionary *values = axs_liquidglass_readPreferences();
+        NSInteger version = [values[@"prefsVersion"] isKindOfClass:[NSNumber class]]
+                            ? [values[@"prefsVersion"] integerValue] : 0;
+        if (version >= kAxsLiquidGlassPreferencesVersion) return;
+
+        NSMutableDictionary *updates = [NSMutableDictionary dictionary];
+        id blur = values[@"blurRadius"];
+        if (![blur isKindOfClass:[NSNumber class]] || fabs([blur doubleValue] - kAxsLiquidGlassLegacyBlurRadius) < 0.01) {
+            updates[@"blurRadius"] = @(kAxsLiquidGlassDefaultBlurRadius);
+        }
+        id saturation = values[@"saturation"];
+        if (![saturation isKindOfClass:[NSNumber class]] ||
+            fabs([saturation doubleValue] - kAxsLiquidGlassLegacySaturation) < 0.01) {
+            updates[@"saturation"] = @(kAxsLiquidGlassDefaultSaturation);
+        }
+        // 乳白浓度旧默认 0.06，但用户在"调了没反应"的阶段可能拉到 0。
+        // 0 和 0.06 一样意味着"看不出液态"，一并升级；其它值尊重用户。
+        id tint = values[@"tintAlpha"];
+        if (![tint isKindOfClass:[NSNumber class]] || [tint doubleValue] <= 0.07) {
+            updates[@"tintAlpha"] = @(kAxsLiquidGlassDefaultTintAlpha);
+        }
+        updates[@"prefsVersion"] = @(kAxsLiquidGlassPreferencesVersion);
+
+        CFStringRef domain = (__bridge CFStringRef)AxsLiquidGlassPreferencesDomain;
+        for (NSString *key in updates) {
+            CFPreferencesSetAppValue((__bridge CFStringRef)key,
+                                     (__bridge CFPropertyListRef)updates[key], domain);
+        }
+        CFPreferencesAppSynchronize(domain);
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+            (__bridge CFStringRef)AxsLiquidGlassPreferencesChanged, NULL, NULL, true);
+    } @catch (NSException *exception) {
+        (void)exception;
+    }
+}
 
 @interface AxsLiquidGlassConfig ()
 @property (atomic, copy) NSDictionary *snapshot;
@@ -43,6 +90,8 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     if (self) {
         _reloadQueue = dispatch_queue_create("com.heli.liquid.preferences", DISPATCH_QUEUE_SERIAL);
         _reloadHandlers = [NSMutableArray array];
+        // 先做一次旧默认值迁移，再读快照，否则这一轮还是读到 46/0.06。
+        axs_liquidglass_migratePreferencesIfNeeded();
         [self axs_liquidglass_reload];
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
             (__bridge const void *)self, axs_liquidglass_preferencesDidChange,
@@ -100,17 +149,17 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 
 - (double)axs_liquidglass_blurRadius {
     return [self axs_liquidglass_doubleForKey:@"blurRadius" fallback:kAxsLiquidGlassDefaultBlurRadius
-                                      minimum:12.0 maximum:80.0];
+                                      minimum:40.0 maximum:200.0];
 }
 
 - (double)axs_liquidglass_saturation {
     return [self axs_liquidglass_doubleForKey:@"saturation" fallback:kAxsLiquidGlassDefaultSaturation
-                                      minimum:1.0 maximum:2.2];
+                                      minimum:1.0 maximum:2.50];
 }
 
 - (double)axs_liquidglass_tintAlpha {
     return [self axs_liquidglass_doubleForKey:@"tintAlpha" fallback:kAxsLiquidGlassDefaultTintAlpha
-                                      minimum:0.0 maximum:0.20];
+                                      minimum:0.0 maximum:0.60];
 }
 
 - (double)axs_liquidglass_rimStrength {
