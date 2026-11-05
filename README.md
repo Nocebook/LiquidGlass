@@ -87,7 +87,21 @@ roothide 和 rootless 长得像，但根目录不是固定的 `/var/jb`，而是
 `AxsLiquidGlassWidgets.xm` 在小组件进程里额外做一件事：配置重载时先把残留图层摘干净再按新配置重铺，避免从模式 3 切回模式 2 后还留着高光层。
 
 
-## 构建
+## 下载与安装
+
+已发布：<https://github.com/Nocebook/LiquidGlass/releases/latest>
+
+iPhone 上装（roothide / Sileo）：
+
+1. Safari 打开上面的链接，点最新 Release 里的 `.deb` 文件
+2. 下载完点它，选「用 Sileo 打开」（没弹窗就去「文件」App 里找到它点开）
+3. Sileo 里点「获取」→「排队」→ 安装
+4. 装完点 Sileo 提示的 Restart SpringBoard
+
+包内 `Architecture` 必须是 `iphoneos-arm64`。theos 的 roothide scheme 默认会写成
+`iphoneos-arm64e`，那样 dpkg 会判架构不匹配直接拒绝安装，所以 CI 在打包后重写这个字段。
+
+## 自己构建
 
 本地（需 roothide 版 Theos + iOS 16.5 SDK）：
 
@@ -96,12 +110,7 @@ sh build.sh roothide      # 不传参数时默认也是 roothide
 sh build.sh all           # 需要时一次出 rootful / rootless / roothide
 ```
 
-云端（默认路径）：推到 GitHub 的 `main`，Actions 用 `roothide/theos` 在 `macos-14` 上构建并发布 Release，包版本 `6.0.0-<run_number>`。矩阵当前只开 `roothide` 一项。
-
-```sh
-git remote add origin git@github.com:<你的账号>/LiquidGlass.git
-git push -u origin main
-```
+云端：推到 `main` 即触发，Actions 用 `roothide/theos` 在 `macos-14` 上构建并发布 Release，版本号 `5.2.0-<run_number>`。
 
 产物在 Release 里，也可以在 Actions 的 Artifacts 里拿。
 
