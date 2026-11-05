@@ -1,5 +1,6 @@
 #import "AxsLiquidGlassEffect.h"
 #import "AxsLiquidGlassConfig.h"
+#import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
 #import "AxsLiquidGlassLens.h"
 #import "AxsLiquidGlassMesh.h"
