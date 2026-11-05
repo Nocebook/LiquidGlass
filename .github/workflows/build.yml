@@ -107,14 +107,18 @@ jobs:
             # 这里统一挪进 var/jb，dylib 的 jbroot 解析不受移动影响。
             python3 tools/relocate_to_jbroot.py "$stage"
 
-            app_path="$(find "$stage" -maxdepth 5 -type d -name 'Heli.app' | head -n 1)"
-            if [ -z "$app_path" ]; then
-              echo "ERROR: Heli.app 没有打进包，桌面不会有设置图标"
-              find "$stage" -maxdepth 5 | head -60
+            # 这一版不带桌面 App，入口只在设置里。确认 dylib 与面板都在。
+            dylib_path="$(find "$stage" -name 'AxsLiquidGlass.dylib' | head -n 1)"
+            prefs_path="$(find "$stage" -name 'AxsLiquidGlassPrefs' -type f | head -n 1)"
+            if [ -z "$dylib_path" ] || [ -z "$prefs_path" ]; then
+              echo "ERROR: dylib 或设置面板缺失"
+              echo "  dylib=$dylib_path"
+              echo "  prefs=$prefs_path"
+              find "$stage" -maxdepth 6 | head -60
               exit 1
             fi
-            echo "app bundle: $app_path"
-            ls -la "$app_path"
+            echo "dylib: $dylib_path"
+            echo "prefs: $prefs_path"
 
             # 隐根硬校验：roothide 的 rootfs 是只读的，
             # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。
