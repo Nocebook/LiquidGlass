@@ -62,14 +62,14 @@ static void AxsLogOnceForClass(id settings, double before, double after) {    if
 ///
 /// 判据：同一个 settings 对象在 50ms 内被再次设置，就认为它正处在动画里，原样放行。
 /// 动画结束后第一次设置（间隔 > 50ms）仍然照常抬升，静态观感不受影响。
-static const void *gAxsLastBlurTarget = NULL;
+static __unsafe_unretained id gAxsLastBlurTarget;
 static CFAbsoluteTime gAxsLastBlurStamp = 0.0;
 
 static BOOL AxsBlurIsAnimating(id settings) {
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
-    BOOL animating = ((const void *)settings == gAxsLastBlurTarget) &&
+    BOOL animating = (settings == gAxsLastBlurTarget) &&
                      ((now - gAxsLastBlurStamp) < 0.05);
-    gAxsLastBlurTarget = (const void *)settings;
+    gAxsLastBlurTarget = settings;
     gAxsLastBlurStamp = now;
     return animating;
 }
