@@ -4,7 +4,7 @@
 
 - 包名 `com.heli.liquid`
 - 目标设备：**iPhone 14 Pro（A16）/ iOS 16.3 / 隐根越狱**
-- 打包方案：`THEOS_PACKAGE_SCHEME = rootless`（设备 rootfs 只读，roothide 布局装不进），产物 `iphoneos-arm64`
+- 打包方案：`THEOS_PACKAGE_SCHEME = roothide`（隐根专用，dylib 过 roothide patcher），打包后重定位进 `var/jb`，产物 `iphoneos-arm64`
 - 注入：SpringBoard、MediaRemoteUI、chronod、WidgetRenderer(默认/CarPlay)、ClockAngel
 - 设置入口：**桌面 `liquid` 图标** + **设置 → liquid (HL)**，两处读写同一个 cfg 域
 
@@ -130,6 +130,29 @@ iPhone 上装（roothide / Sileo）：
 包内 `Architecture` 必须是 `iphoneos-arm64`。theos 的 roothide scheme 默认会写成
 `iphoneos-arm64e`，那样 dpkg 会判架构不匹配直接拒绝安装，所以 CI 在打包后重写这个字段。
 
+## 隐根（roothide）构建链路
+
+这里有个容易踩的坑，记一下免得以后再翻：**roothide scheme 编出来的包不能直接发**。
+
+| 环节 | 现象 | 处理 |
+|---|---|---|
+| 编译 | `THEOS_PACKAGE_SCHEME=roothide` 时 Theos 会跑 roothide patcher，dylib 的 install name 与 substrate 依赖被改写成 `@loader_path/.jbroot/...` | 保留，这正是隐根能加载的关键 |
+| 打包 | roothide scheme **不设** `THEOS_PACKAGE_INSTALL_PREFIX`，产物是 rootfs 绝对路径（`/Library`、`/Applications`） | `tools/relocate_to_jbroot.py` 统一挪进 `var/jb` |
+| 安装 | 不重定位会报 `error creating directory './rootfs/Library/...': Read-only file system` | 重定位后装进可写的 `var` 分区 |
+| 校验 | 任何越界路径都会让安装失败 | `tools/check_deb_paths.py` 硬校验，越界即中断构建 |
+
+对比两种 scheme 编出来的 dylib：
+
+```
+rootless：ID @rpath/AxsLiquidGlass.dylib
+          RPATH /var/jb/usr/lib                    ← 隐根上 /var/jb 不存在，加载失败
+roothide：ID @loader_path/.jbroot/Library/MobileSubstrate/DynamicLibraries/AxsLiquidGlass.dylib
+          LOAD @loader_path/.jbroot/usr/lib/libsubstrate.dylib   ← 由 roothide 解析到真实隐藏根
+```
+
+`postinst` / `postrm` 也要注意：隐根下 `/var/jb` 只是兼容链接，真实根是
+`/var/containers/Bundle/Application/.jbroot-*`，脚本里依次探 `JBROOT`、`/var/jb`、`.jbroot-*`。
+
 ## 自己构建
 
 本地（需 roothide 版 Theos + iOS 16.5 SDK）：
@@ -139,7 +162,7 @@ sh build.sh roothide      # 不传参数时默认也是 roothide
 sh build.sh all           # 需要时一次出 rootful / rootless / roothide
 ```
 
-云端：推到 `main` 即触发，Actions 用 `roothide/theos` 在 `macos-14` 上构建并发布 Release，版本号 `5.2.0-<run_number>`。
+云端：推到 `main` 即触发，Actions 用 `roothide/theos` 在 `macos-14` 上构建并发布 Release，版本号 `6.1.0-<run_number>`。
 
 产物在 Release 里，也可以在 Actions 的 Artifacts 里拿。
 
