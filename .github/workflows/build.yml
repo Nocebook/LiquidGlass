@@ -110,25 +110,7 @@ jobs:
 
             # 隐根硬校验：roothide 的 rootfs 是只读的，
             # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。
-            python3 - "$stage" <<'PY'
-import os, sys
-stage = sys.argv[1]
-bad = []
-for root, dirs, files in os.walk(stage):
-    rel = os.path.relpath(root, stage)
-    if rel == ".":
-        continue
-    if rel.split(os.sep)[0] not in ("var", "DEBIAN"):
-        bad.append(rel)
-    if rel.split(os.sep)[0] == "var" and not rel.startswith(os.path.join("var", "jb")):
-        bad.append(rel)
-if bad:
-    print("ERROR: 以下路径不在 var/jb 下，roothide 装不进只读 rootfs：")
-    for b in bad:
-        print("   !", b)
-    sys.exit(1)
-print("path check: all entries under var/jb")
-PY
+            python3 tools/check_deb_paths.py "$stage"
 
             dpkg-deb -b "$stage" "$deb"
             rm -rf "$stage"
