@@ -132,8 +132,9 @@ static NSString *axs_liquidglass_processName(void) {
 
 + (BOOL)axs_liquidglass_allowsDecorativeLayersForKind:(AxsLiquidGlassSurfaceKind)kind {
     if (kind == AxsLiquidGlassSurfaceKindWidget) {
-        // 小组件默认只调参数：加自绘图层会让快照归档失败，表现为白块或不显示。
-        return [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_widgetMode] == 2;
+        // widget 进程内存只有 30~50MB，加自绘图层是被杀进程的常见诱因。
+        // 默认的模式 2 用零 layer 的描边（layer.borderWidth），只有明确选到模式 3 才允许加图层。
+        return [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_widgetMode] >= 3;
     }
     if (kind == AxsLiquidGlassSurfaceKindKeyboard) return NO;  // 键盘上叠高光会遮挡候选字
     return YES;

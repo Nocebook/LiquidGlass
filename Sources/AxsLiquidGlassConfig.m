@@ -6,7 +6,7 @@ static const double kAxsLiquidGlassDefaultBlurRadius = 46.0;
 static const double kAxsLiquidGlassDefaultSaturation = 1.70;
 static const double kAxsLiquidGlassDefaultTintAlpha = 0.06;
 static const double kAxsLiquidGlassDefaultRimStrength = 0.35;
-static const NSInteger kAxsLiquidGlassDefaultWidgetMode = 1;
+static const NSInteger kAxsLiquidGlassDefaultWidgetMode = 2;
 
 @interface AxsLiquidGlassConfig ()
 @property (atomic, copy) NSDictionary *snapshot;
@@ -120,7 +120,7 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 - (NSInteger)axs_liquidglass_widgetMode {
     id value = [self axs_liquidglass_valueForKey:@"widgetMode" defaultValue:nil];
     NSInteger mode = [value isKindOfClass:[NSNumber class]] ? [value integerValue] : kAxsLiquidGlassDefaultWidgetMode;
-    if (mode < 0 || mode > 2) mode = kAxsLiquidGlassDefaultWidgetMode;
+    if (mode < 0 || mode > 3) mode = kAxsLiquidGlassDefaultWidgetMode;
     return mode;
 }
 

@@ -105,25 +105,27 @@
         <dict>
             <key>cell</key><string>PSGroupCell</string>
             <key>label</key><string>小组件</string>
-            <key>footerText</key><string>地图类小组件渲染失败会直接空白。默认只调参数、不加图层，遇到问题把对应包名填进跳过列表。</string>
+            <key>footerText</key><string>小组件进程内存只有 30~50MB、渲染窗口 8~10 秒，超限会被系统杀掉并直接空白。默认「边缘折光」不新增任何图层，只改模糊参数和描边；「完整效果」会加高光图层，少数组件可能撑不住，出问题就退回上一档，或把包名填进跳过列表。</string>
         </dict>
         <dict>
             <key>cell</key><string>PSListItemsCell</string>
             <key>label</key><string>小组件处理</string>
             <key>key</key><string>widgetMode</string>
             <key>defaults</key><string>com.axs.liquidglass</string>
-            <key>default</key><integer>1</integer>
+            <key>default</key><integer>2</integer>
             <key>validValues</key>
             <array>
                 <integer>0</integer>
                 <integer>1</integer>
                 <integer>2</integer>
+                <integer>3</integer>
             </array>
             <key>validTitles</key>
             <array>
                 <string>完全跳过</string>
                 <string>仅调参数</string>
-                <string>完整效果</string>
+                <string>边缘折光（推荐）</string>
+                <string>完整效果（实验）</string>
             </array>
         </dict>
         <dict>

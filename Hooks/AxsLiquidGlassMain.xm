@@ -9,19 +9,30 @@
 // 系统所有毛玻璃最终都落在 UIVisualEffectView 上，从这一层切入
 // 比逐个 hook 控制中心/文件夹/Dock 稳，也不会漏掉新系统新增的表面。
 // initWithEffect: / setEffect: 都是 UIVisualEffectView 自己实现的方法，挂在这里不会牵连其他 UIView。
+//
+// 每个回调都包 @try：在 WidgetRenderer / chronod 这类扩展进程里，一个未捕获的
+// Objective-C 异常不是"少个效果"，而是整个进程被杀 → 桌面小组件直接空白。
 %hook UIVisualEffectView
 
 - (id)initWithEffect:(UIVisualEffect *)effect {
     self = %orig;
     if (self) {
-        [AxsLiquidGlassEffect axs_liquidglass_handleEffectChange:self];
+        @try {
+            [AxsLiquidGlassEffect axs_liquidglass_handleEffectChange:self];
+        } @catch (NSException *exception) {
+            (void)exception;
+        }
     }
     return self;
 }
 
 - (void)setEffect:(UIVisualEffect *)effect {
     %orig;
-    [AxsLiquidGlassEffect axs_liquidglass_handleEffectChange:self];
+    @try {
+        [AxsLiquidGlassEffect axs_liquidglass_handleEffectChange:self];
+    } @catch (NSException *exception) {
+        (void)exception;
+    }
 }
 
 %end
@@ -32,7 +43,11 @@
 %hook UIVisualEffectView
 - (void)layoutSubviews {
     %orig;
-    [AxsLiquidGlassEffect axs_liquidglass_layoutTrackedView:self];
+    @try {
+        [AxsLiquidGlassEffect axs_liquidglass_layoutTrackedView:self];
+    } @catch (NSException *exception) {
+        (void)exception;
+    }
 }
 %end
 %end
@@ -41,17 +56,25 @@
 %hook UIVisualEffectView
 - (void)didMoveToSuperview {
     %orig;
-    [AxsLiquidGlassEffect axs_liquidglass_handleHierarchyChange:self];
+    @try {
+        [AxsLiquidGlassEffect axs_liquidglass_handleHierarchyChange:self];
+    } @catch (NSException *exception) {
+        (void)exception;
+    }
 }
 %end
 %end
 
 %ctor {
     @autoreleasepool {
-        // 读取配置快照；这里不写默认值，避免所有进程都去动偏好文件。
+        // 读取配置快照；这里不写默认值，避免所有进程都去动偏好。
         [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_addReloadHandler:^{
-            [AxsLiquidGlassEffect axs_liquidglass_refreshTrackedViews];
-            [AxsLiquidGlassBackdrop axs_liquidglass_refreshTrackedViews];
+            @try {
+                [AxsLiquidGlassEffect axs_liquidglass_refreshTrackedViews];
+                [AxsLiquidGlassBackdrop axs_liquidglass_refreshTrackedViews];
+            } @catch (NSException *exception) {
+                (void)exception;
+            }
         }];
 
         // Dock / 文件夹在 iOS 16 走 _UIBackdropView，单独补一条只调参数的路径。
