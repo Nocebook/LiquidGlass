@@ -6,6 +6,7 @@
 
 #import <substrate.h>
 #import <objc/runtime.h>
+#import <CoreFoundation/CoreFoundation.h>
 
 static void (*axs_liquidglass_origSetBlurRadius)(id, SEL, double);
 static void (*axs_liquidglass_origSetSaturation)(id, SEL, double);
@@ -42,8 +43,7 @@ static double AxsTargetBlur(double original) {
     return target > 176.0 ? 176.0 : target;
 }
 
-static void AxsLogOnceForClass(id settings, double before, double after) {
-    if (!settings) return;
+static void AxsLogOnceForClass(id settings, double before, double after) {    if (!settings) return;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         gAxsLoggedClasses = [NSMutableSet set];
@@ -56,9 +56,27 @@ static void AxsLogOnceForClass(id settings, double before, double after) {
     AxsLog(@"settings %@ blur: %.1f -> %.1f", name, before, after);
 }
 
+/// 锁屏上滑、通知中心下拉、控制中心收起这些动画里，系统会**逐帧**重设模糊半径
+/// （模糊随手势进度插值）。如果我们每一帧都把它抬到上限，就等于每帧跑一次
+/// 全屏 176pt 的高斯模糊 —— GPU 直接打满，画面冻住，表现就是"上滑滑不动"。
+///
+/// 判据：同一个 settings 对象在 50ms 内被再次设置，就认为它正处在动画里，原样放行。
+/// 动画结束后第一次设置（间隔 > 50ms）仍然照常抬升，静态观感不受影响。
+static const void *gAxsLastBlurTarget = NULL;
+static CFAbsoluteTime gAxsLastBlurStamp = 0.0;
+
+static BOOL AxsBlurIsAnimating(id settings) {
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    BOOL animating = ((const void *)settings == gAxsLastBlurTarget) &&
+                     ((now - gAxsLastBlurStamp) < 0.05);
+    gAxsLastBlurTarget = (const void *)settings;
+    gAxsLastBlurStamp = now;
+    return animating;
+}
+
 static void AxsHookSetBlurRadius(id self, SEL _cmd, double radius) {
     double value = radius;
-    if (AxsSettingsActive()) {
+    if (AxsSettingsActive() && !AxsBlurIsAnimating(self)) {
         value = AxsTargetBlur(radius);
         if (value != radius) AxsLogOnceForClass(self, radius, value);
     }

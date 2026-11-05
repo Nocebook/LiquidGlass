@@ -162,6 +162,16 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         return;
     }
 
+    // 整屏级别的模糊底（锁屏墙纸、控制中心整页背景、通知中心整页）不是控件级玻璃，
+    // 而是系统的"背景虚化"。它的半径在解锁、下拉、上滑这些动画里是逐帧插值的：
+    // 静态时改大只是更糊，动画里就会变成每一帧都跑一次全屏上限模糊 —— 画面直接冻住。
+    // 所以这类表面连模糊参数都不碰，原样交给系统。
+    // 注意必须在有 window 之后才判断：还没入树的视图拿不到参照尺寸，算出来恒等于整屏。
+    if (view.window && axs_liquidglass_areaRatio(view) > 0.62) {
+        [self axs_liquidglass_restoreView:view];
+        return;
+    }
+
     AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
     double radius = [config axs_liquidglass_blurRadius];
     double saturation = [config axs_liquidglass_saturation];
@@ -213,12 +223,9 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         }
     } else if ([AxsLiquidGlassSurface axs_liquidglass_allowsDecorativeLayersForKind:kind]) {
         // 主屏 / 控制中心 / 通知：玻璃膜 + 边缘折射，这一组才是"液态"观感的来源。
-        // 两条硬约束：
-        //   · 圆角 < 4 的表面不铺膜 —— 方角上铺一层白雾就是"看着很脏"的元凶；
-        //   · 超过窗口 62% 面积的表面是整屏模糊底，铺膜会把整屏洗白，只留模糊。
-        double ratio = axs_liquidglass_areaRatio(view);
-        BOOL tooLarge = ratio > 0.62;
-        if (cornerRadius >= 4.0 && !tooLarge) {
+        // 圆角 < 4 的表面不铺膜 —— 方角上铺一层白雾就是"看着很脏"的元凶。
+        // 整屏面积在上面已经提前返回了，这里只处理真正的控件级表面。
+        if (cornerRadius >= 4.0) {
             [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                        fill:fill border:rim
                                                    specular:specular perfMode:perfMode];
@@ -227,12 +234,10 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         } else {
             [AxsLiquidGlassLens axs_liquidglass_removeFromView:view];
             [AxsLiquidGlassMesh axs_liquidglass_clearRefractionFromView:view];
-            if (cornerRadius < 4.0) {
-                static BOOL loggedRightAngle = NO;
-                if (!loggedRightAngle) {
-                    loggedRightAngle = YES;
-                    AxsLog(@"玻璃膜：%@ 判定为直角（圆角 %.1f），只保留模糊", NSStringFromClass([view class]), cornerRadius);
-                }
+            static BOOL loggedRightAngle = NO;
+            if (!loggedRightAngle) {
+                loggedRightAngle = YES;
+                AxsLog(@"玻璃膜：%@ 判定为直角（圆角 %.1f），只保留模糊", NSStringFromClass([view class]), cornerRadius);
             }
         }
     } else {

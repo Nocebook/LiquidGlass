@@ -243,30 +243,14 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
         return NO;
     }
 
-    // 优先挂真实背景层：只有 CABackdropLayer 上的网格才是"把背景折弯"。
-    // 找不到就退回视图自己的图层 —— 网格会作用于整棵子树，视觉上仍然是边缘折射，
-    // 代价只是内容层一起轻微弯折，比"什么都不发生"好得多。
-    CALayer *backdrop = AxsFindBackdropLayer(view.layer, 0);
-    CALayer *target = backdrop;
-    NSString *targetName = nil;
-
+    // 只挂真实的背景层。早期版本在找不到 CABackdropLayer 时会退回挂到视图自身图层，
+    // 但网格作用于整棵子树 —— 文字、图标会跟着一起弯，而且在锁屏这类界面上
+    // 弯折后的画面与手势命中区域对不上，代价远大于那点折射。找不到就不折。
+    CALayer *target = AxsFindBackdropLayer(view.layer, 0);
     if (!target) {
-        // 回退只给小块表面用：网格会作用于整棵子树，大面板（尤其带文字输入的）
-        // 弯折后观感容易失控，宁可这一块不折。
-        UIView *reference = view.window ?: view;
-        double referenceArea = (double)CGRectGetWidth(reference.bounds) * (double)CGRectGetHeight(reference.bounds);
-        double area = (double)width * (double)height;
-        if (referenceArea > 0.0 && area > referenceArea * 0.25) {
-            AxsMeshNote([NSString stringWithFormat:
-                         @"%@ 没有 CABackdropLayer 且面积过大，不做弯折", NSStringFromClass([view class])]);
-            return NO;
-        }
-        target = view.layer;
-        targetName = @"自身图层";
-        AxsMeshNote([NSString stringWithFormat:
-                     @"未找到 CABackdropLayer（%@ 有 %lu 个子层），改为挂在视图自身图层",
-                     NSStringFromClass([view class]),
-                     (unsigned long)view.layer.sublayers.count]);
+        AxsMeshNote([NSString stringWithFormat:@"%@ 没有 CABackdropLayer（%lu 个子层），不做弯折",
+                     NSStringFromClass([view class]), (unsigned long)view.layer.sublayers.count]);
+        return NO;
     }
 
     id mesh = AxsMeshForGeometry(width, height, radius, strength);
@@ -297,9 +281,9 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
     objc_setAssociatedObject(view, &kAxsMeshAppliedKey, @(strength), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     gAxsMeshAppliedCount += 1;
     if (gAxsMeshAppliedCount == 1) {
-        AxsLog(@"折射：首次生效 %@（%.0fx%.0f，圆角 %.0f，强度 %.2f，挂在 %@／%@）",
+        AxsLog(@"折射：首次生效 %@（%.0fx%.0f，圆角 %.0f，强度 %.2f，挂在 %@）",
                NSStringFromClass([view class]), width, height, radius, strength,
-               targetName ?: @"CABackdropLayer", NSStringFromClass([target class]));
+               NSStringFromClass([target class]));
     }
     return YES;
 }
@@ -308,14 +292,21 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
     if (!view) return;
     if (!objc_getAssociatedObject(view, &kAxsMeshAppliedKey)) return;
 
-    // 应用时可能挂在 backdrop 上，也可能退回视图自身图层，还原两边都要试。
+    // 应用时挂在 backdrop 上；视图自身图层那条是给 6.2.0-28 及更早版本清理残留用的，
+    // 那一版会把网格退回挂到 view.layer，升级后必须主动摘掉，否则网格会一直留着。
     CALayer *backdrop = AxsFindBackdropLayer(view.layer, 0);
     id original = objc_getAssociatedObject(view, &kAxsMeshOriginalKey);
     if (backdrop) {
         AxsSetMeshTransform(backdrop, original);
     }
     if (view.layer != backdrop) {
-        AxsSetMeshTransform(view.layer, nil);
+        id current = nil;
+        @try {
+            current = [view.layer valueForKey:@"meshTransform"];
+        } @catch (NSException *exception) {
+            (void)exception;
+        }
+        if (current) AxsSetMeshTransform(view.layer, nil);
     }
     objc_setAssociatedObject(view, &kAxsMeshAppliedKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsMeshOriginalKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);

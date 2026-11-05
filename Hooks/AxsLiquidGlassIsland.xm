@@ -122,11 +122,22 @@ static BOOL AxsIslandNameMatches(NSString *name) {
     return [name rangeOfString:@"aperture" options:NSCaseInsensitiveSearch].location != NSNotFound;
 }
 
+/// 这些宿主树的子树里也可能出现名字带 aperture 的视图（锁屏的收起态灵动岛就是），
+/// 但它们不是灵动岛本体容器。往里面钉 alpha=0 会连带弄坏锁屏的交互，一律不下潜。
+static BOOL AxsIslandIsForeignHost(NSString *className) {
+    NSString *lower = [className lowercaseString];
+    return [lower containsString:@"lockscreen"] || [lower containsString:@"cover"] ||
+           [lower containsString:@"homescreen"] || [lower containsString:@"switcher"] ||
+           [lower containsString:@"wallpaper"];
+}
+
 /// 窗口里再往下捞一层：某些版本灵动岛主体不挂在窗口上，而是一个
 /// _SBSystemApertureContainerView / MagiciansCurtainView。命中就返回最外层那个。
+/// 只下去 3 层：再深就会捞到锁屏、主屏里的同名零件。
 static UIView *AxsIslandFindInView(UIView *root, NSInteger depth) {
-    if (!root || depth > 6) return nil;
+    if (!root || depth > 3) return nil;
     if (AxsIslandNameMatches(NSStringFromClass([root class]))) return root;
+    if (AxsIslandIsForeignHost(NSStringFromClass([root class]))) return nil;
     for (UIView *child in root.subviews) {
         UIView *found = AxsIslandFindInView(child, depth + 1);
         if (found) return found;

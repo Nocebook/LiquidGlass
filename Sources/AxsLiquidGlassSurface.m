@@ -48,8 +48,11 @@ static NSString *axs_liquidglass_processName(void) {
 
 + (AxsLiquidGlassSurfaceKind)axs_liquidglass_fallbackKind {
     NSString *process = axs_liquidglass_processName();
-    if ([process isEqualToString:@"SpringBoard"]) return AxsLiquidGlassSurfaceKindHome;
     if ([process containsString:@"MediaRemote"]) return AxsLiquidGlassSurfaceKindAlert;
+    // SpringBoard 里"匹配不到"的视图一律不处理。
+    // 旧版本这里默认返回 Home，等于把锁屏、状态栏、墙纸这类没人认识的表面
+    // 全按"Dock 玻璃"铺膜加网格 —— 锁屏上滑卡死就是这么来的。
+    // 主屏该有的入口都由 dock/folder/sbicon/homescreen 关键字命中，不需要兜底。
     return AxsLiquidGlassSurfaceKindNone;
 }
 
@@ -64,12 +67,20 @@ static NSString *axs_liquidglass_processName(void) {
         if ([name containsString:@"keyboard"] || [name containsString:@"predictive"]) {
             return AxsLiquidGlassSurfaceKindKeyboard;
         }
+        // 锁屏必须排在 alert 之前：CSCoverSheetViewController / CSCombinedListViewController
+        // 这些类名同时能命中下面的 "coversheet"，误判成弹窗就会去改解锁动画的模糊。
+        if ([name containsString:@"lockscreen"] || [name containsString:@"lockview"] ||
+            [name containsString:@"cslock"] || [name containsString:@"cscombined"] ||
+            [name containsString:@"coversheet"] || [name containsString:@"sbcover"] ||
+            [name containsString:@"coverSheetHost"]) {
+            return AxsLiquidGlassSurfaceKindLockScreen;
+        }
         if ([name containsString:@"controlcenter"] || [name containsString:@"ccmodule"] ||
-            [name containsString:@"moduleview"]) {
+            [name containsString:@"moduleview"] || [name containsString:@"sbcc"]) {
             return AxsLiquidGlassSurfaceKindControlCenter;
         }
         if ([name containsString:@"notification"] || [name containsString:@"banner"] ||
-            [name containsString:@"coversheet"] || [name containsString:@"contextmenu"] ||
+            [name containsString:@"contextmenu"] ||
             [name containsString:@"platter"] || [name containsString:@"alertcontroller"]) {
             return AxsLiquidGlassSurfaceKindAlert;
         }
@@ -117,6 +128,10 @@ static NSString *axs_liquidglass_processName(void) {
 
 + (BOOL)axs_liquidglass_shouldHandleView:(UIView *)view kind:(AxsLiquidGlassSurfaceKind)kind {
     if (kind == AxsLiquidGlassSurfaceKindNone) return NO;
+    // 锁屏的模糊半径是解锁动画的时间轴：上滑过程中系统每帧都会重设一次，
+    // 任何改写都会把动画拖成幻灯片。这一类完全交给系统原样渲染。
+    if (kind == AxsLiquidGlassSurfaceKindLockScreen) return NO;
+
     AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
     if (![config axs_liquidglass_isEnabled]) return NO;
 
