@@ -2,8 +2,9 @@
 set -eu
 cd "$(dirname "$0")"
 
+# 目标机型 iPhone 14 Pro / iOS 16.3 走 roothide（隐藏根），默认就出这个包。
 if [ "$#" -eq 0 ]; then
-    set -- rootless
+    set -- roothide
 elif [ "$#" -eq 1 ] && [ "$1" = all ]; then
     set -- rootful rootless roothide
 fi

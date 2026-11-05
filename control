@@ -1,11 +1,11 @@
 Package: com.axs.liquidglass
 Name: 完美液态玻璃
-Version: 5.2.0
-Architecture: iphoneos-arm
-Description: 把系统毛玻璃重做成液态玻璃质感，支持控制中心、Dock、文件夹、通知与小组件；小组件默认只调参数，避免地图类组件渲染空白。
+Version: 6.0.0
+Architecture: iphoneos-arm64
+Description: 把系统毛玻璃重做成液态玻璃质感，支持控制中心、Dock、文件夹、通知与小组件；小组件默认只调参数，避免地图类组件渲染空白。适配 roothide 隐藏根越狱。
 Maintainer: Axs
 Author: Axs
 Section: Axs-Tweaks
-Depends: mobilesubstrate, preferenceloader
+Depends: mobilesubstrate, preferenceloader, firmware (>= 15.0)
 Icon: https://axs66.github.io/pro/icon/liquidglass.png
 Sileodepiction: https://axs66.github.io/pro/sileodepiction/liquidglass/js.json

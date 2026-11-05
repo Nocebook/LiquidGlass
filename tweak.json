@@ -8,7 +8,9 @@
   "package": "com.axs.liquidglass",
   "bundle": "com.apple.springboard",
   "sdk_version": "16.5",
-  "minimum_ios": "14.0",
+  "minimum_ios": "15.0",
+  "package_scheme": "roothide",
+  "target_device": "iPhone14,2 (iPhone 14 Pro), iOS 16.3",
   "preferences": true,
   "slider": true,
   "github_actions": true
