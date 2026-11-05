@@ -9,7 +9,7 @@
         <key>detail</key><string>AxsLiquidGlassRootListController</string>
         <key>icon</key><string>icon</string>        
         <key>isController</key><true/>
-        <key>label</key><string>完美液态玻璃</string>
+        <key>label</key><string>liquid (HL)</string>
     </dict>
 </dict>
 </plist>

@@ -41,7 +41,7 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _reloadQueue = dispatch_queue_create("com.axs.liquidglass.preferences", DISPATCH_QUEUE_SERIAL);
+        _reloadQueue = dispatch_queue_create("com.heli.liquid.preferences", DISPATCH_QUEUE_SERIAL);
         _reloadHandlers = [NSMutableArray array];
         [self axs_liquidglass_reload];
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),

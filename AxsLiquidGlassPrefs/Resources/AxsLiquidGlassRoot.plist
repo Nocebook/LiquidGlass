@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>title</key><string>完美液态玻璃</string>
+    <key>title</key><string>liquid (HL)</string>
     <key>items</key>
     <array>
         <dict>
@@ -14,7 +14,7 @@
             <key>cell</key><string>PSSwitchCell</string>
             <key>label</key><string>启用插件</string>
             <key>key</key><string>enabled</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><false/>
         </dict>
 
@@ -28,7 +28,7 @@
             <key>cellClass</key><string>AxsLiquidGlassSliderCell</string>
             <key>label</key><string>模糊半径</string>
             <key>key</key><string>blurRadius</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><real>46.0</real>
             <key>min</key><real>12.0</real>
             <key>max</key><real>80.0</real>
@@ -39,7 +39,7 @@
             <key>cellClass</key><string>AxsLiquidGlassSliderCell</string>
             <key>label</key><string>色彩饱和度</string>
             <key>key</key><string>saturation</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><real>1.7</real>
             <key>min</key><real>1.0</real>
             <key>max</key><real>2.2</real>
@@ -50,7 +50,7 @@
             <key>cellClass</key><string>AxsLiquidGlassSliderCell</string>
             <key>label</key><string>乳白浓度</string>
             <key>key</key><string>tintAlpha</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><real>0.06</real>
             <key>min</key><real>0.0</real>
             <key>max</key><real>0.2</real>
@@ -61,7 +61,7 @@
             <key>cellClass</key><string>AxsLiquidGlassSliderCell</string>
             <key>label</key><string>高光强度</string>
             <key>key</key><string>rimStrength</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><real>0.35</real>
             <key>min</key><real>0.0</real>
             <key>max</key><real>1.0</real>
@@ -77,28 +77,28 @@
             <key>cell</key><string>PSSwitchCell</string>
             <key>label</key><string>主屏、Dock 与文件夹</string>
             <key>key</key><string>scopeHome</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><true/>
         </dict>
         <dict>
             <key>cell</key><string>PSSwitchCell</string>
             <key>label</key><string>控制中心</string>
             <key>key</key><string>scopeControlCenter</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><true/>
         </dict>
         <dict>
             <key>cell</key><string>PSSwitchCell</string>
             <key>label</key><string>通知与弹窗</string>
             <key>key</key><string>scopeAlerts</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><true/>
         </dict>
         <dict>
             <key>cell</key><string>PSSwitchCell</string>
             <key>label</key><string>键盘</string>
             <key>key</key><string>scopeKeyboard</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><false/>
         </dict>
 
@@ -111,7 +111,7 @@
             <key>cell</key><string>PSListItemsCell</string>
             <key>label</key><string>小组件处理</string>
             <key>key</key><string>widgetMode</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><integer>2</integer>
             <key>validValues</key>
             <array>
@@ -132,7 +132,7 @@
             <key>cell</key><string>PSEditTextCell</string>
             <key>label</key><string>跳过列表</string>
             <key>key</key><string>widgetBlocklist</string>
-            <key>defaults</key><string>com.axs.liquidglass</string>
+            <key>defaults</key><string>com.heli.liquid</string>
             <key>default</key><string>autonavi,amap</string>
             <key>placeholder</key><string>逗号分隔，匹配包名子串</string>
         </dict>

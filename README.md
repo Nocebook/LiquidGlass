@@ -1,12 +1,12 @@
-# 完美液态玻璃 (LiquidGlass)
+# liquid (HL) (LiquidGlass)
 
 越狱插件，把系统毛玻璃重做成液态玻璃质感：更厚的模糊、更高的饱和度、一层左上斜向高光加一圈边缘折射线。
 
-- 包名 `com.axs.liquidglass`
+- 包名 `com.heli.liquid`
 - 目标设备：**iPhone 14 Pro（A16）/ iOS 16.3 / roothide 隐藏根越狱**
 - 打包方案：`THEOS_PACKAGE_SCHEME = roothide`，产物 `iphoneos-arm64`
 - 注入：SpringBoard、MediaRemoteUI、chronod、WidgetRenderer(默认/CarPlay)、ClockAngel
-- 设置面板：`设置 → 完美液态玻璃`
+- 设置面板：`设置 → liquid (HL)`
 
 ## roothide 适配（这一版的重点）
 

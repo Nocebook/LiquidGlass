@@ -3,8 +3,8 @@
 #import <Foundation/Foundation.h>
 #import <CoreFoundation/CoreFoundation.h>
 
-static NSString * const AxsLiquidGlassPreferencesDomain = @"com.axs.liquidglass";
-static NSString * const AxsLiquidGlassPreferencesChanged = @"com.axs.liquidglass.preferences-changed";
+static NSString * const AxsLiquidGlassPreferencesDomain = @"com.heli.liquid";
+static NSString * const AxsLiquidGlassPreferencesChanged = @"com.heli.liquid.preferences-changed";
 
 // 偏好一律走 cfprefsd（CFPreferences / NSUserDefaults），不直接拼文件路径。
 // roothide 的 jbroot() 会把 /var/mobile/Library/Preferences 也重定向进隐藏根，
