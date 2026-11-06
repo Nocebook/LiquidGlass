@@ -18,6 +18,14 @@
 ///
 /// 换版本会把等级重置回 0，所以每次发新版都给一次"干净启动"的机会。
 /// 注意：只有 SpringBoard 参与这套判定，其他注入进程直接返回 0。
+///
+/// 这几个函数被 Hooks 里的 .xm 调用，而 .xm 由 Logos 以 Objective-C++ 编译 ——
+/// 少了这层 extern "C"，它们会被当成 C++ 符号（__Z28AxsLiquidGlassGuard...），
+/// 与 Guard.m 里的 C 符号对不上，链接期直接 undefined。
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 NSInteger AxsLiquidGlassGuardBeginLaunch(void);
 
 /// 当前降级等级：0 正常 / 1 只保留模糊 / 2 完全停用。
@@ -31,3 +39,7 @@ void AxsLiquidGlassGuardScheduleHeartbeat(void);
 
 /// 手动解除降级（面板按钮调用，删状态文件）。
 void AxsLiquidGlassGuardReset(void);
+
+#ifdef __cplusplus
+}
+#endif
