@@ -82,4 +82,14 @@ typedef struct {
 } AxsLiquidGlassParams;
 
 /// 返回内部静态快照的地址。调用方必须**立刻**把需要的字段拷出来用，不要长期持有指针。
+///
+/// 必须 extern "C"：Hooks 里的 .xm 由 Logos 以 Objective-C++ 编译，
+/// 没有这层包裹的话，这个函数在 .xm 里会被当成 C++ 符号（__Z23AxsLiquidGlassParamsGetv），
+/// 而 Config.m 里是 C 符号，链接期直接 undefined。
+#ifdef __cplusplus
+extern "C" {
+#endif
 const AxsLiquidGlassParams *AxsLiquidGlassParamsGet(void);
+#ifdef __cplusplus
+}
+#endif
