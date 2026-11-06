@@ -200,8 +200,8 @@ void AxsLiquidGlassIslandStartIfWanted(void) {
             return;
         }
 
-        if (!AxsIslandHandlerInstalled) {
-            AxsIslandHandlerInstalled = YES;
+        if (!gAxsIslandHandlerInstalled) {
+            gAxsIslandHandlerInstalled = YES;
             [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_addReloadHandler:^{
                 @try {
                     AxsIslandSync();
