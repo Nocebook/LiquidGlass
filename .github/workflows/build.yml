@@ -142,7 +142,9 @@ jobs:
             # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。
             python3 tools/check_deb_paths.py "$stage"
 
-            dpkg-deb -b "$stage" "$deb"
+            # 显式 xz：Linux 的新 dpkg 默认 zstd，统一回与旧版本一致的压缩，
+            # 避免设备端 dpkg 对 zstd 支持程度的差异。
+            dpkg-deb -b -Zxz "$stage" "$deb"
             rm -rf "$stage"
             echo "--- $deb ---"
             dpkg-deb -f "$deb" Package Architecture Version Depends
