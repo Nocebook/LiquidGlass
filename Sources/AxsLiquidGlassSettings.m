@@ -28,14 +28,16 @@ static NSMutableSet<NSString *> *gAxsLoggedClasses;
 /// App 里的导航栏、键盘、侧边栏、弹出菜单的模糊半径也会被抬到配置值，
 /// 滚动时每帧重算更大的高斯核 —— 这是待机耗电之外最明显的一项。
 /// 所以默认只在系统界面里改写，App 内恢复原生观感。
+///
+/// 这里刻意**不用 dispatch_once**：这个判定在 setter 热路径里，而 once 令牌
+/// 被同线程重入就是死锁，卡在 SpringBoard 主线程上等于一次崩溃（7.2.0 踩过）。
+/// 普通静态标志即使被多线程同时首次赋值，写进去的也是同一个结果，无害。
 static BOOL AxsSettingsInSystemUI(void) {
-    static BOOL cached = NO;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        NSString *name = [NSProcessInfo processInfo].processName;
-        cached = [name isEqualToString:@"SpringBoard"];
-    });
-    return cached;
+    static int cached = -1;
+    if (cached < 0) {
+        cached = [[NSProcessInfo processInfo].processName isEqualToString:@"SpringBoard"] ? 1 : 0;
+    }
+    return cached == 1;
 }
 
 static BOOL AxsSettingsActive(void) {
