@@ -22,6 +22,17 @@
 /// 按当前配置刷新：开则挂玻璃，关则彻底摘掉。
 + (void)axs_liquidglass_islandRefresh;
 
+/// 快速路径：不重新枚举窗口，只拿已跟踪的容器重算一次几何。
+/// 由容器的 layoutSubviews 调用（展开/收起时逐帧），签名没变时什么都不做。
++ (void)axs_liquidglass_islandRefreshTracked;
+
+/// 接管容器类的 layoutSubviews，让尺寸变化即时触发刷新，替代高频轮询。
+/// 返回 YES 表示确实接管成功 —— 轮询可以退到很低的频率。
++ (BOOL)axs_liquidglass_islandHookLayoutForContainer:(UIView *)container;
+
+/// 是否已经事件驱动（接管成功 = 轮询只是兜底）。
++ (BOOL)axs_liquidglass_islandIsEventDriven;
+
 /// 摘掉玻璃（不影响"隐藏灵动岛"那条链路）。
 + (void)axs_liquidglass_islandTeardown;
 

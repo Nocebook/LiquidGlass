@@ -2,26 +2,58 @@
 #import "AxsLiquidGlassPreferences.h"
 #import "AxsLiquidGlassPrivate.h"
 
-// 6.1.0-21 的默认值是 46/1.70/0.06 —— 实测系统自己的 _UIBackdropViewSettings
-// 默认 blurRadius 就是 46，等于我们把它设成了原值，视觉上零变化。
-// 新的默认值必须拉开差距：模糊翻倍、乳白明显、饱和度更高。
-static const double kAxsLiquidGlassDefaultBlurRadius = 120.0;
-static const double kAxsLiquidGlassDefaultSaturation = 1.90;
+#import <os/lock.h>
+#include <string.h>
+
+// 7.1.0 之前的默认值是 120/1.90/0.06 —— 视觉上确实"更糊"，但 120 相当于把系统
+// 原生 46 的采样核拉到 2.6 倍，滚动主屏、开合控制中心时高斯模糊要重算的面积
+// 随之翻倍，这是装完插件后耗电与发热的第一来源。
+// 新的默认值只抬到 88（约原生 1.9 倍）——和 120 摆在一起肉眼几乎分不出，
+// GPU 侧的模糊开销却降了将近一半。想要更糊的用户自己在面板里往上拉。
+static const double kAxsLiquidGlassDefaultBlurRadius = 88.0;
+static const double kAxsLiquidGlassDefaultSaturation = 1.80;
 static const double kAxsLiquidGlassDefaultTintAlpha = 0.28;
 static const double kAxsLiquidGlassDefaultRimStrength = 0.65;
 static const NSInteger kAxsLiquidGlassDefaultWidgetMode = 2;
 
 // 液态层：这一组参数来自 88 液态玻璃（Liquidify）的观感拆解 + LiquidGlassKit 的
 // 折射/菲涅尔取值。目标是"装完就看得出是液态玻璃"，而不是只把模糊调厚一点。
-static const double kAxsLiquidGlassDefaultMeshStrength = 0.60;
+static const double kAxsLiquidGlassDefaultMeshStrength = 0.45;
 static const double kAxsLiquidGlassDefaultFillAlpha = 0.16;
-static const double kAxsLiquidGlassDefaultSpecular = 0.55;
+static const double kAxsLiquidGlassDefaultSpecular = 0.42;
 static const NSInteger kAxsLiquidGlassDefaultPerfMode = 1;
 
 // 旧默认值：用户没手动调过就原地升级，避免"装了新版本还是没变化"。
 static const double kAxsLiquidGlassLegacyBlurRadius = 46.0;
 static const double kAxsLiquidGlassLegacySaturation = 1.70;
-static const NSInteger kAxsLiquidGlassPreferencesVersion = 2;
+// 7.0.0 的默认值：换成省电默认时同样只迁移"还是出厂值"的用户。
+static const double kAxsLiquidGlassHeavyBlurRadius = 120.0;
+static const double kAxsLiquidGlassHeavySaturation = 1.90;
+static const double kAxsLiquidGlassHeavySpecular = 0.55;
+static const double kAxsLiquidGlassHeavyMesh = 0.60;
+static const NSInteger kAxsLiquidGlassPreferencesVersion = 3;
+
+#pragma mark - 热路径快照
+
+static AxsLiquidGlassParams gAxsParams;
+static os_unfair_lock gAxsParamsLock = OS_UNFAIR_LOCK_INIT;
+
+const AxsLiquidGlassParams *AxsLiquidGlassParamsGet(void) {
+    // 兜底：如果某条路径在配置单例建立之前就来读快照，拿到的是全零结构体，
+    // 表现就是"插件装了没反应"。这里保证至少构建过一次。
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        (void)[AxsLiquidGlassConfig axs_liquidglass_shared];
+    });
+    return &gAxsParams;
+}
+
+static void AxsParamsStore(const AxsLiquidGlassParams *params) {
+    if (!params) return;
+    os_unfair_lock_lock(&gAxsParamsLock);
+    gAxsParams = *params;
+    os_unfair_lock_unlock(&gAxsParamsLock);
+}
 
 // 只在升级后第一次加载时执行一次。之后用户怎么调都不再覆盖。
 static void axs_liquidglass_migratePreferencesIfNeeded(void) {
@@ -33,12 +65,15 @@ static void axs_liquidglass_migratePreferencesIfNeeded(void) {
 
         NSMutableDictionary *updates = [NSMutableDictionary dictionary];
         id blur = values[@"blurRadius"];
-        if (![blur isKindOfClass:[NSNumber class]] || fabs([blur doubleValue] - kAxsLiquidGlassLegacyBlurRadius) < 0.01) {
+        if (![blur isKindOfClass:[NSNumber class]] ||
+            fabs([blur doubleValue] - kAxsLiquidGlassLegacyBlurRadius) < 0.01 ||
+            fabs([blur doubleValue] - kAxsLiquidGlassHeavyBlurRadius) < 0.01) {
             updates[@"blurRadius"] = @(kAxsLiquidGlassDefaultBlurRadius);
         }
         id saturation = values[@"saturation"];
         if (![saturation isKindOfClass:[NSNumber class]] ||
-            fabs([saturation doubleValue] - kAxsLiquidGlassLegacySaturation) < 0.01) {
+            fabs([saturation doubleValue] - kAxsLiquidGlassLegacySaturation) < 0.01 ||
+            fabs([saturation doubleValue] - kAxsLiquidGlassHeavySaturation) < 0.01) {
             updates[@"saturation"] = @(kAxsLiquidGlassDefaultSaturation);
         }
         // 乳白浓度旧默认 0.06，但用户在"调了没反应"的阶段可能拉到 0。
@@ -46,6 +81,17 @@ static void axs_liquidglass_migratePreferencesIfNeeded(void) {
         id tint = values[@"tintAlpha"];
         if (![tint isKindOfClass:[NSNumber class]] || [tint doubleValue] <= 0.07) {
             updates[@"tintAlpha"] = @(kAxsLiquidGlassDefaultTintAlpha);
+        }
+        // 7.0.0 的高光 / 折射默认值偏重，跟着一起降到省电默认。
+        id specular = values[@"specularStrength"];
+        if (![specular isKindOfClass:[NSNumber class]] ||
+            fabs([specular doubleValue] - kAxsLiquidGlassHeavySpecular) < 0.01) {
+            updates[@"specularStrength"] = @(kAxsLiquidGlassDefaultSpecular);
+        }
+        id mesh = values[@"meshStrength"];
+        if (![mesh isKindOfClass:[NSNumber class]] ||
+            fabs([mesh doubleValue] - kAxsLiquidGlassHeavyMesh) < 0.01) {
+            updates[@"meshStrength"] = @(kAxsLiquidGlassDefaultMeshStrength);
         }
         updates[@"prefsVersion"] = @(kAxsLiquidGlassPreferencesVersion);
 
@@ -104,10 +150,45 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
             (__bridge const void *)self, axs_liquidglass_preferencesDidChange,
             (__bridge CFStringRef)AxsLiquidGlassPreferencesChanged, NULL,
             CFNotificationSuspensionBehaviorDeliverImmediately);
+
+        // 低电量模式是系统级的省电信号，跟着它降档比让用户手动去面板里拨要可靠得多。
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(axs_liquidglass_powerStateChanged:)
+                                                     name:NSProcessInfoPowerStateDidChangeNotification
+                                                   object:nil];
         // Close the window between the first read and observer registration.
         dispatch_async(_reloadQueue, ^{ [self axs_liquidglass_reload]; });
     }
     return self;
+}
+
+- (void)axs_liquidglass_powerStateChanged:(NSNotification *)note {
+    (void)note;
+    dispatch_async(self.reloadQueue, ^{ [self axs_liquidglass_reload]; });
+}
+
+/// 把当前取值压成 C 结构体，给逐帧路径用。
+- (void)axs_liquidglass_rebuildParams {
+    AxsLiquidGlassParams params;
+    memset(&params, 0, sizeof(params));
+    params.blurRadius = [self axs_liquidglass_blurRadius];
+    params.saturation = [self axs_liquidglass_saturation];
+    params.tintAlpha = [self axs_liquidglass_tintAlpha];
+    params.rimStrength = [self axs_liquidglass_rimStrength];
+    params.meshStrength = [self axs_liquidglass_meshStrength];
+    params.fillAlpha = [self axs_liquidglass_fillAlpha];
+    params.specularStrength = [self axs_liquidglass_specularStrength];
+    params.alertsOpacity = [self axs_liquidglass_alertsOpacity];
+    params.perfMode = [self axs_liquidglass_effectivePerfMode];
+    params.widgetMode = [self axs_liquidglass_widgetMode];
+    params.enabled = [self axs_liquidglass_isEnabled];
+    params.islandGlass = [self axs_liquidglass_islandGlass];
+    params.hideIsland = [self axs_liquidglass_hideIsland];
+    params.lowPower = [self axs_liquidglass_isLowPower];
+    params.keyboardScope = [self axs_liquidglass_scopeEnabled:@"keyboard"];
+    params.appBlur = [self axs_liquidglass_appBlur];
+    params.generation = self.generation;
+    AxsParamsStore(&params);
 }
 
 - (void)axs_liquidglass_reload {
@@ -115,6 +196,7 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     self.snapshot = [values isKindOfClass:[NSDictionary class]] ? values : @{};
     self.widgetBlocklist = [self axs_liquidglass_parseBlocklist:self.snapshot[@"widgetBlocklist"]];
     self.generation = self.generation + 1;
+    [self axs_liquidglass_rebuildParams];
     dispatch_async(dispatch_get_main_queue(), ^{
         NSArray<void (^)(void)> *handlers;
         @synchronized (self.reloadHandlers) {
@@ -201,6 +283,29 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     return mode;
 }
 
+- (BOOL)axs_liquidglass_lowPowerAuto {
+    id value = [self axs_liquidglass_valueForKey:@"lowPowerAuto" defaultValue:@(YES)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
+}
+
+- (BOOL)axs_liquidglass_appBlur {
+    id value = [self axs_liquidglass_valueForKey:@"appBlur" defaultValue:@(NO)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
+}
+
+- (BOOL)axs_liquidglass_isLowPower {
+    if (![self axs_liquidglass_lowPowerAuto]) return NO;
+    return [NSProcessInfo processInfo].isLowPowerModeEnabled;
+}
+
+- (NSInteger)axs_liquidglass_effectivePerfMode {
+    NSInteger mode = [self axs_liquidglass_perfMode];
+    // 低电量时直接按"省电档"渲染：不挂折射网格、去掉镜面高光、膜压淡。
+    // 视觉损失有限，但省下的是整块屏幕每帧的合成开销 —— 低电量时这笔账更划算。
+    if ([self axs_liquidglass_isLowPower] && mode > 0) return 0;
+    return mode;
+}
+
 - (NSInteger)axs_liquidglass_widgetMode {
     id value = [self axs_liquidglass_valueForKey:@"widgetMode" defaultValue:nil];
     NSInteger mode = [value isKindOfClass:[NSNumber class]] ? [value integerValue] : kAxsLiquidGlassDefaultWidgetMode;
@@ -264,6 +369,7 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 }
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     CFNotificationCenterRemoveEveryObserver(CFNotificationCenterGetDarwinNotifyCenter(),
                                             (__bridge const void *)self);
 }

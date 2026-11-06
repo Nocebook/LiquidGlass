@@ -22,6 +22,8 @@ static __weak UIView *gAxsIslandHiddenTarget;
 static BOOL gAxsIslandHidden = NO;
 static BOOL gAxsIslandDumped = NO;
 static NSInteger gAxsIslandSweeps = 0;
+static NSInteger gAxsIslandMisses = 0;
+static BOOL gAxsIslandEventDriven = NO;
 
 static BOOL AxsIslandHideWanted(void) {
     return [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_hideIsland];
@@ -46,6 +48,7 @@ static void AxsIslandSweep(void) {
     UIView *container = [AxsLiquidGlassIslandDriver axs_liquidglass_islandContainer];
 
     if (!container) {
+        gAxsIslandMisses += 1;
         if ((hide || AxsIslandGlassWanted()) && !gAxsIslandDumped && gAxsIslandSweeps >= 3) {
             gAxsIslandDumped = YES;
             NSArray<UIView *> *windows = [AxsLiquidGlassIslandDriver axs_liquidglass_islandWindows];
@@ -60,6 +63,7 @@ static void AxsIslandSweep(void) {
         }
         return;
     }
+    gAxsIslandMisses = 0;
 
     // 隐藏优先：玻璃在不可见时没有意义，先摘掉省一笔合成开销。
     if (hide) {
@@ -70,6 +74,10 @@ static void AxsIslandSweep(void) {
             gAxsIslandHidden = YES;
             AxsLog(@"灵动岛：已隐藏 %@（%.0fx%.0f）", NSStringFromClass([container class]),
                    CGRectGetWidth(container.bounds), CGRectGetHeight(container.bounds));
+        } else {
+            // 隐藏状态已经稳定，剩下的只是"系统会不会重建容器"，
+            // 没必要再按 1.2 秒的频率盯着 —— 退到兜底节奏。
+            gAxsIslandEventDriven = YES;
         }
         return;
     }
@@ -85,6 +93,9 @@ static void AxsIslandSweep(void) {
 
     if (AxsIslandGlassWanted()) {
         [AxsLiquidGlassIslandDriver axs_liquidglass_islandRefresh];
+        // 容器类的 layoutSubviews 一旦被接管，尺寸变化就是事件驱动的，
+        // 轮询只剩"系统重建容器"这一种兜底场景，可以退到 2.5 秒。
+        gAxsIslandEventDriven = [AxsLiquidGlassIslandDriver axs_liquidglass_islandIsEventDriven];
     } else {
         [AxsLiquidGlassIslandDriver axs_liquidglass_islandTeardown];
     }
@@ -92,10 +103,40 @@ static void AxsIslandSweep(void) {
 
 #pragma mark - 定时器
 
+/// 下一轮扫描间隔。
+/// 旧版是固定 1.2 秒的 repeating timer：只要灵动岛玻璃开着，SpringBoard 就永远
+/// 每 1.2 秒醒一次扫全窗口树，设备再也进不了深睡 —— 这是装完插件待机掉电快的主因。
+/// 现在按"有没有事情可做"分三档：事件驱动 → 2.5s 兜底；未接管 → 1.2s 保效果；
+/// 长时间找不到容器（锁屏、刚重启）→ 6s 慢速等待。
+static NSTimeInterval AxsIslandNextInterval(void) {
+    if (gAxsIslandMisses >= 3) return 6.0;
+    if (gAxsIslandEventDriven) return 2.5;
+    return 1.2;
+}
+
 static void AxsIslandStopTimer(void) {
     if (!gAxsIslandTimer) return;
     [gAxsIslandTimer invalidate];
     gAxsIslandTimer = nil;
+}
+
+static void AxsIslandScheduleNext(void) {
+    AxsIslandStopTimer();
+    NSTimeInterval interval = AxsIslandNextInterval();
+    gAxsIslandTimer = [NSTimer scheduledTimerWithTimeInterval:interval
+                                                      repeats:NO
+                                                        block:^(NSTimer *timer) {
+        (void)timer;
+        gAxsIslandTimer = nil;
+        @try {
+            AxsIslandSweep();
+        } @catch (NSException *exception) {
+            (void)exception;
+        }
+        AxsIslandScheduleNext();
+    }];
+    // 允许系统把这次唤醒合并到别的唤醒里，进一步省电。
+    gAxsIslandTimer.tolerance = interval * 0.4;
 }
 
 static void AxsIslandSync(void) {
@@ -108,23 +149,9 @@ static void AxsIslandSync(void) {
         return;
     }
 
-    if (!gAxsIslandTimer) {
-        // 1.2s 只是兜底。灵动岛的尺寸变化（收起/展开）靠这个节奏跟上，
-        // 不挂 display link：那是 Liquidify 为了做逐帧渐变才需要的东西，我们没有逐帧需求。
-        gAxsIslandTimer = [NSTimer scheduledTimerWithTimeInterval:1.2
-                                                          repeats:YES
-                                                            block:^(NSTimer *timer) {
-            (void)timer;
-            @try {
-                AxsIslandSweep();
-            } @catch (NSException *exception) {
-                (void)exception;
-            }
-        }];
-        gAxsIslandTimer.tolerance = 0.5;
-        AxsLog(@"灵动岛：开始守护（1.2s 兜底扫描）");
-    }
     AxsIslandSweep();
+    AxsIslandScheduleNext();
+    AxsLog(@"灵动岛：开始守护（%.1fs 自适应扫描）", AxsIslandNextInterval());
 }
 
 __attribute__((constructor))

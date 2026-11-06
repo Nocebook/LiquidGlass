@@ -8,8 +8,10 @@
 
 #import <substrate.h>
 #import <QuartzCore/QuartzCore.h>
+#include <string.h>
 
 static char kAxsLiquidGlassBackdropAppliedKey;
+static char kAxsLiquidGlassBackdropKeyboardKey;
 
 static void (*axs_liquidglass_origDidMoveToSuperview)(id, SEL);
 static void (*axs_liquidglass_origLayoutSubviews)(id, SEL);
@@ -18,15 +20,25 @@ static NSInteger gAxsBackdropAppliedCount = 0;
 static NSInteger gAxsBackdropSkippedCount = 0;
 static BOOL gAxsBackdropLogged = NO;
 
+/// 应用参数签名。用 C 结构体而不是格式化字符串：
+/// layoutSubviews 是逐帧回调，每次拼一个 NSString 会持续产生临时对象，
+/// 滚动时的内存分配压力基本都来自这里。
+typedef struct {
+    float rim;
+    float fill;
+    float specular;
+    float mesh;
+    float radius;
+    int perfMode;
+} AxsBackdropSignature;
+
 @interface AxsLiquidGlassBackdrop ()
 + (void)axs_liquidglass_clear:(UIView *)view;
 @end
 
 static BOOL axs_liquidglass_isWidgetProcess(void) {
-    NSString *process = [NSProcessInfo processInfo].processName;
-    return [process isEqualToString:@"chronod"] ||
-           [process hasPrefix:@"WidgetRenderer"] ||
-           [process isEqualToString:@"ClockAngel"];
+    // 进程名判定只做一次：每次 layout 都去问 NSProcessInfo 会分配字符串。
+    return [AxsLiquidGlassSurface axs_liquidglass_isWidgetProcess];
 }
 
 /// 从自身或最近的祖先上找出真实的圆角：系统大量卡片是"父视图裁圆角、
@@ -44,19 +56,33 @@ static CGFloat axs_liquidglass_effectiveRadius(UIView *view) {
 }
 
 static BOOL axs_liquidglass_isKeyboardSurface(UIView *view) {
+    // 结果缓存在视图上：这个判定要往上走 12 层、每层都做一次类名小写化，
+    // 在 App 里每一个背景模糊都是"不是键盘"，每次布局都重算纯属浪费。
+    // 视图换过父级时由 didMoveToSuperview 清掉缓存重新判定。
+    NSNumber *cached = objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropKeyboardKey);
+    if (cached) return cached.boolValue;
+
+    BOOL found = NO;
     UIView *current = view;
     for (NSInteger depth = 0; current && depth < 12; depth++) {
         NSString *name = NSStringFromClass([current class]).lowercaseString;
-        if ([name containsString:@"keyboard"] || [name containsString:@"predictive"]) return YES;
+        if ([name containsString:@"keyboard"] || [name containsString:@"predictive"]) {
+            found = YES;
+            break;
+        }
         current = current.superview;
     }
-    return NO;
+    objc_setAssociatedObject(view, &kAxsLiquidGlassBackdropKeyboardKey, @(found),
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    return found;
 }
 
 static void axs_liquidglass_hookDidMoveToSuperview(id self, SEL _cmd) {
     if (axs_liquidglass_origDidMoveToSuperview) {
         axs_liquidglass_origDidMoveToSuperview(self, _cmd);
     }
+    objc_setAssociatedObject((id)self, &kAxsLiquidGlassBackdropKeyboardKey, nil,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [AxsLiquidGlassBackdrop axs_liquidglass_applyIfNeeded:(UIView *)self];
 }
 
@@ -109,37 +135,48 @@ static void axs_liquidglass_hookLayoutSubviews(id self, SEL _cmd) {
     }
     if (axs_liquidglass_isWidgetProcess()) return;
 
-    AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
-    if (![config axs_liquidglass_isEnabled]) {
+    const AxsLiquidGlassParams *params = AxsLiquidGlassParamsGet();
+    AxsLiquidGlassParams current = *params;   // 一次拷出来，后面全用栈上的值
+
+    if (!current.enabled) {
         [self axs_liquidglass_clear:view];
         return;
     }
 
-    double rim = [config axs_liquidglass_rimStrength];
-    double fill = [config axs_liquidglass_fillAlpha];
-    double specular = [config axs_liquidglass_specularStrength];
-    double mesh = [config axs_liquidglass_meshStrength];
-    NSInteger perfMode = [config axs_liquidglass_perfMode];
+    double rim = current.rimStrength;
+    double fill = current.fillAlpha;
+    double specular = current.specularStrength;
+    double mesh = current.meshStrength;
+    NSInteger perfMode = current.perfMode;
 
     if (rim <= 0.001 && fill <= 0.001 && specular <= 0.001) {
         [self axs_liquidglass_clear:view];
         return;
     }
-    if (axs_liquidglass_isKeyboardSurface(view) && ![config axs_liquidglass_scopeEnabled:@"keyboard"]) {
-        return;
-    }
-
-    // 签名比对：布局回调非常频繁，参数没变就直接返回，避免每帧重建图层。
-    NSString *signature = [NSString stringWithFormat:@"%.1f|%.1f|%.1f|%.1f|%.1f|%ld",
-                           rim, fill, specular, mesh, axs_liquidglass_effectiveRadius(view),
-                           (long)perfMode];
-    NSString *previous = objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey);
-    if ([previous isEqualToString:signature]) {
-        [AxsLiquidGlassLens axs_liquidglass_layoutView:view radius:axs_liquidglass_effectiveRadius(view)];
-        return;
-    }
 
     CGFloat radius = axs_liquidglass_effectiveRadius(view);
+
+    // 签名比对放在最前面（除了零成本的类判断）：参数和几何都没变就直接返回，
+    // 不再做键盘祖先遍历、不再拼字符串、也不重新算半径。
+    // 比对用 memcmp 而不是 -isEqual：这条路径每帧都会走，不能有任何对象分配。
+    AxsBackdropSignature signature;
+    signature.rim = (float)rim;
+    signature.fill = (float)fill;
+    signature.specular = (float)specular;
+    signature.mesh = (float)mesh;
+    signature.radius = (float)radius;
+    signature.perfMode = (int)perfMode;
+    NSData *previous = objc_getAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey);
+    if ([previous isKindOfClass:[NSData class]] &&
+        previous.length == sizeof(signature) &&
+        memcmp(previous.bytes, &signature, sizeof(signature)) == 0) {
+        [AxsLiquidGlassLens axs_liquidglass_layoutView:view radius:radius];
+        return;
+    }
+
+    // 键盘判定要往上走 12 层，所以放在签名命中之后：常规表面走不到这里。
+    if (!current.keyboardScope && axs_liquidglass_isKeyboardSurface(view)) return;
+
     if (radius < 4.0) {
         // 直角表面不加描边，否则会在方角上画出一圈硬边。
         gAxsBackdropSkippedCount += 1;
@@ -164,7 +201,8 @@ static void axs_liquidglass_hookLayoutSubviews(id self, SEL _cmd) {
         return;
     }
 
-    objc_setAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey, signature,
+    objc_setAssociatedObject(view, &kAxsLiquidGlassBackdropAppliedKey,
+                             [NSData dataWithBytes:&signature length:sizeof(signature)],
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [[self axs_liquidglass_registry] addObject:view];
     gAxsBackdropAppliedCount += 1;

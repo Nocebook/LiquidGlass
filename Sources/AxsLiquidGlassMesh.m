@@ -5,6 +5,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 #import <stdlib.h>
+#include <string.h>
 
 static char kAxsMeshAppliedKey;
 static char kAxsMeshOriginalKey;
@@ -83,16 +84,17 @@ static id AxsMeshForGeometry(CGFloat width, CGFloat height, CGFloat radius, doub
     id cached = [AxsMeshCache() objectForKey:key];
     if (cached) return cached;
 
-    // 网格密度：小卡片 10 段；药丸/胶囊这类细长表面要 12 段，否则圆头那两段弧会被
-    // 直线插值拉平，"边缘弯折"就退化成一圈轻微的位移；整屏级别才降到 8 段。
+    // 网格密度直接决定 GPU 顶点与片元的工作量，而折射带只有 5%~22% 宽度，
+    // 段数降到 8/6 之后弯折的形状几乎看不出差别，面数却少了 40%~55%：
+    //   药丸 10 段 = 100 面（原 144），普通卡片 8 段 = 64 面（原 100），大面 6 段 = 36 面（原 64）。
     NSInteger segments;
     double aspect = width / MAX(height, 1.0);
     if (height < 120.0 && aspect > 2.0) {
-        segments = 12;
-    } else if (width * height > 260000.0) {
-        segments = 8;
-    } else {
         segments = 10;
+    } else if (width * height > 260000.0) {
+        segments = 6;
+    } else {
+        segments = 8;
     }
     NSInteger side = segments + 1;
     NSUInteger vertexCount = (NSUInteger)(side * side);
@@ -214,6 +216,15 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
 
 static char kAxsLayerMeshAppliedKey;
 static char kAxsLayerMeshOriginalKey;
+static char kAxsLayerMeshGeometryKey;
+
+/// 同一块图层上一次挂网格时的几何与强度。用来做幂等判断。
+typedef struct {
+    float width;
+    float height;
+    float radius;
+    float strength;
+} AxsMeshGeometry;
 
 /// 把网格直接挂到某个图层上，原值记在图层自己身上。
 /// 灵动岛只有一个裸露的 CABackdropLayer，没有 UIVisualEffectView 可挂；
@@ -223,6 +234,15 @@ static BOOL AxsAttachMeshToLayer(CALayer *target, CGFloat width, CGFloat height,
     if (!target) return NO;
     if (strength <= 0.01) return NO;
     if (width < 40.0 || height < 20.0) return NO;
+
+    // 幂等：几何、圆角、强度都没变就直接返回，不碰图层。
+    // 灵动岛是按固定节奏轮询刷新的，每一轮都重设一次 meshTransform 会白白提交一次
+    // CA 事务、把 CAPortalLayer / backdrop 重新合成一遍 —— 一天下来是几万次无意义的重绘。
+    AxsMeshGeometry geometry = { (float)width, (float)height, (float)radius, (float)strength };
+    NSData *previous = objc_getAssociatedObject(target, &kAxsLayerMeshGeometryKey);
+    if ([previous isKindOfClass:[NSData class]] &&
+        previous.length == sizeof(geometry) &&
+        memcmp(previous.bytes, &geometry, sizeof(geometry)) == 0) return YES;
 
     id mesh = AxsMeshForGeometry(width, height, radius, strength);
     if (!mesh) {
@@ -251,6 +271,9 @@ static BOOL AxsAttachMeshToLayer(CALayer *target, CGFloat width, CGFloat height,
 
     objc_setAssociatedObject(target, &kAxsLayerMeshAppliedKey, @(strength),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(target, &kAxsLayerMeshGeometryKey,
+                             [NSData dataWithBytes:&geometry length:sizeof(geometry)],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     return YES;
 }
 
@@ -261,6 +284,7 @@ static void AxsDetachMeshFromLayer(CALayer *target) {
     AxsSetMeshTransform(target, [original isKindOfClass:[NSNull class]] ? nil : original);
     objc_setAssociatedObject(target, &kAxsLayerMeshAppliedKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(target, &kAxsLayerMeshOriginalKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(target, &kAxsLayerMeshGeometryKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 @implementation AxsLiquidGlassMesh

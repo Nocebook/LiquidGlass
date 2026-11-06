@@ -4,19 +4,36 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
+#include <string.h>
 
 static char kAxsLensContainerKey;
 static char kAxsLensFillKey;
 static char kAxsLensSpecularKey;
 static char kAxsLensBorderKey;
 static char kAxsLensBorderMaskKey;
-static char kAxsLensShadowKey;
 static char kAxsLensSignatureKey;
 static char kAxsLensGeometryKey;
 
 static NSInteger gAxsLensAppliedCount = 0;
 
 #pragma mark - 几何
+
+/// 参数签名。用结构体而不是格式化字符串：这个比较在滚动时是逐帧的，
+/// 每次拼一个 NSString 会持续制造临时对象，十几块玻璃叠起来就是每帧十几次分配。
+typedef struct {
+    float radius;
+    float fill;
+    float border;
+    float specular;
+    int perfMode;
+    int dark;
+} AxsLensSignature;
+
+typedef struct {
+    float width;
+    float height;
+    float radius;
+} AxsLensGeometry;
 
 static BOOL AxsLensIsDark(UIView *view) {
     if (@available(iOS 12.0, *)) {
@@ -73,13 +90,22 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
 
     CGFloat clampedRadius = MAX(0.0, radius);
     BOOL dark = AxsLensIsDark(view);
-    NSString *signature = [NSString stringWithFormat:@"%.1f|%.3f|%.3f|%.3f|%ld|%d",
-                           clampedRadius, fill, border, specular, (long)perfMode, (int)dark];
-    NSString *previous = objc_getAssociatedObject(view, &kAxsLensSignatureKey);
+
+    AxsLensSignature signature;
+    signature.radius = (float)clampedRadius;
+    signature.fill = (float)fill;
+    signature.border = (float)border;
+    signature.specular = (float)specular;
+    signature.perfMode = (int)perfMode;
+    signature.dark = (int)dark;
+    NSData *previous = objc_getAssociatedObject(view, &kAxsLensSignatureKey);
     CALayer *container = objc_getAssociatedObject(view, &kAxsLensContainerKey);
 
     // 参数没变且图层还在：只补一次几何，不做任何重建。这是控制中心反复开关时的主路径。
-    if (container && [previous isEqualToString:signature]) {
+    // 用 memcmp 比对，不分配对象 —— 滚动时这个判断是逐帧的。
+    if (container && [previous isKindOfClass:[NSData class]] &&
+        previous.length == sizeof(signature) &&
+        memcmp(previous.bytes, &signature, sizeof(signature)) == 0) {
         [self axs_liquidglass_layoutView:view radius:clampedRadius];
         return;
     }
@@ -97,7 +123,9 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         container.cornerCurve = kCACornerCurveContinuous;
     }
 
-    // 1. 玻璃本体：上亮下暗的极淡乳白。
+    // 1+3 合并成一层：玻璃本体（上亮下暗的极淡乳白）+ 底边内阴影。
+    //    早期是两层渐变上下叠着画，每块表面多一次全幅 alpha 混合；
+    //    合成到同一条竖直渐变里，观感几乎一致，但少了一个图层、少一遍混合。
     //    暗色界面下不能再用纯白 —— 白膜落在深色底上会发灰，改成低透明度本色 + 更深的收口。
     CAGradientLayer *fillLayer = objc_getAssociatedObject(view, &kAxsLensFillKey);
     if (!fillLayer) {
@@ -108,57 +136,50 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         [container addSublayer:fillLayer];
         objc_setAssociatedObject(view, &kAxsLensFillKey, fillLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
-    fillLayer.hidden = (fill <= 0.001);
+    fillLayer.hidden = (fill <= 0.001 && border <= 0.001);
+    CGFloat shadowAlpha = (CGFloat)((dark ? 0.22 : 0.10) * border);
     if (dark) {
         fillLayer.colors = @[
             (id)[UIColor colorWithWhite:0.62 alpha:(CGFloat)(fill * 0.55)].CGColor,
-            (id)[UIColor colorWithWhite:0.32 alpha:(CGFloat)(fill * 0.28)].CGColor
+            (id)[UIColor colorWithWhite:0.42 alpha:(CGFloat)(fill * 0.30)].CGColor,
+            (id)[UIColor colorWithWhite:0.20 alpha:0.0].CGColor,
+            (id)[UIColor colorWithWhite:0.0 alpha:shadowAlpha].CGColor
         ];
     } else {
         fillLayer.colors = @[
             (id)[UIColor colorWithRed:0.98 green:0.99 blue:1.0 alpha:(CGFloat)fill].CGColor,
-            (id)[UIColor colorWithRed:0.88 green:0.93 blue:1.0 alpha:(CGFloat)(fill * 0.42)].CGColor
+            (id)[UIColor colorWithRed:0.90 green:0.94 blue:1.0 alpha:(CGFloat)(fill * 0.62)].CGColor,
+            (id)[UIColor colorWithRed:0.86 green:0.90 blue:1.0 alpha:0.0].CGColor,
+            (id)[UIColor colorWithWhite:0.0 alpha:shadowAlpha].CGColor
         ];
     }
-    fillLayer.locations = @[@0.0, @1.0];
+    fillLayer.locations = @[@0.0, @0.42, @0.80, @1.0];
 
     // 2. 镜面高光：左上角一团柔光，对应真实玻璃的主光源。
+    //    省电档（specular 被压成 0）时连图层都不建 —— 一块整幅的径向渐变
+    //    在任何界面上都是实打实的一次合成，省电档下没有理由留着它。
     CAGradientLayer *specularLayer = objc_getAssociatedObject(view, &kAxsLensSpecularKey);
-    if (!specularLayer) {
-        specularLayer = [CAGradientLayer layer];
-        specularLayer.name = @"heli.liquid.specular";
-        specularLayer.type = kCAGradientLayerRadial;
-        specularLayer.startPoint = CGPointMake(0.16, 0.02);
-        specularLayer.endPoint = CGPointMake(0.82, 0.95);
-        [container addSublayer:specularLayer];
-        objc_setAssociatedObject(view, &kAxsLensSpecularKey, specularLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    if (specular > 0.001) {
+        if (!specularLayer) {
+            specularLayer = [CAGradientLayer layer];
+            specularLayer.name = @"heli.liquid.specular";
+            specularLayer.type = kCAGradientLayerRadial;
+            specularLayer.startPoint = CGPointMake(0.16, 0.02);
+            specularLayer.endPoint = CGPointMake(0.82, 0.95);
+            [container addSublayer:specularLayer];
+            objc_setAssociatedObject(view, &kAxsLensSpecularKey, specularLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+        specularLayer.hidden = NO;
+        CGFloat specularGain = dark ? 0.26 : 0.32;
+        specularLayer.colors = @[
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(specularGain * specular)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.09 * specular)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:0.0].CGColor
+        ];
+        specularLayer.locations = @[@0.0, @0.42, @1.0];
+    } else if (specularLayer) {
+        specularLayer.hidden = YES;
     }
-    specularLayer.hidden = (specular <= 0.001);
-    CGFloat specularGain = dark ? 0.26 : 0.34;
-    specularLayer.colors = @[
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(specularGain * specular)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.10 * specular)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:0.0].CGColor
-    ];
-    specularLayer.locations = @[@0.0, @0.42, @1.0];
-
-    // 3. 底边内阴影：让玻璃看起来"有厚度"，不是一张贴纸。
-    CAGradientLayer *shadowLayer = objc_getAssociatedObject(view, &kAxsLensShadowKey);
-    if (!shadowLayer) {
-        shadowLayer = [CAGradientLayer layer];
-        shadowLayer.name = @"heli.liquid.shadow";
-        shadowLayer.startPoint = CGPointMake(0.0, 0.0);
-        shadowLayer.endPoint = CGPointMake(0.0, 1.0);
-        [container addSublayer:shadowLayer];
-        objc_setAssociatedObject(view, &kAxsLensShadowKey, shadowLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    }
-    shadowLayer.hidden = (border <= 0.001);
-    shadowLayer.colors = @[
-        (id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor,
-        (id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor,
-        (id)[UIColor colorWithWhite:0.0 alpha:(CGFloat)((dark ? 0.22 : 0.10) * border)].CGColor
-    ];
-    shadowLayer.locations = @[@0.0, @0.62, @1.0];
 
     // 4. 定向描边（重写）。
     //    旧实现是线性对角渐变 + 白边，观感上"整圈一样亮"，不像玻璃。
@@ -200,7 +221,9 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     CAShapeLayer *mask = objc_getAssociatedObject(view, &kAxsLensBorderMaskKey);
     mask.lineWidth = (CGFloat)(0.9 + 0.9 * border);
 
-    objc_setAssociatedObject(view, &kAxsLensSignatureKey, signature, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(view, &kAxsLensSignatureKey,
+                             [NSData dataWithBytes:&signature length:sizeof(signature)],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [self axs_liquidglass_layoutView:view radius:clampedRadius];
 
     gAxsLensAppliedCount += 1;
@@ -223,9 +246,17 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
 
     // 尺寸和圆角都没变就直接返回：layoutSubviews 在滚动/展开动画里每帧都调，
     // 重建描边路径是这个模块里最没必要的一笔开销。
-    NSString *geometry = [NSString stringWithFormat:@"%.1fx%.1f|%.1f", width, height, radius];
-    if ([objc_getAssociatedObject(view, &kAxsLensGeometryKey) isEqual:geometry]) return;
-    objc_setAssociatedObject(view, &kAxsLensGeometryKey, geometry, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    AxsLensGeometry geometry;
+    geometry.width = (float)width;
+    geometry.height = (float)height;
+    geometry.radius = (float)radius;
+    NSData *previousGeometry = objc_getAssociatedObject(view, &kAxsLensGeometryKey);
+    if ([previousGeometry isKindOfClass:[NSData class]] &&
+        previousGeometry.length == sizeof(geometry) &&
+        memcmp(previousGeometry.bytes, &geometry, sizeof(geometry)) == 0) return;
+    objc_setAssociatedObject(view, &kAxsLensGeometryKey,
+                             [NSData dataWithBytes:&geometry length:sizeof(geometry)],
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     // 用图层自己的坐标（从 0 开始），跟 bounds.origin 解耦，滚动时不会二次偏移。
     container.frame = CGRectMake(0.0, 0.0, width, height);
@@ -234,10 +265,8 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     CGRect localRect = CGRectMake(0.0, 0.0, width, height);
     CALayer *fillLayer = objc_getAssociatedObject(view, &kAxsLensFillKey);
     CALayer *specularLayer = objc_getAssociatedObject(view, &kAxsLensSpecularKey);
-    CALayer *shadowLayer = objc_getAssociatedObject(view, &kAxsLensShadowKey);
     fillLayer.frame = localRect;
     specularLayer.frame = localRect;
-    shadowLayer.frame = localRect;
 
     // 锥形渐变的几何跟线性不同：startPoint 是圆心，endPoint 只决定起始角。
     // 半径变化时圆心始终在正中间，这里跟 bounds 一起保持在 0.5/0.5 即可。
@@ -268,7 +297,6 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     objc_setAssociatedObject(view, &kAxsLensSpecularKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsLensBorderKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsLensBorderMaskKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(view, &kAxsLensShadowKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsLensSignatureKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(view, &kAxsLensGeometryKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

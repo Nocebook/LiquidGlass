@@ -172,7 +172,8 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         return;
     }
 
-    AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
+    // 一次拷出热路径快照：这之后每一次取值都不再走消息派发 + 字典查找。
+    AxsLiquidGlassParams params = *AxsLiquidGlassParamsGet();
 
     // 小组件进程一律不动 effect。白屏的根因就在这：
     // WidgetKit 出快照时背景是空的，_UICustomBlurEffect 会在快照进程里新建一条
@@ -180,14 +181,14 @@ static double axs_liquidglass_areaRatio(UIView *view) {
     // 也扛不住这条链，超限进程被杀，系统拿不到快照，同样渲染成白块。
     // 所以小组件档位全部改成纯装饰语义：描边与高光都是零 backdrop 成本的。
     if (!isWidget) {
-        double radius = [config axs_liquidglass_blurRadius];
-        double saturation = [config axs_liquidglass_saturation];
-        double tintAlpha = [config axs_liquidglass_tintAlpha];
+        double radius = params.blurRadius;
+        double saturation = params.saturation;
+        double tintAlpha = params.tintAlpha;
 
         // 通知与弹窗的底色透明度：跟 Liquidify 的"通知中心透明度"同语义，
         // 1.0 原样，调低后通知底更透、壁纸更明显。只作用于通知和上下文菜单。
         if (kind == AxsLiquidGlassSurfaceKindAlert || kind == AxsLiquidGlassSurfaceKindContextMenu) {
-            tintAlpha *= [config axs_liquidglass_alertsOpacity];
+            tintAlpha *= params.alertsOpacity;
         }
 
         UIVisualEffect *effect = [self axs_liquidglass_makeEffectWithRadius:radius
@@ -204,11 +205,11 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 
-    double rim = [config axs_liquidglass_rimStrength];
-    double fill = [config axs_liquidglass_fillAlpha];
-    double specular = [config axs_liquidglass_specularStrength];
-    double mesh = [config axs_liquidglass_meshStrength];
-    NSInteger perfMode = [config axs_liquidglass_perfMode];
+    double rim = params.rimStrength;
+    double fill = params.fillAlpha;
+    double specular = params.specularStrength;
+    double mesh = params.meshStrength;
+    NSInteger perfMode = params.perfMode;
     CGFloat cornerRadius = [self axs_liquidglass_radiusForView:view];
 
     if (isWidget) {
@@ -222,7 +223,7 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         }
         // 档位语义（effect 一律不替换）：1 无装饰、2 零 layer 描边、3 描边 + 高光图层。
         // 档位 3 也强制走省电参数，不给它上折射网格。
-        NSInteger widgetMode = [config axs_liquidglass_widgetMode];
+        NSInteger widgetMode = params.widgetMode;
         if (widgetMode >= 3 && rim > 0.001 && cornerRadius >= 4.0) {
             [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                        fill:fill * 0.55 border:rim

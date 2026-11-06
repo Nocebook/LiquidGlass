@@ -5,9 +5,31 @@
 #import "AxsLiquidGlassMesh.h"
 #import "AxsLiquidGlassPrivate.h"
 
+#import <substrate.h>
+#include <string.h>
+
 static __weak UIView *gAxsIslandGlassContainer;
 static BOOL gAxsIslandGlassApplied = NO;
 static BOOL gAxsIslandGlassNoteLogged = NO;
+
+/// 上一次成功挂载时的参数快照。几何、圆角、参数都没变就不再碰图层 ——
+/// 灵动岛是轮询刷新的，每轮都重设一次玻璃膜会提交一次 CA 事务、
+/// 把胶囊底重新合成一遍，一天下来是几万次完全多余的重绘。
+typedef struct {
+    float width;
+    float height;
+    float radius;
+    float rim;
+    float fill;
+    float specular;
+    float mesh;
+    int perfMode;
+} AxsIslandSignature;
+
+static AxsIslandSignature gAxsIslandSignature;
+static BOOL gAxsIslandHasSignature = NO;
+/// 是否已经接管容器类的 layoutSubviews。接管成功时轮询可以退到很低的频率。
+static BOOL gAxsIslandEventDriven = NO;
 
 #pragma mark - 命名判定
 
@@ -23,6 +45,104 @@ static BOOL AxsIslandGlassIsForeignHost(NSString *className) {
     return [lower containsString:@"lockscreen"] || [lower containsString:@"cover"] ||
            [lower containsString:@"homescreen"] || [lower containsString:@"switcher"] ||
            [lower containsString:@"wallpaper"] || [lower containsString:@"statusbar"];
+}
+
+#pragma mark - 应用
+
+/// 把玻璃与折射挂到容器上。签名没变时直接返回，不产生任何 CA 事务。
+/// 重入保护：insertSublayer 有可能把容器的布局再触发一次，
+/// 而签名是在最后才写入的 —— 没有这道闸就会自己套自己。
+static BOOL gAxsIslandApplying = NO;
+
+static void AxsIslandApply(UIView *container, AxsLiquidGlassParams params) {
+    if (!container || gAxsIslandApplying) return;
+
+    CGRect bounds = container.bounds;
+    CGFloat width = CGRectGetWidth(bounds);
+    CGFloat height = CGRectGetHeight(bounds);
+    if (width < 60.0 || height < 20.0) return;
+
+    // 圆角：系统会在收起/展开时改它，取不到就按药丸取半高。
+    CGFloat radius = container.layer.cornerRadius;
+    if (radius < 1.0) radius = height * 0.5;
+    radius = MIN(radius, height * 0.5);
+
+    double rim = params.rimStrength;
+    double fill = params.fillAlpha;
+    double specular = params.specularStrength;
+    double mesh = params.meshStrength;
+    NSInteger perfMode = params.perfMode;
+
+    // 灵动岛面积小、离视线最近，玻璃感可以比别处更浓一点；但档位照配置走，
+    // 省电档下 Lens 自己会把膜和高光压掉。
+    double islandFill = MIN(fill * 1.15, 0.34);
+    double islandBorder = MIN(rim * 1.25, 1.0);
+    double islandSpecular = MIN(specular * 1.10, 1.0);
+    // 省电档要跟 Lens 内部一致：它会把高光清零、膜压到 55%，签名也得跟着算，
+    // 否则每次轮询都会因为"参数不同"而重建一遍图层。
+    double effectiveSpecular = (perfMode <= 0) ? 0.0 : islandSpecular;
+    double effectiveFill = (perfMode <= 0) ? islandFill * 0.55 : islandFill;
+
+    AxsIslandSignature signature;
+    signature.width = (float)width;
+    signature.height = (float)height;
+    signature.radius = (float)radius;
+    signature.rim = (float)islandBorder;
+    signature.fill = (float)effectiveFill;
+    signature.specular = (float)effectiveSpecular;
+    signature.mesh = (float)mesh;
+    signature.perfMode = (int)perfMode;
+
+    if (gAxsIslandHasSignature &&
+        memcmp(&signature, &gAxsIslandSignature, sizeof(signature)) == 0) {
+        return;   // 什么都没变：一个图层都不碰
+    }
+
+    gAxsIslandApplying = YES;
+    @try {
+        [AxsLiquidGlassLens axs_liquidglass_applyToView:container
+                                                  radius:radius
+                                                    fill:islandFill
+                                                  border:islandBorder
+                                                specular:islandSpecular
+                                                perfMode:perfMode];
+
+        // 折射只挂真实背景层：灵动岛内部确实有 CABackdropLayer（系统胶囊底就是它）。
+        // 药丸尺寸小，网格面数很低，这一笔开销可以接受。
+        if (perfMode > 0 && mesh > 0.01) {
+            [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToLayer:container.layer
+                                                                radius:radius
+                                                              strength:mesh];
+        }
+    } @finally {
+        gAxsIslandApplying = NO;
+    }
+
+    gAxsIslandSignature = signature;
+    gAxsIslandHasSignature = YES;
+
+    if (!gAxsIslandGlassApplied) {
+        gAxsIslandGlassApplied = YES;
+        AxsLog(@"灵动岛：玻璃已挂载 %@（%.0fx%.0f，圆角 %.0f）",
+               NSStringFromClass([container class]), width, height, radius);
+    }
+}
+
+/// 容器自己重排时立刻跟一次。灵动岛展开 / 收起的尺寸变化都会经过 layoutSubviews，
+/// 把刷新挂在这里，主循环就不用为了"跟上动画"而高频轮询了。
+static void (*gAxsIslandOrigLayoutSubviews)(id, SEL);
+
+static void AxsIslandLayoutTrampoline(id self, SEL _cmd) {
+    if (gAxsIslandOrigLayoutSubviews) {
+        gAxsIslandOrigLayoutSubviews(self, _cmd);
+    }
+    if ((UIView *)self == gAxsIslandGlassContainer) {
+        @try {
+            [AxsLiquidGlassIslandDriver axs_liquidglass_islandRefreshTracked];
+        } @catch (NSException *exception) {
+            (void)exception;
+        }
+    }
 }
 
 @implementation AxsLiquidGlassIslandDriver
@@ -74,6 +194,17 @@ static BOOL AxsIslandGlassIsForeignHost(NSString *className) {
     } @catch (NSException *exception) {
         (void)exception;
     }
+
+    // 灵动岛只可能在 SBSystemApertureWindow 里。桌面常驻窗口有十几个，
+    // 每个都往下递归 5 层、几百个视图，每秒扫一遍纯属白烧 CPU 和电量。
+    // 先按窗口类名筛一遍，命中就只扫这一棵子树。
+    NSMutableArray<UIView *> *preferred = [NSMutableArray array];
+    for (UIView *window in windows) {
+        if (window.hidden || window.alpha < 0.01) continue;
+        NSString *name = NSStringFromClass([window class]).lowercaseString;
+        if ([name containsString:@"aperture"]) [preferred addObject:window];
+    }
+    if (preferred.count > 0) return preferred;
 
     return windows;
 }
@@ -128,6 +259,7 @@ static void AxsIslandGlassCollect(UIView *root, NSInteger depth, NSMutableArray<
 #pragma mark - 刷新
 
 + (void)axs_liquidglass_islandTeardown {
+    gAxsIslandHasSignature = NO;
     UIView *container = gAxsIslandGlassContainer;
     if (!container) return;
     [AxsLiquidGlassLens axs_liquidglass_removeFromView:container];
@@ -139,8 +271,8 @@ static void AxsIslandGlassCollect(UIView *root, NSInteger depth, NSMutableArray<
 }
 
 + (void)axs_liquidglass_islandRefresh {
-    AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
-    if (![config axs_liquidglass_islandGlass]) {
+    AxsLiquidGlassParams params = *AxsLiquidGlassParamsGet();
+    if (!params.islandGlass) {
         [self axs_liquidglass_islandTeardown];
         return;
     }
@@ -159,46 +291,52 @@ static void AxsIslandGlassCollect(UIView *root, NSInteger depth, NSMutableArray<
         // 容器换了（系统重建）先把旧的摘干净，避免在废弃视图上留一层玻璃。
         [self axs_liquidglass_islandTeardown];
         gAxsIslandGlassContainer = container;
+        [self axs_liquidglass_islandHookLayoutForContainer:container];
     }
 
-    CGRect bounds = container.bounds;
-    CGFloat width = CGRectGetWidth(bounds);
-    CGFloat height = CGRectGetHeight(bounds);
-    if (width < 60.0 || height < 20.0) return;
+    AxsIslandApply(container, params);
+}
 
-    // 圆角：系统会在收起/展开时改它，取不到就按药丸取半高。
-    CGFloat radius = container.layer.cornerRadius;
-    if (radius < 1.0) radius = height * 0.5;
-    radius = MIN(radius, height * 0.5);
++ (void)axs_liquidglass_islandRefreshTracked {
+    UIView *container = gAxsIslandGlassContainer;
+    if (!container || !container.window) return;
+    AxsLiquidGlassParams params = *AxsLiquidGlassParamsGet();
+    if (!params.islandGlass) return;
+    AxsIslandApply(container, params);
+}
 
-    double rim = [config axs_liquidglass_rimStrength];
-    double fill = [config axs_liquidglass_fillAlpha];
-    double specular = [config axs_liquidglass_specularStrength];
-    double mesh = [config axs_liquidglass_meshStrength];
-    NSInteger perfMode = [config axs_liquidglass_perfMode];
+/// 接管容器自己的 layoutSubviews：展开 / 收起的每一次尺寸变化都会即时跟上，
+/// 于是守护线程可以退到很低的频率，空闲时几乎不耗电。
++ (BOOL)axs_liquidglass_islandHookLayoutForContainer:(UIView *)container {
+    if (!container) return NO;
+    Class cls = [container class];
+    NSString *name = NSStringFromClass(cls);
+    if (name.length == 0) return NO;
 
-    // 灵动岛面积小、离视线最近，玻璃感可以比别处更浓一点；但档位照配置走，
-    // 省电档下 Lens 自己会把膜和高光压掉。
-    [AxsLiquidGlassLens axs_liquidglass_applyToView:container
-                                              radius:radius
-                                                fill:MIN(fill * 1.15, 0.34)
-                                              border:MIN(rim * 1.25, 1.0)
-                                            specular:MIN(specular * 1.10, 1.0)
-                                            perfMode:perfMode];
+    static NSMutableSet<NSString *> *hooked;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        hooked = [NSMutableSet set];
+    });
+    if ([hooked containsObject:name]) return YES;
+    [hooked addObject:name];
 
-    // 折射只挂真实背景层：灵动岛内部确实有 CABackdropLayer（系统胶囊底就是它）。
-    // 药丸尺寸小，网格面数很低，这一笔开销可以接受。
-    if (perfMode > 0 && mesh > 0.01) {
-        [AxsLiquidGlassMesh axs_liquidglass_applyRefractionToLayer:container.layer
-                                                            radius:radius
-                                                          strength:mesh];
-    }
+    // 只挂"类自己实现"的版本：继承来的 layoutSubviews 挂在子类上，
+    // MSHookMessageEx 会改到父类，等于给一大片系统视图加了开销。
+    if (!axs_liquidglass_classImplements(cls, @selector(layoutSubviews))) return NO;
+    // 再加一道类名约束，避免挂到通用视图类上。
+    if (!AxsIslandGlassNameMatches(name)) return NO;
 
-    if (!gAxsIslandGlassApplied) {
-        gAxsIslandGlassApplied = YES;
-        AxsLog(@"灵动岛：玻璃已挂载 %@（%.0fx%.0f，圆角 %.0f）",
-               NSStringFromClass([container class]), width, height, radius);
-    }
+    MSHookMessageEx(cls, @selector(layoutSubviews),
+                    (IMP)AxsIslandLayoutTrampoline,
+                    (IMP *)&gAxsIslandOrigLayoutSubviews);
+    gAxsIslandEventDriven = (gAxsIslandOrigLayoutSubviews != NULL);
+    AxsLog(@"灵动岛：已接管 %@ 的 layoutSubviews（尺寸变化即时刷新）", name);
+    return gAxsIslandEventDriven;
+}
+
++ (BOOL)axs_liquidglass_islandIsEventDriven {
+    return gAxsIslandEventDriven;
 }
 
 @end

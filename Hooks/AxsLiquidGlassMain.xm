@@ -82,18 +82,21 @@
 
         @try {
             AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
-            AxsLog(@"配置 enabled=%d blur=%.1f sat=%.2f tint=%.2f 描边=%.2f 折射=%.2f 膜=%.2f 高光=%.2f 档位=%ld widget=%ld island=%d",
+            const AxsLiquidGlassParams *params = AxsLiquidGlassParamsGet();
+            AxsLog(@"配置 enabled=%d blur=%.1f sat=%.2f tint=%.2f 描边=%.2f 折射=%.2f 膜=%.2f 高光=%.2f 档位=%ld 生效档=%ld 低电量=%d widget=%ld island=%d",
                    [config axs_liquidglass_isEnabled],
-                   [config axs_liquidglass_blurRadius],
-                   [config axs_liquidglass_saturation],
-                   [config axs_liquidglass_tintAlpha],
-                   [config axs_liquidglass_rimStrength],
-                   [config axs_liquidglass_meshStrength],
-                   [config axs_liquidglass_fillAlpha],
-                   [config axs_liquidglass_specularStrength],
+                   params->blurRadius,
+                   params->saturation,
+                   params->tintAlpha,
+                   params->rimStrength,
+                   params->meshStrength,
+                   params->fillAlpha,
+                   params->specularStrength,
                    (long)[config axs_liquidglass_perfMode],
-                   (long)[config axs_liquidglass_widgetMode],
-                   [config axs_liquidglass_hideIsland]);
+                   (long)params->perfMode,
+                   (int)params->lowPower,
+                   (long)params->widgetMode,
+                   params->islandGlass);
         } @catch (NSException *exception) {
             (void)exception;
         }

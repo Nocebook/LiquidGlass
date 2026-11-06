@@ -2,404 +2,423 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>title</key>
-	<string>liquid (HL)</string>
 	<key>items</key>
 	<array>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>总开关</string>
 			<key>footerText</key>
 			<string>关闭后立即恢复系统原生模糊，不需要注销。</string>
+			<key>label</key>
+			<string>总开关</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>启用插件</string>
-			<key>key</key>
-			<string>enabled</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>label</key>
+			<string>启用插件</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>半径越大越像磨砂厚玻璃；饱和度决定底色透不透。模糊半径是耗电第一大户，默认 88 已经比系统原生 46 厚一倍，日常够用；拉到 150 以上会明显发热。</string>
 			<key>label</key>
 			<string>玻璃质感</string>
-			<key>footerText</key>
-			<string>半径越大越像磨砂厚玻璃；饱和度决定底色透不透。</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>模糊强度</string>
-			<key>key</key>
-			<string>blurRadius</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<real>120.0</real>
-			<key>min</key>
-			<real>40.0</real>
-			<key>max</key>
-			<real>200.0</real>
 			<key>decimals</key>
 			<integer>0</integer>
+			<key>default</key>
+			<real>88.0</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>blurRadius</string>
+			<key>label</key>
+			<string>模糊强度</string>
+			<key>max</key>
+			<real>200.0</real>
+			<key>min</key>
+			<real>40.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>色彩饱和度</string>
-			<key>key</key>
-			<string>saturation</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<real>1.9</real>
-			<key>min</key>
-			<real>1.0</real>
-			<key>max</key>
-			<real>2.5</real>
 			<key>decimals</key>
 			<integer>1</integer>
+			<key>default</key>
+			<real>1.8</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>saturation</string>
+			<key>label</key>
+			<string>色彩饱和度</string>
+			<key>max</key>
+			<real>2.5</real>
+			<key>min</key>
+			<real>1.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>乳白浓度</string>
-			<key>key</key>
-			<string>tintAlpha</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
+			<key>decimals</key>
+			<integer>2</integer>
 			<key>default</key>
 			<real>0.28</real>
-			<key>min</key>
-			<real>0.0</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>tintAlpha</string>
+			<key>label</key>
+			<string>乳白浓度</string>
 			<key>max</key>
 			<real>0.6</real>
-			<key>decimals</key>
-			<integer>2</integer>
+			<key>min</key>
+			<real>0.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>描边强度</string>
-			<key>key</key>
-			<string>rimStrength</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<real>0.65</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>max</key>
-			<real>1.0</real>
 			<key>decimals</key>
 			<integer>2</integer>
+			<key>default</key>
+			<real>0.65</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>rimStrength</string>
+			<key>label</key>
+			<string>描边强度</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>footerText</key>
+			<string>默认只在桌面、控制中心、通知这些系统界面上改写模糊。打开后连 App 里的导航栏、键盘、侧边栏也会跟着加厚——观感更统一，但每个 App 滚动时都要重算更大的高斯核，是待机以外最明显的一项耗电。</string>
+			<key>key</key>
+			<string>appBlur</string>
+			<key>label</key>
+			<string>第三方 App 也加厚模糊</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>液态层</string>
 			<key>footerText</key>
 			<string>边缘折射会真的把背后的内容在圆角处弯折（走 CABackdropLayer 网格），这是液态玻璃和普通模糊的区别；性能档调到省电时只保留描边与薄膜。</string>
+			<key>label</key>
+			<string>液态层</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>边缘折射</string>
+			<key>decimals</key>
+			<integer>2</integer>
+			<key>default</key>
+			<real>0.45</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>meshStrength</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<real>0.6</real>
-			<key>min</key>
-			<real>0.0</real>
+			<key>label</key>
+			<string>边缘折射</string>
 			<key>max</key>
 			<real>1.0</real>
-			<key>decimals</key>
-			<integer>2</integer>
+			<key>min</key>
+			<real>0.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>玻璃膜浓度</string>
-			<key>key</key>
-			<string>fillAlpha</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
+			<key>decimals</key>
+			<integer>2</integer>
 			<key>default</key>
 			<real>0.16</real>
-			<key>min</key>
-			<real>0.0</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>fillAlpha</string>
+			<key>label</key>
+			<string>玻璃膜浓度</string>
 			<key>max</key>
 			<real>0.4</real>
-			<key>decimals</key>
-			<integer>2</integer>
+			<key>min</key>
+			<real>0.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>镜面高光</string>
-			<key>key</key>
-			<string>specularStrength</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<real>0.55</real>
-			<key>min</key>
-			<real>0.0</real>
-			<key>max</key>
-			<real>1.0</real>
 			<key>decimals</key>
 			<integer>2</integer>
+			<key>default</key>
+			<real>0.42</real>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>specularStrength</string>
+			<key>label</key>
+			<string>镜面高光</string>
+			<key>max</key>
+			<real>1.0</real>
+			<key>min</key>
+			<real>0.0</real>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSListItemsCell</string>
-			<key>label</key>
-			<string>性能档</string>
-			<key>key</key>
-			<string>perfMode</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<integer>1</integer>
-			<key>values</key>
-			<array>
-				<integer>0</integer>
-				<integer>1</integer>
-				<integer>2</integer>
-			</array>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>perfMode</string>
+			<key>label</key>
+			<string>性能档</string>
 			<key>titles</key>
 			<array>
 				<string>省电</string>
 				<string>标准</string>
 				<string>极致</string>
 			</array>
+			<key>values</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>footerText</key>
+			<string>系统进入低电量模式时自动按省电档渲染：不挂折射网格、去掉镜面高光、膜压淡一半。退出低电量后自动恢复，不需要注销。</string>
+			<key>key</key>
+			<string>lowPowerAuto</string>
+			<key>label</key>
+			<string>低电量模式自动省电</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>作用范围</string>
 			<key>footerText</key>
 			<string>键盘默认关闭：高光会压住候选字。锁屏的模糊是解锁动画的时间轴，固定交给系统，不提供开关。</string>
+			<key>label</key>
+			<string>作用范围</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>主屏</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeHome</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>主屏</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>Dock</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeDock</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>Dock</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>文件夹</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeFolder</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>文件夹</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>搜索胶囊</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeSearchPill</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>搜索胶囊</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>资源库</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeAppLibrary</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>资源库</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>上下文菜单</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeContextMenu</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>上下文菜单</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>控制中心</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeControlCenter</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<true/>
+			<key>label</key>
+			<string>控制中心</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>通知与弹窗</string>
-			<key>key</key>
-			<string>scopeAlerts</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>scopeAlerts</string>
+			<key>label</key>
+			<string>通知与弹窗</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSTitleValueCell</string>
 			<key>cellClass</key>
 			<string>AxsLiquidGlassSliderCell</string>
-			<key>label</key>
-			<string>通知底色透明度</string>
-			<key>key</key>
-			<string>alertsOpacity</string>
+			<key>decimals</key>
+			<integer>2</integer>
+			<key>default</key>
+			<real>1.0</real>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
-			<key>default</key>
+			<key>key</key>
+			<string>alertsOpacity</string>
+			<key>label</key>
+			<string>通知底色透明度</string>
+			<key>max</key>
 			<real>1.0</real>
 			<key>min</key>
 			<real>0.2</real>
-			<key>max</key>
-			<real>1.0</real>
-			<key>decimals</key>
-			<integer>2</integer>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>键盘</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
 			<key>key</key>
 			<string>scopeKeyboard</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>default</key>
-			<false/>
+			<key>label</key>
+			<string>键盘</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>灵动岛</string>
 			<key>footerText</key>
 			<string>玻璃：给灵动岛容器挂玻璃膜与边缘折射，收起、展开的两种尺寸都会跟随重排。「隐藏」优先级更高，打开后整块透明，胶囊动画也不再显示。</string>
+			<key>label</key>
+			<string>灵动岛</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>灵动岛玻璃</string>
-			<key>key</key>
-			<string>islandGlass</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<true/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>islandGlass</string>
+			<key>label</key>
+			<string>灵动岛玻璃</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
-			<key>label</key>
-			<string>隐藏灵动岛</string>
-			<key>key</key>
-			<string>hideIsland</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<false/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>hideIsland</string>
+			<key>label</key>
+			<string>隐藏灵动岛</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>小组件</string>
 			<key>footerText</key>
 			<string>小组件的模糊一律交给系统原样渲染：快照进程里背景是空的，替换模糊会直接渲成白块（白屏就是这么来的）。档位只控制装饰：跳过 / 无装饰 / 零图层描边（推荐）/ 描边加高光图层（实验）。某个组件出问题就退回上一档，或把包名填进跳过列表。</string>
+			<key>label</key>
+			<string>小组件</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSListItemsCell</string>
-			<key>label</key>
-			<string>小组件处理</string>
-			<key>key</key>
-			<string>widgetMode</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<integer>2</integer>
-			<key>validValues</key>
-			<array>
-				<integer>0</integer>
-				<integer>1</integer>
-				<integer>2</integer>
-				<integer>3</integer>
-			</array>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>widgetMode</string>
+			<key>label</key>
+			<string>小组件处理</string>
 			<key>validTitles</key>
 			<array>
 				<string>完全跳过</string>
@@ -407,21 +426,30 @@
 				<string>边缘描边（推荐）</string>
 				<string>完整效果（实验）</string>
 			</array>
+			<key>validValues</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+			</array>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSEditTextCell</string>
-			<key>label</key>
-			<string>跳过列表</string>
-			<key>key</key>
-			<string>widgetBlocklist</string>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
 			<key>default</key>
 			<string>autonavi,amap</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>key</key>
+			<string>widgetBlocklist</string>
+			<key>label</key>
+			<string>跳过列表</string>
 			<key>placeholder</key>
 			<string>逗号分隔，匹配包名子串</string>
 		</dict>
 	</array>
+	<key>title</key>
+	<string>liquid (HL)</string>
 </dict>
 </plist>
