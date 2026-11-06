@@ -25,6 +25,8 @@ static BOOL AxsIslandGlassIsForeignHost(NSString *className) {
            [lower containsString:@"wallpaper"] || [lower containsString:@"statusbar"];
 }
 
+@implementation AxsLiquidGlassIslandDriver
+
 #pragma mark - 窗口枚举
 
 + (NSArray<UIView *> *)axs_liquidglass_islandWindows {
