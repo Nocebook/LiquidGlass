@@ -348,7 +348,19 @@
 			<key>label</key>
 			<string>灵动岛</string>
 			<key>footerText</key>
-			<string>开启后灵动岛整块透明，来电、音乐、计时器的胶囊动画也不再显示。适合截图或者想要干净顶栏的时候；关掉立刻恢复。</string>
+			<string>玻璃：给灵动岛容器挂玻璃膜与边缘折射，收起、展开的两种尺寸都会跟随重排。「隐藏」优先级更高，打开后整块透明，胶囊动画也不再显示。</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>灵动岛玻璃</string>
+			<key>key</key>
+			<string>islandGlass</string>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>default</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>cell</key>

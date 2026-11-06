@@ -35,6 +35,8 @@
 
 /// 隐藏灵动岛：为 YES 时把灵动岛容器的 alpha 压到 0。
 - (BOOL)axs_liquidglass_hideIsland;
+/// 灵动岛玻璃：给 SystemAperture 容器挂玻璃膜与边缘折射（默认开）。
+- (BOOL)axs_liquidglass_islandGlass;
 /// 每次配置重载自增，页面刷新时可据此判断是否需要重做。
 - (unsigned long long)axs_liquidglass_generation;
 

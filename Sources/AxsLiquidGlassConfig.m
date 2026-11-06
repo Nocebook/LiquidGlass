@@ -252,6 +252,13 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
 
+// 灵动岛玻璃默认开：这一条是"看得见"的功能，装完就该有变化。
+// 找不到容器时模块自己会静默退出，不会把灵动岛弄坏，所以敢默认开。
+- (BOOL)axs_liquidglass_islandGlass {
+    id value = [self axs_liquidglass_valueForKey:@"islandGlass" defaultValue:@(YES)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
+}
+
 - (unsigned long long)axs_liquidglass_generation {
     return _generation;
 }

@@ -16,6 +16,15 @@ static char kAxsLensGeometryKey;
 
 static NSInteger gAxsLensAppliedCount = 0;
 
+#pragma mark - 几何
+
+static BOOL AxsLensIsDark(UIView *view) {
+    if (@available(iOS 12.0, *)) {
+        return view.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
+    }
+    return NO;
+}
+
 /// 把玻璃膜插在 backdrop 层的正上方、真实内容层的下方。
 /// 直接 addSublayer 会盖到子视图上面（文字发白）；插到 index 0 又会被模糊盖住。
 static void AxsInsertLensContainer(UIView *view, CALayer *container) {
@@ -35,7 +44,6 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         [view.layer addSublayer:container];
     }
 }
-
 
 @implementation AxsLiquidGlassLens
 
@@ -64,8 +72,9 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     }
 
     CGFloat clampedRadius = MAX(0.0, radius);
-    NSString *signature = [NSString stringWithFormat:@"%.1f|%.3f|%.3f|%.3f|%ld",
-                           clampedRadius, fill, border, specular, (long)perfMode];
+    BOOL dark = AxsLensIsDark(view);
+    NSString *signature = [NSString stringWithFormat:@"%.1f|%.3f|%.3f|%.3f|%ld|%d",
+                           clampedRadius, fill, border, specular, (long)perfMode, (int)dark];
     NSString *previous = objc_getAssociatedObject(view, &kAxsLensSignatureKey);
     CALayer *container = objc_getAssociatedObject(view, &kAxsLensContainerKey);
 
@@ -88,7 +97,8 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         container.cornerCurve = kCACornerCurveContinuous;
     }
 
-    // 1. 玻璃本体：上亮下暗的极淡乳白
+    // 1. 玻璃本体：上亮下暗的极淡乳白。
+    //    暗色界面下不能再用纯白 —— 白膜落在深色底上会发灰，改成低透明度本色 + 更深的收口。
     CAGradientLayer *fillLayer = objc_getAssociatedObject(view, &kAxsLensFillKey);
     if (!fillLayer) {
         fillLayer = [CAGradientLayer layer];
@@ -99,13 +109,20 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         objc_setAssociatedObject(view, &kAxsLensFillKey, fillLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     fillLayer.hidden = (fill <= 0.001);
-    fillLayer.colors = @[
-        (id)[UIColor colorWithRed:0.98 green:0.99 blue:1.0 alpha:(CGFloat)fill].CGColor,
-        (id)[UIColor colorWithRed:0.90 green:0.94 blue:1.0 alpha:(CGFloat)(fill * 0.45)].CGColor
-    ];
+    if (dark) {
+        fillLayer.colors = @[
+            (id)[UIColor colorWithWhite:0.62 alpha:(CGFloat)(fill * 0.55)].CGColor,
+            (id)[UIColor colorWithWhite:0.32 alpha:(CGFloat)(fill * 0.28)].CGColor
+        ];
+    } else {
+        fillLayer.colors = @[
+            (id)[UIColor colorWithRed:0.98 green:0.99 blue:1.0 alpha:(CGFloat)fill].CGColor,
+            (id)[UIColor colorWithRed:0.88 green:0.93 blue:1.0 alpha:(CGFloat)(fill * 0.42)].CGColor
+        ];
+    }
     fillLayer.locations = @[@0.0, @1.0];
 
-    // 2. 镜面高光：左上角一团柔光，对应真实玻璃的主光源
+    // 2. 镜面高光：左上角一团柔光，对应真实玻璃的主光源。
     CAGradientLayer *specularLayer = objc_getAssociatedObject(view, &kAxsLensSpecularKey);
     if (!specularLayer) {
         specularLayer = [CAGradientLayer layer];
@@ -117,14 +134,15 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         objc_setAssociatedObject(view, &kAxsLensSpecularKey, specularLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     specularLayer.hidden = (specular <= 0.001);
+    CGFloat specularGain = dark ? 0.26 : 0.34;
     specularLayer.colors = @[
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.34 * specular)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(specularGain * specular)].CGColor,
         (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.10 * specular)].CGColor,
         (id)[UIColor colorWithWhite:1.0 alpha:0.0].CGColor
     ];
     specularLayer.locations = @[@0.0, @0.42, @1.0];
 
-    // 3. 底边内阴影
+    // 3. 底边内阴影：让玻璃看起来"有厚度"，不是一张贴纸。
     CAGradientLayer *shadowLayer = objc_getAssociatedObject(view, &kAxsLensShadowKey);
     if (!shadowLayer) {
         shadowLayer = [CAGradientLayer layer];
@@ -138,18 +156,20 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     shadowLayer.colors = @[
         (id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor,
         (id)[UIColor colorWithWhite:0.0 alpha:0.0].CGColor,
-        (id)[UIColor colorWithWhite:0.0 alpha:(CGFloat)(0.10 * border)].CGColor
+        (id)[UIColor colorWithWhite:0.0 alpha:(CGFloat)((dark ? 0.22 : 0.10) * border)].CGColor
     ];
     shadowLayer.locations = @[@0.0, @0.62, @1.0];
 
-    // 4. 定向描边：左上亮 → 中段暗 → 右下回亮，这是"玻璃有厚度"的关键。
-    //    用一个渐变层 + 圆角路径描边做 mask，比 borderWidth 的纯白边自然得多。
+    // 4. 定向描边（重写）。
+    //    旧实现是线性对角渐变 + 白边，观感上"整圈一样亮"，不像玻璃。
+    //    真玻璃的反射是沿圆角一圈扫过的：左上最亮 → 右上快速衰减 → 底边几乎全暗 → 左下回亮。
+    //    用锥形渐变（conic）以中心为原点绕一圈，再拿圆角路径描边当 mask，光就"绕着边走"。
     CAGradientLayer *borderLayer = objc_getAssociatedObject(view, &kAxsLensBorderKey);
     if (!borderLayer) {
         borderLayer = [CAGradientLayer layer];
         borderLayer.name = @"heli.liquid.border";
-        borderLayer.startPoint = CGPointMake(0.0, 0.0);
-        borderLayer.endPoint = CGPointMake(1.0, 1.0);
+        borderLayer.startPoint = CGPointMake(0.5, 0.5);
+        borderLayer.endPoint = CGPointMake(0.5, 0.0);   // 0 度从正上方开始，顺时针
         CAShapeLayer *mask = [CAShapeLayer layer];
         mask.name = @"heli.liquid.border.mask";
         mask.fillColor = [UIColor clearColor].CGColor;
@@ -160,12 +180,22 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         objc_setAssociatedObject(view, &kAxsLensBorderKey, borderLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     borderLayer.hidden = (border <= 0.001);
+    if (@available(iOS 12.0, *)) {
+        borderLayer.type = kCAGradientLayerConic;
+    }
+    // 角度对应：0 正上 / 0.25 右 / 0.5 下 / 0.75 左。
+    // 峰值放在 0.86（左上），次峰 0.12（右上），底边 0.5 附近压到几乎全暗。
+    CGFloat keyGain = dark ? 0.95 : 0.88;
     borderLayer.colors = @[
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.85 * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.10 * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.52 * border)].CGColor
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.30 * keyGain * border)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.62 * keyGain * border)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.14 * keyGain * border)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.04 * keyGain * border)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.26 * keyGain * border)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.95 * keyGain * border)].CGColor,
+        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.46 * keyGain * border)].CGColor
     ];
-    borderLayer.locations = @[@0.0, @0.48, @1.0];
+    borderLayer.locations = @[@0.0, @0.12, @0.32, @0.52, @0.72, @0.86, @0.96];
 
     CAShapeLayer *mask = objc_getAssociatedObject(view, &kAxsLensBorderMaskKey);
     mask.lineWidth = (CGFloat)(0.9 + 0.9 * border);
@@ -175,8 +205,9 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
 
     gAxsLensAppliedCount += 1;
     if (gAxsLensAppliedCount == 1) {
-        AxsLog(@"玻璃膜：首次生效 %@（圆角 %.0f，膜 %.2f，边 %.2f，高光 %.2f，档位 %ld）",
-               NSStringFromClass([view class]), clampedRadius, fill, border, specular, (long)perfMode);
+        AxsLog(@"玻璃膜：首次生效 %@（圆角 %.0f，膜 %.2f，边 %.2f，高光 %.2f，档位 %ld，%s）",
+               NSStringFromClass([view class]), clampedRadius, fill, border, specular,
+               (long)perfMode, dark ? "暗色" : "亮色");
     }
 }
 
@@ -201,14 +232,15 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     container.cornerRadius = MAX(0.0, radius);
 
     CGRect localRect = CGRectMake(0.0, 0.0, width, height);
-    for (NSString *key in @[@"fill", @"specular", @"shadow"]) {
-        CALayer *layer = nil;
-        if ([key isEqualToString:@"fill"]) layer = objc_getAssociatedObject(view, &kAxsLensFillKey);
-        if ([key isEqualToString:@"specular"]) layer = objc_getAssociatedObject(view, &kAxsLensSpecularKey);
-        if ([key isEqualToString:@"shadow"]) layer = objc_getAssociatedObject(view, &kAxsLensShadowKey);
-        layer.frame = localRect;
-    }
+    CALayer *fillLayer = objc_getAssociatedObject(view, &kAxsLensFillKey);
+    CALayer *specularLayer = objc_getAssociatedObject(view, &kAxsLensSpecularKey);
+    CALayer *shadowLayer = objc_getAssociatedObject(view, &kAxsLensShadowKey);
+    fillLayer.frame = localRect;
+    specularLayer.frame = localRect;
+    shadowLayer.frame = localRect;
 
+    // 锥形渐变的几何跟线性不同：startPoint 是圆心，endPoint 只决定起始角。
+    // 半径变化时圆心始终在正中间，这里跟 bounds 一起保持在 0.5/0.5 即可。
     CAGradientLayer *borderLayer = objc_getAssociatedObject(view, &kAxsLensBorderKey);
     CAShapeLayer *mask = objc_getAssociatedObject(view, &kAxsLensBorderMaskKey);
     if (borderLayer && mask) {

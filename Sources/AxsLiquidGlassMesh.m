@@ -83,9 +83,17 @@ static id AxsMeshForGeometry(CGFloat width, CGFloat height, CGFloat radius, doub
     id cached = [AxsMeshCache() objectForKey:key];
     if (cached) return cached;
 
-    // 网格密度：小卡片用 10 段，大面板用 8 段。144 个面的形变在 GPU 上是白送的，
-    // 但没必要给全屏表面堆到 400 个面。
-    NSInteger segments = (width * height > 260000.0) ? 8 : 10;
+    // 网格密度：小卡片 10 段；药丸/胶囊这类细长表面要 12 段，否则圆头那两段弧会被
+    // 直线插值拉平，"边缘弯折"就退化成一圈轻微的位移；整屏级别才降到 8 段。
+    NSInteger segments;
+    double aspect = width / MAX(height, 1.0);
+    if (height < 120.0 && aspect > 2.0) {
+        segments = 12;
+    } else if (width * height > 260000.0) {
+        segments = 8;
+    } else {
+        segments = 10;
+    }
     NSInteger side = segments + 1;
     NSUInteger vertexCount = (NSUInteger)(side * side);
     NSUInteger faceCount = (NSUInteger)(segments * segments);
@@ -202,7 +210,96 @@ static BOOL AxsSetMeshTransform(CALayer *layer, id mesh) {
     }
 }
 
+#pragma mark - 图层级入口
+
+static char kAxsLayerMeshAppliedKey;
+static char kAxsLayerMeshOriginalKey;
+
+/// 把网格直接挂到某个图层上，原值记在图层自己身上。
+/// 灵动岛只有一个裸露的 CABackdropLayer，没有 UIVisualEffectView 可挂；
+/// 从视图入口递归查找反而会先撞上整窗图层，所以单独开一条图层入口。
+static BOOL AxsAttachMeshToLayer(CALayer *target, CGFloat width, CGFloat height,
+                                 CGFloat radius, double strength) {
+    if (!target) return NO;
+    if (strength <= 0.01) return NO;
+    if (width < 40.0 || height < 20.0) return NO;
+
+    id mesh = AxsMeshForGeometry(width, height, radius, strength);
+    if (!mesh) {
+        AxsMeshNote(@"CAMeshTransform 创建失败（图层入口）");
+        return NO;
+    }
+
+    if (!objc_getAssociatedObject(target, &kAxsLayerMeshOriginalKey)) {
+        id original = nil;
+        @try {
+            original = [target valueForKey:@"meshTransform"];
+        } @catch (NSException *exception) {
+            (void)exception;
+        }
+        // 用 NSNull 占位：null 也是"原来就没有"的合法状态，不占位会导致每次重挂都覆盖原值。
+        objc_setAssociatedObject(target, &kAxsLayerMeshOriginalKey,
+                                 original ?: (id)[NSNull null],
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+
+    if (!AxsSetMeshTransform(target, mesh)) {
+        AxsMeshNote([NSString stringWithFormat:@"%@ 拒绝 meshTransform（图层入口）",
+                     NSStringFromClass([target class])]);
+        return NO;
+    }
+
+    objc_setAssociatedObject(target, &kAxsLayerMeshAppliedKey, @(strength),
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    return YES;
+}
+
+static void AxsDetachMeshFromLayer(CALayer *target) {
+    if (!target) return;
+    if (!objc_getAssociatedObject(target, &kAxsLayerMeshAppliedKey)) return;
+    id original = objc_getAssociatedObject(target, &kAxsLayerMeshOriginalKey);
+    AxsSetMeshTransform(target, [original isKindOfClass:[NSNull class]] ? nil : original);
+    objc_setAssociatedObject(target, &kAxsLayerMeshAppliedKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(target, &kAxsLayerMeshOriginalKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
 @implementation AxsLiquidGlassMesh
+
++ (CALayer *)axs_liquidglass_backdropLayerInView:(UIView *)view {
+    if (!view || !view.layer) return nil;
+    return AxsFindBackdropLayer(view.layer, 0);
+}
+
++ (BOOL)axs_liquidglass_applyRefractionToLayer:(CALayer *)layer
+                                        radius:(CGFloat)radius
+                                      strength:(double)strength {
+    if (!layer) return NO;
+    if (![NSThread isMainThread]) return NO;
+    if (strength <= 0.01) {
+        AxsDetachMeshFromLayer(layer);
+        return NO;
+    }
+
+    CALayer *target = AxsLayerWantsRefraction(layer) ? layer : AxsFindBackdropLayer(layer, 0);
+    if (!target) {
+        AxsMeshNote([NSString stringWithFormat:@"%@ 子层里没有 CABackdropLayer（图层入口）",
+                     NSStringFromClass([layer class])]);
+        return NO;
+    }
+
+    CGRect bounds = target.bounds;
+    return AxsAttachMeshToLayer(target, CGRectGetWidth(bounds), CGRectGetHeight(bounds),
+                                radius, strength);
+}
+
++ (void)axs_liquidglass_clearRefractionFromLayer:(CALayer *)layer {
+    if (!layer) return;
+    if (AxsLayerWantsRefraction(layer)) {
+        AxsDetachMeshFromLayer(layer);
+        return;
+    }
+    AxsDetachMeshFromLayer(AxsFindBackdropLayer(layer, 0));
+}
 
 + (BOOL)axs_liquidglass_hasRefraction:(UIView *)view {
     return objc_getAssociatedObject(view, &kAxsMeshAppliedKey) != nil;
