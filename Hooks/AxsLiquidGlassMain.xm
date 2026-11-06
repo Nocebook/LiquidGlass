@@ -3,6 +3,7 @@
 #import "AxsLiquidGlassConfig.h"
 #import "AxsLiquidGlassEffect.h"
 #import "AxsLiquidGlassGuard.h"
+#import "AxsLiquidGlassIslandBridge.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
 #import "AxsLiquidGlassSettings.h"
@@ -155,5 +156,26 @@
         AxsLiquidGlassGuardNoteStage(@"Hook 安装完成");
         // 跑满 20 秒没出事，就把这次启动记成"好的"，下次不再降级。
         AxsLiquidGlassGuardScheduleHeartbeat();
+
+        // 启动稳定窗口。
+        //
+        // 前 12 秒只做一件事：改写模糊参数。玻璃膜、锥形描边、折射网格、灵动岛
+        // 一律不生效 —— 它们都要往系统图层树里插图层 / 改 meshTransform，
+        // 而这正是"安全模式"最容易被触发的地方。把风险最高的动作推到桌面完全
+        // 起来之后再执行，崩溃就不会落在启动判定窗口里，最多是一次重启而不是安全模式。
+        //
+        // 注意顺序：先 MarkDecorReady，再刷新已经跟踪到的视图，最后启动灵动岛。
+        // 灵动岛自己是独立的定时器，必须在闸门打开之后才允许它开始扫窗口树。
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(12.0 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            @try {
+                AxsLiquidGlassGuardMarkDecorReady();
+                [AxsLiquidGlassEffect axs_liquidglass_refreshTrackedViews];
+                [AxsLiquidGlassBackdrop axs_liquidglass_refreshTrackedViews];
+                AxsLiquidGlassIslandStartIfWanted();
+            } @catch (NSException *exception) {
+                AxsLog(@"稳定窗口后刷新异常：%@", exception.reason);
+            }
+        });
     }
 }

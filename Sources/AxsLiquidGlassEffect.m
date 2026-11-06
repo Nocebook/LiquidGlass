@@ -1,5 +1,6 @@
 #import "AxsLiquidGlassEffect.h"
 #import "AxsLiquidGlassConfig.h"
+#import "AxsLiquidGlassGuard.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
 #import "AxsLiquidGlassLens.h"
@@ -211,6 +212,19 @@ static double axs_liquidglass_areaRatio(UIView *view) {
     double mesh = params.meshStrength;
     NSInteger perfMode = params.perfMode;
     CGFloat cornerRadius = [self axs_liquidglass_radiusForView:view];
+
+    // 装饰层闸门（7.3.0）。
+    // 启动后的前 12 秒、以及看门狗降级期间，这里一律把四个参数压成 0：
+    // 下面的每个分支都在"参数为 0 时先清理已有图层再返回"，所以压零之后
+    // 不需要任何额外判断，天然退化成"只改模糊"。真正的原因是：
+    // 往系统视图的图层树里插子层 / 改 meshTransform，是整份代码里唯一
+    // 能把 SpringBoard 直接搞死的东西，必须跟启动阶段彻底错开。
+    if (!AxsLiquidGlassGuardDecorReady()) {
+        rim = 0.0;
+        fill = 0.0;
+        specular = 0.0;
+        mesh = 0.0;
+    }
 
     if (isWidget) {
         // 旧版本可能在小组件进程里换过 effect：还回去，清掉白屏残留。

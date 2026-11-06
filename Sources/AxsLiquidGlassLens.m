@@ -1,4 +1,5 @@
 #import "AxsLiquidGlassLens.h"
+#import "AxsLiquidGlassConfig.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
 
@@ -27,6 +28,7 @@ typedef struct {
     float specular;
     int perfMode;
     int dark;
+    int conic;
 } AxsLensSignature;
 
 typedef struct {
@@ -94,6 +96,10 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
 
     CGFloat clampedRadius = MAX(0.0, radius);
     BOOL dark = AxsLensIsDark(view);
+    // 描边形态：默认线性对角（6.3.1 验证过的形态），锥形渐变放到开关后面。
+    // 锥形渐变是 7.0.0 新写的，观感更好但从未在真机上验证过 ——
+    // 一旦它是崩溃源，默认开启就等于拿"能不能开机"去赌，所以默认关。
+    BOOL conic = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_conicBorder];
 
     AxsLensSignature signature;
     signature.radius = (float)clampedRadius;
@@ -102,6 +108,7 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     signature.specular = (float)specular;
     signature.perfMode = (int)perfMode;
     signature.dark = (int)dark;
+    signature.conic = (int)conic;
     NSData *previous = objc_getAssociatedObject(view, &kAxsLensSignatureKey);
     CALayer *container = objc_getAssociatedObject(view, &kAxsLensContainerKey);
 
@@ -193,8 +200,6 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     if (!borderLayer) {
         borderLayer = [CAGradientLayer layer];
         borderLayer.name = @"heli.liquid.border";
-        borderLayer.startPoint = CGPointMake(0.5, 0.5);
-        borderLayer.endPoint = CGPointMake(0.5, 0.0);   // 0 度从正上方开始，顺时针
         CAShapeLayer *mask = [CAShapeLayer layer];
         mask.name = @"heli.liquid.border.mask";
         mask.fillColor = [UIColor clearColor].CGColor;
@@ -205,22 +210,41 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
         objc_setAssociatedObject(view, &kAxsLensBorderKey, borderLayer, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     borderLayer.hidden = (border <= 0.001);
-    if (@available(iOS 12.0, *)) {
-        borderLayer.type = kCAGradientLayerConic;
-    }
-    // 角度对应：0 正上 / 0.25 右 / 0.5 下 / 0.75 左。
-    // 峰值放在 0.86（左上），次峰 0.12（右上），底边 0.5 附近压到几乎全暗。
+
+    // 白边强度统一走 keyGain，两种形态共用。
     CGFloat keyGain = dark ? 0.95 : 0.88;
-    borderLayer.colors = @[
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.30 * keyGain * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.62 * keyGain * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.14 * keyGain * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.04 * keyGain * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.26 * keyGain * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.95 * keyGain * border)].CGColor,
-        (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.46 * keyGain * border)].CGColor
-    ];
-    borderLayer.locations = @[@0.0, @0.12, @0.32, @0.52, @0.72, @0.86, @0.96];
+
+    // 部署目标 15.0，kCAGradientLayerConic 一定存在，不需要 @available 保护。
+    if (conic) {
+        // 锥形渐变：以中心为原点绕一圈，光"绕着圆角走"。
+        // 角度对应：0 正上 / 0.25 右 / 0.5 下 / 0.75 左。
+        // 峰值放在 0.86（左上），次峰 0.12（右上），底边 0.5 附近压到几乎全暗。
+        borderLayer.type = kCAGradientLayerConic;
+        borderLayer.startPoint = CGPointMake(0.5, 0.5);
+        borderLayer.endPoint = CGPointMake(0.5, 0.0);
+        borderLayer.colors = @[
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.30 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.62 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.14 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.04 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.26 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.95 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.46 * keyGain * border)].CGColor
+        ];
+        borderLayer.locations = @[@0.0, @0.12, @0.32, @0.52, @0.72, @0.86, @0.96];
+    } else {
+        // 线性对角：左上亮 → 右下暗。三个色标就够，图层与色标数都比锥形少，
+        // 这是 6.3.1 在真机上跑通过的那一版形态，稳妥优先。
+        borderLayer.type = kCAGradientLayerAxial;
+        borderLayer.startPoint = CGPointMake(0.0, 0.0);
+        borderLayer.endPoint = CGPointMake(1.0, 1.0);
+        borderLayer.colors = @[
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.86 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.34 * keyGain * border)].CGColor,
+            (id)[UIColor colorWithWhite:1.0 alpha:(CGFloat)(0.68 * keyGain * border)].CGColor
+        ];
+        borderLayer.locations = @[@0.0, @0.52, @1.0];
+    }
 
     CAShapeLayer *mask = objc_getAssociatedObject(view, &kAxsLensBorderMaskKey);
     mask.lineWidth = (CGFloat)(0.9 + 0.9 * border);

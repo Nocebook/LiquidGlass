@@ -377,13 +377,25 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
 
-// 灵动岛玻璃默认开：这一条是"看得见"的功能，装完就该有变化。
-// 找不到容器时模块自己会静默退出，不会把灵动岛弄坏，所以敢默认开。
+// 灵动岛玻璃 7.3.0 起默认关。
+//
+// 7.2.0 默认开，理由是"这条是看得见的功能，装完就该有变化"。但实测代价是：
+// 它要在启动后不久就往系统托管的 SystemAperture 容器里插图层，
+// 而且那时它还不受看门狗管辖（构造函数绕过 %ctor）——
+// 一旦这里出事，就是开机即安全模式，用户连面板都进不去。
+// 现在的顺序是：先保证能开机，再让用户在面板里单独打开、单独验证。
 - (BOOL)axs_liquidglass_islandGlass {
     // 启动保护生效时不碰灵动岛：那块区域归系统驱动托管，动它最容易出事。
     if (AxsLiquidGlassGuardLevel() >= 1) return NO;
-    id value = [self axs_liquidglass_valueForKey:@"islandGlass" defaultValue:@(YES)];
-    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
+    id value = [self axs_liquidglass_valueForKey:@"islandGlass" defaultValue:@(NO)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
+}
+
+- (BOOL)axs_liquidglass_conicBorder {
+    // 启动保护生效时不冒险：连描边形态都退回已验证的线性。
+    if (AxsLiquidGlassGuardLevel() >= 1) return NO;
+    id value = [self axs_liquidglass_valueForKey:@"conicBorder" defaultValue:@(NO)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
 
 - (unsigned long long)axs_liquidglass_generation {

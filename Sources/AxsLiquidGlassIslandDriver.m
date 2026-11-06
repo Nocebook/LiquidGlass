@@ -1,5 +1,6 @@
 #import "AxsLiquidGlassIslandDriver.h"
 #import "AxsLiquidGlassConfig.h"
+#import "AxsLiquidGlassGuard.h"
 #import "AxsLiquidGlassLens.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassMesh.h"
@@ -267,6 +268,10 @@ static void AxsIslandGlassCollect(UIView *root, NSInteger depth, NSMutableArray<
         [self axs_liquidglass_islandTeardown];
         return;
     }
+
+    // 最后一道保险：不管调用方是谁，闸门没开就绝不往容器里插图层。
+    // 这一句让"某个新加的调用点忘了判断"这种失误变得无害。
+    if (!AxsLiquidGlassGuardDecorReady()) return;
 
     UIView *container = [self axs_liquidglass_islandContainer];
     if (!container) {

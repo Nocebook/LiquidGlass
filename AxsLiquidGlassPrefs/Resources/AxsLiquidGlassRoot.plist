@@ -222,6 +222,20 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.heli.liquid</string>
+			<key>footerText</key>
+			<string>关闭时是线性对角描边（左上亮、右下暗），这是验证过的稳妥形态；打开后改成锥形渐变，亮部会沿圆角扫一圈，更像真玻璃的反光。锥形是较新的写法，单独一个开关，方便你判断效果和稳定性。</string>
+			<key>key</key>
+			<string>conicBorder</string>
+			<key>label</key>
+			<string>锥形定向描边</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
 			<true/>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
@@ -380,9 +394,11 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
-			<true/>
+			<false/>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
+			<key>footerText</key>
+			<string>默认关闭。它要往系统托管的灵动岛容器里插图层，是整份插件里风险最高的一块，而且此前从未在你的机器上验证通过。打开后如果桌面重启，插件会自动退回"只保留模糊"，你只要再注销一次就能正常使用 —— 这一步单独试，崩了也只怪这一个开关。</string>
 			<key>key</key>
 			<string>islandGlass</string>
 			<key>label</key>

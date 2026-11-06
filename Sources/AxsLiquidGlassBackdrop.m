@@ -1,5 +1,6 @@
 #import "AxsLiquidGlassBackdrop.h"
 #import "AxsLiquidGlassConfig.h"
+#import "AxsLiquidGlassGuard.h"
 #import "AxsLiquidGlassLens.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassMesh.h"
@@ -134,6 +135,14 @@ static void axs_liquidglass_hookLayoutSubviews(id self, SEL _cmd) {
         ancestor = ancestor.superview;
     }
     if (axs_liquidglass_isWidgetProcess()) return;
+
+    // 装饰层闸门（7.3.0）：这条路径**只**做装饰（玻璃膜 + 折射网格），
+    // 没有改模糊参数的能力，所以启动稳定窗口内直接什么都不做。
+    // 7.2.0 没有这道闸门，Dock / 文件夹的 backdrop 在启动瞬间就被插入了子层。
+    if (!AxsLiquidGlassGuardDecorReady()) {
+        [self axs_liquidglass_clear:view];
+        return;
+    }
 
     const AxsLiquidGlassParams *params = AxsLiquidGlassParamsGet();
     AxsLiquidGlassParams current = *params;   // 一次拷出来，后面全用栈上的值

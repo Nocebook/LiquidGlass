@@ -9,9 +9,14 @@ extern char **environ;
 
 static NSString * const kAxsLiquidGlassRepositoryURL = @"https://nocebook.github.io/heli/";
 
-/// 启动保护的状态文件，路径必须跟 tweak 里的 AxsLiquidGlassGuard 保持一致。
-/// 面板进程以 mobile 身份运行，能读写 /var/mobile/Library/Caches。
-static NSString * const kAxsLiquidGlassGuardPath = @"/var/mobile/Library/Caches/com.heli.liquid.guard";
+/// 启动保护的状态存放位置，必须跟 tweak 里的 AxsLiquidGlassGuard 保持一致。
+///
+/// 7.3.0 起从"写 /var/mobile/Library/Caches 下的文件"改成 CFPreferences：
+/// SpringBoard 有沙盒，fopen 那条路很可能直接被拒，写失败之后等级永远停在 0，
+/// 于是每次开机都全量加载、每次都崩 —— 用户看到的就是"怎么装都是安全模式"。
+/// CFPreferences 的落盘由 cfprefsd 代劳，两边（tweak / 面板）都能可靠读写。
+static NSString * const kAxsLiquidGlassGuardDomain = @"com.heli.liquid.guard";
+static NSString * const kAxsLiquidGlassGuardStateKey = @"state";
 
 static BOOL AxsLiquidGlassSpawn(NSString *path, NSArray<NSString *> *arguments) {
     if (path.length == 0) return NO;
@@ -127,8 +132,16 @@ static BOOL AxsLiquidGlassRespring(void) {
 }
 
 - (void)axs_liquidglass_clearGuard:(id)sender {
-    NSString *content = [NSString stringWithContentsOfFile:kAxsLiquidGlassGuardPath
-                                                  encoding:NSUTF8StringEncoding error:nil];
+    CFPropertyListRef raw = CFPreferencesCopyAppValue(
+        (__bridge CFStringRef)kAxsLiquidGlassGuardStateKey,
+        (__bridge CFStringRef)kAxsLiquidGlassGuardDomain);
+    NSString *content = nil;
+    if (raw) {
+        if (CFGetTypeID(raw) == CFStringGetTypeID()) {
+            content = [(__bridge NSString *)raw copy];
+        }
+        CFRelease(raw);
+    }
     NSInteger level = 0;
     for (NSString *line in [content componentsSeparatedByString:@"\n"]) {
         if ([line hasPrefix:@"level="]) level = [[line substringFromIndex:6] integerValue];
@@ -143,7 +156,10 @@ static BOOL AxsLiquidGlassRespring(void) {
         return;
     }
 
-    [[NSFileManager defaultManager] removeItemAtPath:kAxsLiquidGlassGuardPath error:nil];
+    CFPreferencesSetAppValue((__bridge CFStringRef)kAxsLiquidGlassGuardStateKey,
+                             NULL,
+                             (__bridge CFStringRef)kAxsLiquidGlassGuardDomain);
+    CFPreferencesAppSynchronize((__bridge CFStringRef)kAxsLiquidGlassGuardDomain);
 
     NSString *detail = level >= 2
         ? @"之前是完全停用（等级 2）。"

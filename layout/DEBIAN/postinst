@@ -47,8 +47,13 @@ for app in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app; do
     fi
 done
 
-# 清掉启动看门狗的状态文件：新装 / 升级之后从等级 0 重新开始，
+# 清掉启动看门狗的降级状态：新装 / 升级之后从等级 0 重新开始，
 # 保证新包拿到的是一次"干净启动"，不会被上一版留下的降级等级卡住。
+#
+# 7.3.0 起状态存在 CFPreferences 域 com.heli.liquid.guard 里
+# （由 cfprefsd 落盘成 /var/mobile/Library/Preferences/<域>.plist），
+# 所以这里要删的是那个 plist；前两行是 7.2.0 及更早留下的文件，一并清掉。
+rm -f /var/mobile/Library/Preferences/com.heli.liquid.guard.plist >/dev/null 2>&1
 rm -f /var/mobile/Library/Caches/com.heli.liquid.guard >/dev/null 2>&1
 rm -f /tmp/com.heli.liquid.guard >/dev/null 2>&1
 

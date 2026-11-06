@@ -7,7 +7,12 @@
 
 /// 参与判定的版本号。每次发版都要跟着 control 一起改 ——
 /// 换版本 = 等级归零，等于给新包一次干净启动的机会。
-static NSString * const kAxsGuardVersion = @"7.2.0";
+static NSString * const kAxsGuardVersion = @"7.3.0";
+
+/// 状态存放的偏好域。故意跟插件本体（com.heli.liquid）分开，
+/// 免得面板的 reload 逻辑把看门狗状态当成用户配置读进去。
+static NSString * const kAxsGuardDomain = @"com.heli.liquid.guard";
+static NSString * const kAxsGuardStateKey = @"state";
 
 /// 跑满这么久没出事，才算"这次启动是好的"。
 static const NSInteger kAxsGuardHeartbeatSeconds = 20;
@@ -16,29 +21,9 @@ static const NSInteger kAxsGuardStaleSeconds = 900;
 
 static NSInteger gAxsGuardLevel = 0;
 static BOOL gAxsGuardDecided = NO;
-static BOOL gAxsGuardOwnsFile = NO;
-
-static NSString *AxsGuardPath(void) {
-    static NSString *path;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        // SpringBoard 的沙箱能写 /var/mobile/Library/Caches（日志就在那儿），
-        // 万一某些精简 bootstrap 没有这个目录，退化到 /tmp。
-        NSArray<NSString *> *candidates = @[
-            @"/var/mobile/Library/Caches/com.heli.liquid.guard",
-            @"/tmp/com.heli.liquid.guard",
-        ];
-        for (NSString *candidate in candidates) {
-            NSString *directory = [candidate stringByDeletingLastPathComponent];
-            if ([[NSFileManager defaultManager] isWritableFileAtPath:directory]) {
-                path = candidate;
-                break;
-            }
-        }
-        if (!path) path = candidates.lastObject;
-    });
-    return path;
-}
+static BOOL gAxsGuardWriter = NO;
+/// 装饰层闸门：启动稳定窗口结束后才会被打开。
+static BOOL gAxsGuardDecorReady = NO;
 
 typedef struct {
     int level;
@@ -48,32 +33,73 @@ typedef struct {
     char stage[64];
 } AxsGuardState;
 
+#pragma mark - 存储
+
+/// 这里必须走 CFPreferences，不能 fopen。
+///
+/// 7.2.0 就是栽在这：它直接 fopen("/var/mobile/Library/Caches/...")，
+/// 而 SpringBoard 有沙盒，写失败时 fopen 返回 NULL、代码静默 return ——
+/// 于是等级永远停在 0，下次启动照样全量加载，又崩，用户看到的就是
+/// "怎么装都是安全模式"，而且这个死循环自己永远出不来。
+/// CFPreferences 的落盘由 cfprefsd 完成（cfprefsd 以 mobile 身份写文件），
+/// 沙盒进程调它不会被拒，这条通路是可靠的。
+static NSString *AxsGuardReadState(void) {
+    CFPropertyListRef value = CFPreferencesCopyAppValue(
+        (__bridge CFStringRef)kAxsGuardStateKey,
+        (__bridge CFStringRef)kAxsGuardDomain);
+    if (!value) return nil;
+    NSString *result = nil;
+    if (CFGetTypeID(value) == CFStringGetTypeID()) {
+        result = [(__bridge NSString *)value copy];
+    }
+    CFRelease(value);
+    return result;
+}
+
+static void AxsGuardWriteState(NSString *state) {
+    if (state.length == 0) return;
+    CFPreferencesSetAppValue((__bridge CFStringRef)kAxsGuardStateKey,
+                             (__bridge CFStringRef)state,
+                             (__bridge CFStringRef)kAxsGuardDomain);
+    CFPreferencesAppSynchronize((__bridge CFStringRef)kAxsGuardDomain);
+}
+
 static AxsGuardState AxsGuardRead(BOOL *versionMatches) {
     AxsGuardState state;
     memset(&state, 0, sizeof(state));
     if (versionMatches) *versionMatches = NO;
 
-    FILE *file = fopen(AxsGuardPath().UTF8String, "r");
-    if (!file) return state;
+    NSString *raw = AxsGuardReadState();
+    if (raw.length == 0) return state;
+
+    // 状态是一段 "key=value\n" 的纯文本，解析失败也只是拿不到值，不会崩。
+    char buffer[512] = {0};
+    const char *utf8 = raw.UTF8String;
+    if (!utf8) return state;
+    strncpy(buffer, utf8, sizeof(buffer) - 1);
 
     char version[40] = {0};
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        if (strncmp(line, "ver=", 4) == 0) {
-            sscanf(line + 4, "%39s", version);
-        } else if (strncmp(line, "level=", 6) == 0) {
-            sscanf(line + 6, "%d", &state.level);
-        } else if (strncmp(line, "fails=", 6) == 0) {
-            sscanf(line + 6, "%d", &state.fails);
-        } else if (strncmp(line, "ok=", 3) == 0) {
-            sscanf(line + 3, "%d", &state.ok);
-        } else if (strncmp(line, "ts=", 3) == 0) {
-            sscanf(line + 3, "%lld", &state.stamp);
-        } else if (strncmp(line, "stage=", 6) == 0) {
-            sscanf(line + 6, "%63[^\n]", state.stage);
+    char *cursor = buffer;
+    while (cursor && *cursor) {
+        char *lineEnd = strchr(cursor, '\n');
+        if (lineEnd) *lineEnd = '\0';
+
+        if (strncmp(cursor, "ver=", 4) == 0) {
+            sscanf(cursor + 4, "%39s", version);
+        } else if (strncmp(cursor, "level=", 6) == 0) {
+            sscanf(cursor + 6, "%d", &state.level);
+        } else if (strncmp(cursor, "fails=", 6) == 0) {
+            sscanf(cursor + 6, "%d", &state.fails);
+        } else if (strncmp(cursor, "ok=", 3) == 0) {
+            sscanf(cursor + 3, "%d", &state.ok);
+        } else if (strncmp(cursor, "ts=", 3) == 0) {
+            sscanf(cursor + 3, "%lld", &state.stamp);
+        } else if (strncmp(cursor, "stage=", 6) == 0) {
+            sscanf(cursor + 6, "%63[^\n]", state.stage);
         }
+
+        cursor = lineEnd ? lineEnd + 1 : NULL;
     }
-    fclose(file);
 
     if (versionMatches) {
         *versionMatches = (strcmp(version, kAxsGuardVersion.UTF8String) == 0);
@@ -82,13 +108,11 @@ static AxsGuardState AxsGuardRead(BOOL *versionMatches) {
 }
 
 static void AxsGuardWrite(int level, int fails, int ok, const char *stage) {
-    if (!gAxsGuardOwnsFile) return;
-    FILE *file = fopen(AxsGuardPath().UTF8String, "w");
-    if (!file) return;
-    fprintf(file, "ver=%s\nlevel=%d\nfails=%d\nok=%d\nts=%lld\nstage=%s\n",
-            kAxsGuardVersion.UTF8String, level, fails, ok,
-            (long long)time(NULL), stage ? stage : "");
-    fclose(file);
+    if (!gAxsGuardWriter) return;
+    NSString *state = [NSString stringWithFormat:
+        @"ver=%@\nlevel=%d\nfails=%d\nok=%d\nts=%lld\nstage=%s\n",
+        kAxsGuardVersion, level, fails, ok, (long long)time(NULL), stage ? stage : ""];
+    AxsGuardWriteState(state);
 }
 
 static BOOL AxsGuardIsSpringBoard(void) {
@@ -101,17 +125,19 @@ static BOOL AxsGuardIsSpringBoard(void) {
     return isSpringBoard;
 }
 
+#pragma mark - 生命周期
+
 NSInteger AxsLiquidGlassGuardBeginLaunch(void) {
     if (gAxsGuardDecided) return gAxsGuardLevel;
     gAxsGuardDecided = YES;
 
     if (!AxsGuardIsSpringBoard()) {
         // 其他注入进程（chronod / WidgetRenderer / 各 App）不参与判定，
-        // 免得十几个进程同时读写同一个文件把计数搞乱。
+        // 免得十几个进程同时读写同一份状态把计数搞乱。
         gAxsGuardLevel = 0;
         return 0;
     }
-    gAxsGuardOwnsFile = YES;
+    gAxsGuardWriter = YES;
 
     BOOL versionMatches = NO;
     AxsGuardState state = AxsGuardRead(&versionMatches);
@@ -156,13 +182,31 @@ NSInteger AxsLiquidGlassGuardLevel(void) {
     return gAxsGuardLevel;
 }
 
+BOOL AxsLiquidGlassGuardDecorReady(void) {
+    // 还没做启动判定时一律不动手：宁可这一瞬间少个效果，也不要在
+    // 不确定等级的情况下往系统图层树里插东西。
+    if (!gAxsGuardDecided) return NO;
+    if (gAxsGuardLevel != 0) return NO;
+    if (gAxsGuardDecorReady) return YES;
+    // 非 SpringBoard 进程不参与启动判定，也就不受稳定窗口约束：
+    // 小组件进程的渲染窗口只有 8~10 秒，等 12 秒等于永远不生效。
+    // 它们的崩溃不会诱发安全模式，代价只是那个小组件变空白。
+    return !AxsGuardIsSpringBoard();
+}
+
+void AxsLiquidGlassGuardMarkDecorReady(void) {
+    if (gAxsGuardDecorReady) return;
+    gAxsGuardDecorReady = YES;
+    AxsLog(@"启动保护：稳定窗口结束，装饰层放开（等级 %ld）", (long)gAxsGuardLevel);
+}
+
 void AxsLiquidGlassGuardNoteStage(NSString *stage) {
-    if (!gAxsGuardOwnsFile || stage.length == 0) return;
+    if (!gAxsGuardWriter || stage.length == 0) return;
     AxsGuardWrite((int)gAxsGuardLevel, 0, 0, stage.UTF8String);
 }
 
 void AxsLiquidGlassGuardScheduleHeartbeat(void) {
-    if (!gAxsGuardOwnsFile) return;
+    if (!gAxsGuardWriter) return;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
                                  (int64_t)(kAxsGuardHeartbeatSeconds * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
@@ -173,8 +217,23 @@ void AxsLiquidGlassGuardScheduleHeartbeat(void) {
 }
 
 void AxsLiquidGlassGuardReset(void) {
-    [[NSFileManager defaultManager] removeItemAtPath:AxsGuardPath() error:nil];
+    CFPreferencesSetAppValue((__bridge CFStringRef)kAxsGuardStateKey,
+                             NULL,
+                             (__bridge CFStringRef)kAxsGuardDomain);
+    CFPreferencesAppSynchronize((__bridge CFStringRef)kAxsGuardDomain);
     gAxsGuardLevel = 0;
     gAxsGuardDecided = YES;
+    gAxsGuardDecorReady = YES;
     AxsLog(@"启动保护：已手动解除（等级归零，下次启动按完整效果加载）");
+}
+
+NSString *AxsLiquidGlassGuardStatusText(void) {
+    BOOL versionMatches = NO;
+    AxsGuardState state = AxsGuardRead(&versionMatches);
+    if (!versionMatches) return nil;
+
+    NSString *levelText = state.level <= 0 ? @"完整效果"
+                        : (state.level == 1 ? @"仅模糊" : @"已停用");
+    return [NSString stringWithFormat:@"上次启动：%s · 保护等级 %d（%@）",
+            state.ok ? "稳定" : "未完成", state.level, levelText];
 }

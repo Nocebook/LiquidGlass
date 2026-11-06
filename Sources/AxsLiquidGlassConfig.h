@@ -35,8 +35,13 @@
 
 /// 隐藏灵动岛：为 YES 时把灵动岛容器的 alpha 压到 0。
 - (BOOL)axs_liquidglass_hideIsland;
-/// 灵动岛玻璃：给 SystemAperture 容器挂玻璃膜与边缘折射（默认开）。
+/// 灵动岛玻璃：给 SystemAperture 容器挂玻璃膜与边缘折射（7.3.0 起默认关）。
 - (BOOL)axs_liquidglass_islandGlass;
+/// 描边用锥形渐变（默认关）。
+/// 锥形渐变会让亮部沿圆角"扫一圈"，观感更像真玻璃，但它是 7.0.0 新写的、
+/// 没在真机上验证过的形态；默认走 6.3.1 验证过的线性对角，
+/// 这一项留着让用户单独试，崩了也只怪这一个开关。
+- (BOOL)axs_liquidglass_conicBorder;
 /// 低电量模式下是否自动降档（默认开）。
 - (BOOL)axs_liquidglass_lowPowerAuto;
 /// 第三方 App 里是否也加厚系统模糊（默认关）。
