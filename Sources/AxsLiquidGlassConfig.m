@@ -1,4 +1,5 @@
 #import "AxsLiquidGlassConfig.h"
+#import "AxsLiquidGlassGuard.h"
 #import "AxsLiquidGlassPreferences.h"
 #import "AxsLiquidGlassPrivate.h"
 
@@ -39,12 +40,15 @@ static AxsLiquidGlassParams gAxsParams;
 static os_unfair_lock gAxsParamsLock = OS_UNFAIR_LOCK_INIT;
 
 const AxsLiquidGlassParams *AxsLiquidGlassParamsGet(void) {
-    // 兜底：如果某条路径在配置单例建立之前就来读快照，拿到的是全零结构体，
-    // 表现就是"插件装了没反应"。这里保证至少构建过一次。
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
+    // 这里必须保证"绝不重入"：早期版本用的是 dispatch_once，一旦某条路径
+    // 在单例初始化过程里又反过来读快照，同一个 once 令牌被同线程二次进入就是死锁 ——
+    // SpringBoard 卡在启动阶段不响应，看门狗直接杀进程，表现就是安全模式。
+    // 改成一个普通的标志位：重入时直接返回当前（可能是全零的）快照，后面 reload 会补上。
+    static BOOL bootstrapped = NO;
+    if (!bootstrapped) {
+        bootstrapped = YES;
         (void)[AxsLiquidGlassConfig axs_liquidglass_shared];
-    });
+    }
     return &gAxsParams;
 }
 
@@ -187,6 +191,20 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     params.lowPower = [self axs_liquidglass_isLowPower];
     params.keyboardScope = [self axs_liquidglass_scopeEnabled:@"keyboard"];
     params.appBlur = [self axs_liquidglass_appBlur];
+
+    // 启动保护等级 1：上一次启动崩过，这次只保留"改模糊参数"这一条最安全的链路。
+    // 玻璃膜、锥形描边、折射网格、灵动岛全部归零 —— 这些都要往系统图层树里
+    // 插图层 / 改 mesh，是整份代码里风险最集中的部分。把参数压成 0 之后，
+    // 下游每个模块都会走"清理 + 直接返回"的分支，不需要额外判断。
+    if (AxsLiquidGlassGuardLevel() >= 1) {
+        params.rimStrength = 0.0;
+        params.fillAlpha = 0.0;
+        params.specularStrength = 0.0;
+        params.meshStrength = 0.0;
+        params.islandGlass = NO;
+        params.hideIsland = NO;
+    }
+
     params.generation = self.generation;
     AxsParamsStore(&params);
 }
@@ -353,6 +371,8 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 }
 
 - (BOOL)axs_liquidglass_hideIsland {
+    // 隐藏灵动岛也是往系统托管视图上写 alpha/hidden，启动保护生效时一并停掉。
+    if (AxsLiquidGlassGuardLevel() >= 1) return NO;
     id value = [self axs_liquidglass_valueForKey:@"hideIsland" defaultValue:@(NO)];
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
@@ -360,6 +380,8 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 // 灵动岛玻璃默认开：这一条是"看得见"的功能，装完就该有变化。
 // 找不到容器时模块自己会静默退出，不会把灵动岛弄坏，所以敢默认开。
 - (BOOL)axs_liquidglass_islandGlass {
+    // 启动保护生效时不碰灵动岛：那块区域归系统驱动托管，动它最容易出事。
+    if (AxsLiquidGlassGuardLevel() >= 1) return NO;
     id value = [self axs_liquidglass_valueForKey:@"islandGlass" defaultValue:@(YES)];
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
 }

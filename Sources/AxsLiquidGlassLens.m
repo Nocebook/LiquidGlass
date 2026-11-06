@@ -77,6 +77,10 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     if (!view || !view.layer) return;
     if (![NSThread isMainThread]) return;
 
+    // 任何一项是 NaN/Inf 就直接放弃：CALayer 对 NaN 几何是抛异常的，
+    // 在 SpringBoard 里没接住就是进程崩溃。宁可不画，也不能让它抛。
+    if (!isfinite(radius) || !isfinite(fill) || !isfinite(border) || !isfinite(specular)) return;
+
     // 省电档：不要镜面高光，膜也压淡一半，只留描边保证"有玻璃边"。
     if (perfMode <= 0) {
         specular = 0.0;
@@ -242,6 +246,7 @@ static void AxsInsertLensContainer(UIView *view, CALayer *container) {
     CGRect bounds = view.bounds;
     CGFloat width = CGRectGetWidth(bounds);
     CGFloat height = CGRectGetHeight(bounds);
+    if (!isfinite(width) || !isfinite(height) || !isfinite(radius)) return;
     if (width < 1.0 || height < 1.0) return;
 
     // 尺寸和圆角都没变就直接返回：layoutSubviews 在滚动/展开动画里每帧都调，

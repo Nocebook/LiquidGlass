@@ -5,7 +5,6 @@
 #import "AxsLiquidGlassMesh.h"
 #import "AxsLiquidGlassPrivate.h"
 
-#import <substrate.h>
 #include <string.h>
 
 static __weak UIView *gAxsIslandGlassContainer;
@@ -28,8 +27,6 @@ typedef struct {
 
 static AxsIslandSignature gAxsIslandSignature;
 static BOOL gAxsIslandHasSignature = NO;
-/// 是否已经接管容器类的 layoutSubviews。接管成功时轮询可以退到很低的频率。
-static BOOL gAxsIslandEventDriven = NO;
 
 #pragma mark - 命名判定
 
@@ -60,11 +57,12 @@ static void AxsIslandApply(UIView *container, AxsLiquidGlassParams params) {
     CGRect bounds = container.bounds;
     CGFloat width = CGRectGetWidth(bounds);
     CGFloat height = CGRectGetHeight(bounds);
+    if (!isfinite(width) || !isfinite(height)) return;
     if (width < 60.0 || height < 20.0) return;
 
     // 圆角：系统会在收起/展开时改它，取不到就按药丸取半高。
     CGFloat radius = container.layer.cornerRadius;
-    if (radius < 1.0) radius = height * 0.5;
+    if (!isfinite(radius) || radius < 1.0) radius = height * 0.5;
     radius = MIN(radius, height * 0.5);
 
     double rim = params.rimStrength;
@@ -99,6 +97,8 @@ static void AxsIslandApply(UIView *container, AxsLiquidGlassParams params) {
     }
 
     gAxsIslandApplying = YES;
+    // 必须 @catch 而不是 @finally：@finally 只是保证执行清理，异常照样往上抛，
+    // 抛到 SpringBoard 的宿主代码里就是一次进程崩溃（= 安全模式）。
     @try {
         [AxsLiquidGlassLens axs_liquidglass_applyToView:container
                                                   radius:radius
@@ -114,9 +114,12 @@ static void AxsIslandApply(UIView *container, AxsLiquidGlassParams params) {
                                                                 radius:radius
                                                               strength:mesh];
         }
-    } @finally {
+    } @catch (NSException *exception) {
         gAxsIslandApplying = NO;
+        AxsLog(@"灵动岛：挂载异常已拦截（%@）", exception.reason);
+        return;
     }
+    gAxsIslandApplying = NO;
 
     gAxsIslandSignature = signature;
     gAxsIslandHasSignature = YES;
@@ -128,23 +131,11 @@ static void AxsIslandApply(UIView *container, AxsLiquidGlassParams params) {
     }
 }
 
-/// 容器自己重排时立刻跟一次。灵动岛展开 / 收起的尺寸变化都会经过 layoutSubviews，
-/// 把刷新挂在这里，主循环就不用为了"跟上动画"而高频轮询了。
-static void (*gAxsIslandOrigLayoutSubviews)(id, SEL);
-
-static void AxsIslandLayoutTrampoline(id self, SEL _cmd) {
-    if (gAxsIslandOrigLayoutSubviews) {
-        gAxsIslandOrigLayoutSubviews(self, _cmd);
-    }
-    if ((UIView *)self == gAxsIslandGlassContainer) {
-        @try {
-            [AxsLiquidGlassIslandDriver axs_liquidglass_islandRefreshTracked];
-        } @catch (NSException *exception) {
-            (void)exception;
-        }
-    }
-}
-
+// 7.1.0 曾在这里用 MSHookMessageEx 接管容器类的 layoutSubviews，靠"尺寸一变就刷新"
+// 把轮询频率压下去。7.2.0 撤掉了：那是整份代码里唯一一处**在运行时给系统类挂钩子**
+// 的地方，而它对耗电的收益（一轮轮询本来就只有几次浮点比较）远小于风险 ——
+// 系统类一旦被挂钩，任何一次 IMP 取值出错都是 SpringBoard 直接死。
+// 现在改为"幂等 + 低频轮询"：几何签名没变时一轮扫描不会碰任何图层。
 @implementation AxsLiquidGlassIslandDriver
 
 #pragma mark - 窗口枚举
@@ -291,52 +282,14 @@ static void AxsIslandGlassCollect(UIView *root, NSInteger depth, NSMutableArray<
         // 容器换了（系统重建）先把旧的摘干净，避免在废弃视图上留一层玻璃。
         [self axs_liquidglass_islandTeardown];
         gAxsIslandGlassContainer = container;
-        [self axs_liquidglass_islandHookLayoutForContainer:container];
     }
 
     AxsIslandApply(container, params);
 }
 
-+ (void)axs_liquidglass_islandRefreshTracked {
++ (BOOL)axs_liquidglass_islandIsMounted {
     UIView *container = gAxsIslandGlassContainer;
-    if (!container || !container.window) return;
-    AxsLiquidGlassParams params = *AxsLiquidGlassParamsGet();
-    if (!params.islandGlass) return;
-    AxsIslandApply(container, params);
-}
-
-/// 接管容器自己的 layoutSubviews：展开 / 收起的每一次尺寸变化都会即时跟上，
-/// 于是守护线程可以退到很低的频率，空闲时几乎不耗电。
-+ (BOOL)axs_liquidglass_islandHookLayoutForContainer:(UIView *)container {
-    if (!container) return NO;
-    Class cls = [container class];
-    NSString *name = NSStringFromClass(cls);
-    if (name.length == 0) return NO;
-
-    static NSMutableSet<NSString *> *hooked;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        hooked = [NSMutableSet set];
-    });
-    if ([hooked containsObject:name]) return YES;
-    [hooked addObject:name];
-
-    // 只挂"类自己实现"的版本：继承来的 layoutSubviews 挂在子类上，
-    // MSHookMessageEx 会改到父类，等于给一大片系统视图加了开销。
-    if (!axs_liquidglass_classImplements(cls, @selector(layoutSubviews))) return NO;
-    // 再加一道类名约束，避免挂到通用视图类上。
-    if (!AxsIslandGlassNameMatches(name)) return NO;
-
-    MSHookMessageEx(cls, @selector(layoutSubviews),
-                    (IMP)AxsIslandLayoutTrampoline,
-                    (IMP *)&gAxsIslandOrigLayoutSubviews);
-    gAxsIslandEventDriven = (gAxsIslandOrigLayoutSubviews != NULL);
-    AxsLog(@"灵动岛：已接管 %@ 的 layoutSubviews（尺寸变化即时刷新）", name);
-    return gAxsIslandEventDriven;
-}
-
-+ (BOOL)axs_liquidglass_islandIsEventDriven {
-    return gAxsIslandEventDriven;
+    return container != nil && container.window != nil && gAxsIslandGlassApplied;
 }
 
 @end

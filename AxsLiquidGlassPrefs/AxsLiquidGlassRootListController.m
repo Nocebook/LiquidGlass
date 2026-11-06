@@ -9,6 +9,10 @@ extern char **environ;
 
 static NSString * const kAxsLiquidGlassRepositoryURL = @"https://nocebook.github.io/heli/";
 
+/// 启动保护的状态文件，路径必须跟 tweak 里的 AxsLiquidGlassGuard 保持一致。
+/// 面板进程以 mobile 身份运行，能读写 /var/mobile/Library/Caches。
+static NSString * const kAxsLiquidGlassGuardPath = @"/var/mobile/Library/Caches/com.heli.liquid.guard";
+
 static BOOL AxsLiquidGlassSpawn(NSString *path, NSArray<NSString *> *arguments) {
     if (path.length == 0) return NO;
     if (![[NSFileManager defaultManager] isExecutableFileAtPath:path]) return NO;
@@ -56,6 +60,9 @@ static BOOL AxsLiquidGlassRespring(void) {
                      set:nil get:nil detail:nil cell:PSGroupCell edit:nil]];
         [self axs_liquidglass_addButton:@"重启桌面（效果异常时用）"
                                  action:@selector(axs_liquidglass_respring:)
+                                     to:items];
+        [self axs_liquidglass_addButton:@"解除启动保护（恢复完整效果）"
+                                 action:@selector(axs_liquidglass_clearGuard:)
                                      to:items];
 
         [items addObject:[PSSpecifier preferenceSpecifierNamed:@"关于" target:self
@@ -117,6 +124,40 @@ static BOOL AxsLiquidGlassRespring(void) {
     NSString *encoded = [kAxsLiquidGlassRepositoryURL stringByAddingPercentEncodingWithAllowedCharacters:allowed];
     NSURL *primary = [NSURL URLWithString:[@"sileo://source/" stringByAppendingString:encoded]];
     [self axs_liquidglass_openURL:primary fallback:[NSURL URLWithString:kAxsLiquidGlassRepositoryURL]];
+}
+
+- (void)axs_liquidglass_clearGuard:(id)sender {
+    NSString *content = [NSString stringWithContentsOfFile:kAxsLiquidGlassGuardPath
+                                                  encoding:NSUTF8StringEncoding error:nil];
+    NSInteger level = 0;
+    for (NSString *line in [content componentsSeparatedByString:@"\n"]) {
+        if ([line hasPrefix:@"level="]) level = [[line substringFromIndex:6] integerValue];
+    }
+
+    if (content.length == 0) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"没有触发过启动保护"
+            message:@"当前没有降级记录。如果你的效果不全，先点「重启桌面」试试。"
+            preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+        return;
+    }
+
+    [[NSFileManager defaultManager] removeItemAtPath:kAxsLiquidGlassGuardPath error:nil];
+
+    NSString *detail = level >= 2
+        ? @"之前是完全停用（等级 2）。"
+        : (level == 1 ? @"之前是只保留模糊（等级 1），玻璃膜与折射被关掉了。" : @"之前是正常运行（等级 0）。");
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"启动保护已解除"
+        message:[NSString stringWithFormat:@"%@重启桌面后按完整效果加载。如果重启后直接进安全模式，"
+                 @"说明这一版在你的机型上确实会崩，请把 /var/mobile/Library/Caches/com.heli.liquid.log 发给我。", detail]
+        preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"稍后" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"立即重启" style:UIAlertActionStyleDefault
+                                            handler:^(UIAlertAction *action) {
+        [self axs_liquidglass_respring:nil];
+    }]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)axs_liquidglass_respring:(id)sender {
