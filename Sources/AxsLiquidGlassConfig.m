@@ -1,63 +1,27 @@
 #import "AxsLiquidGlassConfig.h"
-#import "AxsLiquidGlassGuard.h"
 #import "AxsLiquidGlassPreferences.h"
 #import "AxsLiquidGlassPrivate.h"
 
-#import <os/lock.h>
-#include <string.h>
-
-// 7.1.0 之前的默认值是 120/1.90/0.06 —— 视觉上确实"更糊"，但 120 相当于把系统
-// 原生 46 的采样核拉到 2.6 倍，滚动主屏、开合控制中心时高斯模糊要重算的面积
-// 随之翻倍，这是装完插件后耗电与发热的第一来源。
-// 新的默认值只抬到 88（约原生 1.9 倍）——和 120 摆在一起肉眼几乎分不出，
-// GPU 侧的模糊开销却降了将近一半。想要更糊的用户自己在面板里往上拉。
-static const double kAxsLiquidGlassDefaultBlurRadius = 88.0;
-static const double kAxsLiquidGlassDefaultSaturation = 1.80;
+// 6.1.0-21 的默认值是 46/1.70/0.06 —— 实测系统自己的 _UIBackdropViewSettings
+// 默认 blurRadius 就是 46，等于我们把它设成了原值，视觉上零变化。
+// 新的默认值必须拉开差距：模糊翻倍、乳白明显、饱和度更高。
+static const double kAxsLiquidGlassDefaultBlurRadius = 120.0;
+static const double kAxsLiquidGlassDefaultSaturation = 1.90;
 static const double kAxsLiquidGlassDefaultTintAlpha = 0.28;
 static const double kAxsLiquidGlassDefaultRimStrength = 0.65;
 static const NSInteger kAxsLiquidGlassDefaultWidgetMode = 2;
 
 // 液态层：这一组参数来自 88 液态玻璃（Liquidify）的观感拆解 + LiquidGlassKit 的
 // 折射/菲涅尔取值。目标是"装完就看得出是液态玻璃"，而不是只把模糊调厚一点。
-static const double kAxsLiquidGlassDefaultMeshStrength = 0.45;
+static const double kAxsLiquidGlassDefaultMeshStrength = 0.60;
 static const double kAxsLiquidGlassDefaultFillAlpha = 0.16;
-static const double kAxsLiquidGlassDefaultSpecular = 0.42;
+static const double kAxsLiquidGlassDefaultSpecular = 0.55;
 static const NSInteger kAxsLiquidGlassDefaultPerfMode = 1;
 
 // 旧默认值：用户没手动调过就原地升级，避免"装了新版本还是没变化"。
 static const double kAxsLiquidGlassLegacyBlurRadius = 46.0;
 static const double kAxsLiquidGlassLegacySaturation = 1.70;
-// 7.0.0 的默认值：换成省电默认时同样只迁移"还是出厂值"的用户。
-static const double kAxsLiquidGlassHeavyBlurRadius = 120.0;
-static const double kAxsLiquidGlassHeavySaturation = 1.90;
-static const double kAxsLiquidGlassHeavySpecular = 0.55;
-static const double kAxsLiquidGlassHeavyMesh = 0.60;
-static const NSInteger kAxsLiquidGlassPreferencesVersion = 3;
-
-#pragma mark - 热路径快照
-
-static AxsLiquidGlassParams gAxsParams;
-static os_unfair_lock gAxsParamsLock = OS_UNFAIR_LOCK_INIT;
-
-const AxsLiquidGlassParams *AxsLiquidGlassParamsGet(void) {
-    // 这里必须保证"绝不重入"：早期版本用的是 dispatch_once，一旦某条路径
-    // 在单例初始化过程里又反过来读快照，同一个 once 令牌被同线程二次进入就是死锁 ——
-    // SpringBoard 卡在启动阶段不响应，看门狗直接杀进程，表现就是安全模式。
-    // 改成一个普通的标志位：重入时直接返回当前（可能是全零的）快照，后面 reload 会补上。
-    static BOOL bootstrapped = NO;
-    if (!bootstrapped) {
-        bootstrapped = YES;
-        (void)[AxsLiquidGlassConfig axs_liquidglass_shared];
-    }
-    return &gAxsParams;
-}
-
-static void AxsParamsStore(const AxsLiquidGlassParams *params) {
-    if (!params) return;
-    os_unfair_lock_lock(&gAxsParamsLock);
-    gAxsParams = *params;
-    os_unfair_lock_unlock(&gAxsParamsLock);
-}
+static const NSInteger kAxsLiquidGlassPreferencesVersion = 2;
 
 // 只在升级后第一次加载时执行一次。之后用户怎么调都不再覆盖。
 static void axs_liquidglass_migratePreferencesIfNeeded(void) {
@@ -69,15 +33,12 @@ static void axs_liquidglass_migratePreferencesIfNeeded(void) {
 
         NSMutableDictionary *updates = [NSMutableDictionary dictionary];
         id blur = values[@"blurRadius"];
-        if (![blur isKindOfClass:[NSNumber class]] ||
-            fabs([blur doubleValue] - kAxsLiquidGlassLegacyBlurRadius) < 0.01 ||
-            fabs([blur doubleValue] - kAxsLiquidGlassHeavyBlurRadius) < 0.01) {
+        if (![blur isKindOfClass:[NSNumber class]] || fabs([blur doubleValue] - kAxsLiquidGlassLegacyBlurRadius) < 0.01) {
             updates[@"blurRadius"] = @(kAxsLiquidGlassDefaultBlurRadius);
         }
         id saturation = values[@"saturation"];
         if (![saturation isKindOfClass:[NSNumber class]] ||
-            fabs([saturation doubleValue] - kAxsLiquidGlassLegacySaturation) < 0.01 ||
-            fabs([saturation doubleValue] - kAxsLiquidGlassHeavySaturation) < 0.01) {
+            fabs([saturation doubleValue] - kAxsLiquidGlassLegacySaturation) < 0.01) {
             updates[@"saturation"] = @(kAxsLiquidGlassDefaultSaturation);
         }
         // 乳白浓度旧默认 0.06，但用户在"调了没反应"的阶段可能拉到 0。
@@ -85,17 +46,6 @@ static void axs_liquidglass_migratePreferencesIfNeeded(void) {
         id tint = values[@"tintAlpha"];
         if (![tint isKindOfClass:[NSNumber class]] || [tint doubleValue] <= 0.07) {
             updates[@"tintAlpha"] = @(kAxsLiquidGlassDefaultTintAlpha);
-        }
-        // 7.0.0 的高光 / 折射默认值偏重，跟着一起降到省电默认。
-        id specular = values[@"specularStrength"];
-        if (![specular isKindOfClass:[NSNumber class]] ||
-            fabs([specular doubleValue] - kAxsLiquidGlassHeavySpecular) < 0.01) {
-            updates[@"specularStrength"] = @(kAxsLiquidGlassDefaultSpecular);
-        }
-        id mesh = values[@"meshStrength"];
-        if (![mesh isKindOfClass:[NSNumber class]] ||
-            fabs([mesh doubleValue] - kAxsLiquidGlassHeavyMesh) < 0.01) {
-            updates[@"meshStrength"] = @(kAxsLiquidGlassDefaultMeshStrength);
         }
         updates[@"prefsVersion"] = @(kAxsLiquidGlassPreferencesVersion);
 
@@ -154,59 +104,10 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
             (__bridge const void *)self, axs_liquidglass_preferencesDidChange,
             (__bridge CFStringRef)AxsLiquidGlassPreferencesChanged, NULL,
             CFNotificationSuspensionBehaviorDeliverImmediately);
-
-        // 低电量模式是系统级的省电信号，跟着它降档比让用户手动去面板里拨要可靠得多。
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(axs_liquidglass_powerStateChanged:)
-                                                     name:NSProcessInfoPowerStateDidChangeNotification
-                                                   object:nil];
         // Close the window between the first read and observer registration.
         dispatch_async(_reloadQueue, ^{ [self axs_liquidglass_reload]; });
     }
     return self;
-}
-
-- (void)axs_liquidglass_powerStateChanged:(NSNotification *)note {
-    (void)note;
-    dispatch_async(self.reloadQueue, ^{ [self axs_liquidglass_reload]; });
-}
-
-/// 把当前取值压成 C 结构体，给逐帧路径用。
-- (void)axs_liquidglass_rebuildParams {
-    AxsLiquidGlassParams params;
-    memset(&params, 0, sizeof(params));
-    params.blurRadius = [self axs_liquidglass_blurRadius];
-    params.saturation = [self axs_liquidglass_saturation];
-    params.tintAlpha = [self axs_liquidglass_tintAlpha];
-    params.rimStrength = [self axs_liquidglass_rimStrength];
-    params.meshStrength = [self axs_liquidglass_meshStrength];
-    params.fillAlpha = [self axs_liquidglass_fillAlpha];
-    params.specularStrength = [self axs_liquidglass_specularStrength];
-    params.alertsOpacity = [self axs_liquidglass_alertsOpacity];
-    params.perfMode = [self axs_liquidglass_effectivePerfMode];
-    params.widgetMode = [self axs_liquidglass_widgetMode];
-    params.enabled = [self axs_liquidglass_isEnabled];
-    params.islandGlass = [self axs_liquidglass_islandGlass];
-    params.hideIsland = [self axs_liquidglass_hideIsland];
-    params.lowPower = [self axs_liquidglass_isLowPower];
-    params.keyboardScope = [self axs_liquidglass_scopeEnabled:@"keyboard"];
-    params.appBlur = [self axs_liquidglass_appBlur];
-
-    // 启动保护等级 1：上一次启动崩过，这次只保留"改模糊参数"这一条最安全的链路。
-    // 玻璃膜、锥形描边、折射网格、灵动岛全部归零 —— 这些都要往系统图层树里
-    // 插图层 / 改 mesh，是整份代码里风险最集中的部分。把参数压成 0 之后，
-    // 下游每个模块都会走"清理 + 直接返回"的分支，不需要额外判断。
-    if (AxsLiquidGlassGuardLevel() >= 1) {
-        params.rimStrength = 0.0;
-        params.fillAlpha = 0.0;
-        params.specularStrength = 0.0;
-        params.meshStrength = 0.0;
-        params.islandGlass = NO;
-        params.hideIsland = NO;
-    }
-
-    params.generation = self.generation;
-    AxsParamsStore(&params);
 }
 
 - (void)axs_liquidglass_reload {
@@ -214,7 +115,6 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     self.snapshot = [values isKindOfClass:[NSDictionary class]] ? values : @{};
     self.widgetBlocklist = [self axs_liquidglass_parseBlocklist:self.snapshot[@"widgetBlocklist"]];
     self.generation = self.generation + 1;
-    [self axs_liquidglass_rebuildParams];
     dispatch_async(dispatch_get_main_queue(), ^{
         NSArray<void (^)(void)> *handlers;
         @synchronized (self.reloadHandlers) {
@@ -252,6 +152,13 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     // 装完就要能看到效果：缺键时按开启处理，用户主动关掉才写 false。
     id value = [self axs_liquidglass_valueForKey:@"enabled" defaultValue:@(YES)];
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
+}
+
+- (BOOL)axs_liquidglass_appBlur {
+    // 默认关：只在 SpringBoard 里改写模糊。打开后连 App 内部的导航栏、键盘、
+    // 侧边栏也会被加厚，滚动时每帧重算更大的高斯核 —— 用户主动打开才付这笔钱。
+    id value = [self axs_liquidglass_valueForKey:@"appBlur" defaultValue:@(NO)];
+    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
 
 - (double)axs_liquidglass_blurRadius {
@@ -298,29 +205,6 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
     id value = [self axs_liquidglass_valueForKey:@"perfMode" defaultValue:nil];
     NSInteger mode = [value isKindOfClass:[NSNumber class]] ? [value integerValue] : kAxsLiquidGlassDefaultPerfMode;
     if (mode < 0 || mode > 2) mode = kAxsLiquidGlassDefaultPerfMode;
-    return mode;
-}
-
-- (BOOL)axs_liquidglass_lowPowerAuto {
-    id value = [self axs_liquidglass_valueForKey:@"lowPowerAuto" defaultValue:@(YES)];
-    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : YES;
-}
-
-- (BOOL)axs_liquidglass_appBlur {
-    id value = [self axs_liquidglass_valueForKey:@"appBlur" defaultValue:@(NO)];
-    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
-}
-
-- (BOOL)axs_liquidglass_isLowPower {
-    if (![self axs_liquidglass_lowPowerAuto]) return NO;
-    return [NSProcessInfo processInfo].isLowPowerModeEnabled;
-}
-
-- (NSInteger)axs_liquidglass_effectivePerfMode {
-    NSInteger mode = [self axs_liquidglass_perfMode];
-    // 低电量时直接按"省电档"渲染：不挂折射网格、去掉镜面高光、膜压淡。
-    // 视觉损失有限，但省下的是整块屏幕每帧的合成开销 —— 低电量时这笔账更划算。
-    if ([self axs_liquidglass_isLowPower] && mode > 0) return 0;
     return mode;
 }
 
@@ -371,30 +255,7 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 }
 
 - (BOOL)axs_liquidglass_hideIsland {
-    // 隐藏灵动岛也是往系统托管视图上写 alpha/hidden，启动保护生效时一并停掉。
-    if (AxsLiquidGlassGuardLevel() >= 1) return NO;
     id value = [self axs_liquidglass_valueForKey:@"hideIsland" defaultValue:@(NO)];
-    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
-}
-
-// 灵动岛玻璃 7.3.0 起默认关。
-//
-// 7.2.0 默认开，理由是"这条是看得见的功能，装完就该有变化"。但实测代价是：
-// 它要在启动后不久就往系统托管的 SystemAperture 容器里插图层，
-// 而且那时它还不受看门狗管辖（构造函数绕过 %ctor）——
-// 一旦这里出事，就是开机即安全模式，用户连面板都进不去。
-// 现在的顺序是：先保证能开机，再让用户在面板里单独打开、单独验证。
-- (BOOL)axs_liquidglass_islandGlass {
-    // 启动保护生效时不碰灵动岛：那块区域归系统驱动托管，动它最容易出事。
-    if (AxsLiquidGlassGuardLevel() >= 1) return NO;
-    id value = [self axs_liquidglass_valueForKey:@"islandGlass" defaultValue:@(NO)];
-    return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
-}
-
-- (BOOL)axs_liquidglass_conicBorder {
-    // 启动保护生效时不冒险：连描边形态都退回已验证的线性。
-    if (AxsLiquidGlassGuardLevel() >= 1) return NO;
-    id value = [self axs_liquidglass_valueForKey:@"conicBorder" defaultValue:@(NO)];
     return [value isKindOfClass:[NSNumber class]] ? [value boolValue] : NO;
 }
 
@@ -403,7 +264,6 @@ static void axs_liquidglass_preferencesDidChange(CFNotificationCenterRef center,
 }
 
 - (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
     CFNotificationCenterRemoveEveryObserver(CFNotificationCenterGetDarwinNotifyCenter(),
                                             (__bridge const void *)self);
 }

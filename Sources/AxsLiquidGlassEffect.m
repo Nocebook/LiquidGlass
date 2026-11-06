@@ -1,6 +1,5 @@
 #import "AxsLiquidGlassEffect.h"
 #import "AxsLiquidGlassConfig.h"
-#import "AxsLiquidGlassGuard.h"
 #import "AxsLiquidGlassLog.h"
 #import "AxsLiquidGlassPrivate.h"
 #import "AxsLiquidGlassLens.h"
@@ -173,8 +172,7 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         return;
     }
 
-    // 一次拷出热路径快照：这之后每一次取值都不再走消息派发 + 字典查找。
-    AxsLiquidGlassParams params = *AxsLiquidGlassParamsGet();
+    AxsLiquidGlassConfig *config = [AxsLiquidGlassConfig axs_liquidglass_shared];
 
     // 小组件进程一律不动 effect。白屏的根因就在这：
     // WidgetKit 出快照时背景是空的，_UICustomBlurEffect 会在快照进程里新建一条
@@ -182,14 +180,14 @@ static double axs_liquidglass_areaRatio(UIView *view) {
     // 也扛不住这条链，超限进程被杀，系统拿不到快照，同样渲染成白块。
     // 所以小组件档位全部改成纯装饰语义：描边与高光都是零 backdrop 成本的。
     if (!isWidget) {
-        double radius = params.blurRadius;
-        double saturation = params.saturation;
-        double tintAlpha = params.tintAlpha;
+        double radius = [config axs_liquidglass_blurRadius];
+        double saturation = [config axs_liquidglass_saturation];
+        double tintAlpha = [config axs_liquidglass_tintAlpha];
 
         // 通知与弹窗的底色透明度：跟 Liquidify 的"通知中心透明度"同语义，
         // 1.0 原样，调低后通知底更透、壁纸更明显。只作用于通知和上下文菜单。
         if (kind == AxsLiquidGlassSurfaceKindAlert || kind == AxsLiquidGlassSurfaceKindContextMenu) {
-            tintAlpha *= params.alertsOpacity;
+            tintAlpha *= [config axs_liquidglass_alertsOpacity];
         }
 
         UIVisualEffect *effect = [self axs_liquidglass_makeEffectWithRadius:radius
@@ -206,25 +204,12 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         objc_setAssociatedObject(view, &kAxsLiquidGlassApplyingKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 
-    double rim = params.rimStrength;
-    double fill = params.fillAlpha;
-    double specular = params.specularStrength;
-    double mesh = params.meshStrength;
-    NSInteger perfMode = params.perfMode;
+    double rim = [config axs_liquidglass_rimStrength];
+    double fill = [config axs_liquidglass_fillAlpha];
+    double specular = [config axs_liquidglass_specularStrength];
+    double mesh = [config axs_liquidglass_meshStrength];
+    NSInteger perfMode = [config axs_liquidglass_perfMode];
     CGFloat cornerRadius = [self axs_liquidglass_radiusForView:view];
-
-    // 装饰层闸门（7.3.0）。
-    // 启动后的前 12 秒、以及看门狗降级期间，这里一律把四个参数压成 0：
-    // 下面的每个分支都在"参数为 0 时先清理已有图层再返回"，所以压零之后
-    // 不需要任何额外判断，天然退化成"只改模糊"。真正的原因是：
-    // 往系统视图的图层树里插子层 / 改 meshTransform，是整份代码里唯一
-    // 能把 SpringBoard 直接搞死的东西，必须跟启动阶段彻底错开。
-    if (!AxsLiquidGlassGuardDecorReady()) {
-        rim = 0.0;
-        fill = 0.0;
-        specular = 0.0;
-        mesh = 0.0;
-    }
 
     if (isWidget) {
         // 旧版本可能在小组件进程里换过 effect：还回去，清掉白屏残留。
@@ -237,7 +222,7 @@ static double axs_liquidglass_areaRatio(UIView *view) {
         }
         // 档位语义（effect 一律不替换）：1 无装饰、2 零 layer 描边、3 描边 + 高光图层。
         // 档位 3 也强制走省电参数，不给它上折射网格。
-        NSInteger widgetMode = params.widgetMode;
+        NSInteger widgetMode = [config axs_liquidglass_widgetMode];
         if (widgetMode >= 3 && rim > 0.001 && cornerRadius >= 4.0) {
             [AxsLiquidGlassLens axs_liquidglass_applyToView:view radius:cornerRadius
                                                        fill:fill * 0.55 border:rim

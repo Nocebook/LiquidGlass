@@ -28,7 +28,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>半径越大越像磨砂厚玻璃；饱和度决定底色透不透。模糊半径是耗电第一大户，默认 88 已经比系统原生 46 厚一倍，日常够用；拉到 150 以上会明显发热。</string>
+			<string>半径越大越像磨砂厚玻璃；饱和度决定底色透不透。</string>
 			<key>label</key>
 			<string>玻璃质感</string>
 		</dict>
@@ -60,7 +60,7 @@
 			<key>decimals</key>
 			<integer>1</integer>
 			<key>default</key>
-			<real>1.8</real>
+			<real>1.9</real>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
 			<key>key</key>
@@ -120,7 +120,7 @@
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
 			<key>footerText</key>
-			<string>默认只在桌面、控制中心、通知这些系统界面上改写模糊。打开后连 App 里的导航栏、键盘、侧边栏也会跟着加厚——观感更统一，但每个 App 滚动时都要重算更大的高斯核，是待机以外最明显的一项耗电。</string>
+			<string>默认只改写桌面、控制中心、通知这些系统界面的模糊。打开后 App 里的导航栏、键盘、侧边栏也会一起加厚 —— 观感更统一，但每个 App 滚动时都要重算更大的高斯核，是待机以外最明显的一项耗电。</string>
 			<key>key</key>
 			<string>appBlur</string>
 			<key>label</key>
@@ -142,7 +142,7 @@
 			<key>decimals</key>
 			<integer>2</integer>
 			<key>default</key>
-			<real>0.45</real>
+			<real>0.6</real>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
 			<key>key</key>
@@ -182,7 +182,7 @@
 			<key>decimals</key>
 			<integer>2</integer>
 			<key>default</key>
-			<real>0.42</real>
+			<real>0.55</real>
 			<key>defaults</key>
 			<string>com.heli.liquid</string>
 			<key>key</key>
@@ -217,34 +217,6 @@
 				<integer>1</integer>
 				<integer>2</integer>
 			</array>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>footerText</key>
-			<string>关闭时是线性对角描边（左上亮、右下暗），这是验证过的稳妥形态；打开后改成锥形渐变，亮部会沿圆角扫一圈，更像真玻璃的反光。锥形是较新的写法，单独一个开关，方便你判断效果和稳定性。</string>
-			<key>key</key>
-			<string>conicBorder</string>
-			<key>label</key>
-			<string>锥形定向描边</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<true/>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>footerText</key>
-			<string>系统进入低电量模式时自动按省电档渲染：不挂折射网格、去掉镜面高光、膜压淡一半。退出低电量后自动恢复，不需要注销。</string>
-			<key>key</key>
-			<string>lowPowerAuto</string>
-			<key>label</key>
-			<string>低电量模式自动省电</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -386,23 +358,9 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>玻璃：给灵动岛容器挂玻璃膜与边缘折射，收起、展开的两种尺寸都会跟随重排。「隐藏」优先级更高，打开后整块透明，胶囊动画也不再显示。</string>
+			<string>开启后灵动岛整块透明，来电、音乐、计时器的胶囊动画也不再显示。适合截图或者想要干净顶栏的时候；关掉立刻恢复。</string>
 			<key>label</key>
 			<string>灵动岛</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSwitchCell</string>
-			<key>default</key>
-			<false/>
-			<key>defaults</key>
-			<string>com.heli.liquid</string>
-			<key>footerText</key>
-			<string>默认关闭。它要往系统托管的灵动岛容器里插图层，是整份插件里风险最高的一块，而且此前从未在你的机器上验证通过。打开后如果桌面重启，插件会自动退回"只保留模糊"，你只要再注销一次就能正常使用 —— 这一步单独试，崩了也只怪这一个开关。</string>
-			<key>key</key>
-			<string>islandGlass</string>
-			<key>label</key>
-			<string>灵动岛玻璃</string>
 		</dict>
 		<dict>
 			<key>cell</key>

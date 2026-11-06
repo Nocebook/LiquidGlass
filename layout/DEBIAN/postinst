@@ -1,17 +1,10 @@
 #!/bin/sh
 # 这一版不再带桌面 App（入口只在 设置 → 越狱插件 → liquid (HL)）。
 # 但旧版本装过 /Applications/Heli.app，升级时 dpkg 不会自动删，
-# 这里主动清掉，免得桌面上留一个点了没用的图标。
+# 这里主动清掉并注销，免得桌面上留一个点了没用的图标。
 #
 # roothide（隐根）下 /var/jb 只是兼容链接，真实根在
 # /var/containers/Bundle/Application/.jbroot-*，所以三个位置都要探。
-#
-# ★ 这里**故意不做** killall SpringBoard。
-#   以前那样写有两个问题：
-#     1) 包管理器还在收尾时桌面就被杀了，进度条卡住，看起来像"装到一半自己注销了"；
-#     2) 用户没有选择权：装完直接黑一下屏，也不知道发生了什么。
-#   现在把重启交给包管理器 —— Sileo / Zebra 装完都会给一个「重启 SpringBoard / 注销」按钮，
-#   跟其它插件一致。想立刻生效就点它，不想点就先放着。
 set +e
 
 find_jb() {
@@ -47,14 +40,9 @@ for app in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app; do
     fi
 done
 
-# 清掉启动看门狗的降级状态：新装 / 升级之后从等级 0 重新开始，
-# 保证新包拿到的是一次"干净启动"，不会被上一版留下的降级等级卡住。
-#
-# 7.3.0 起状态存在 CFPreferences 域 com.heli.liquid.guard 里
-# （由 cfprefsd 落盘成 /var/mobile/Library/Preferences/<域>.plist），
-# 所以这里要删的是那个 plist；前两行是 7.2.0 及更早留下的文件，一并清掉。
-rm -f /var/mobile/Library/Preferences/com.heli.liquid.guard.plist >/dev/null 2>&1
-rm -f /var/mobile/Library/Caches/com.heli.liquid.guard >/dev/null 2>&1
-rm -f /tmp/com.heli.liquid.guard >/dev/null 2>&1
+# 这里**不要**杀 SpringBoard。
+# 以前在这里执行 killall -9 SpringBoard，用户看到的现象是"装到一半自己注销了"，
+# 而且没有选择权。重启桌面交给包管理器（Sileo / Zebra 装完给的「重启」按钮），
+# 想立刻生效就点，不想点就先放着。
 
 exit 0

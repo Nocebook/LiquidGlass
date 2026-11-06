@@ -23,28 +23,26 @@ static char kAxsSettingsTouchedKey;
 // 记录日志用：前若干个不同 settings 类的实测数值，数量够了就停，避免刷爆日志。
 static NSMutableSet<NSString *> *gAxsLoggedClasses;
 
-/// 这个进程里要不要改写系统模糊参数。
-///
-/// 面板装饰（玻璃膜 / 描边 / 折射）本来就只挂在被识别的系统表面上，App 内的模糊
-/// 一直保持原样；但 `_UIBackdropViewSettings` 的 setter 是全进程生效的 ——
-/// 只要插件注入了，App 里每一块导航栏、键盘、侧边栏的模糊半径都会被抬到配置值。
-/// 那意味着每个 App 滚动时都要重算更大的高斯核，是本插件在 App 内最大的耗电源。
-/// 所以默认只在 SpringBoard 里改写；想要"全局更糊"的用户可以在面板里打开。
-static BOOL AxsProcessWantsBlurRewrite(void) {
-    static BOOL wants;
+/// 当前进程是不是系统界面（SpringBoard 本身）。
+/// _UIBackdropViewSettings 的 setter 是**全进程**生效的：插件一旦注入，
+/// App 里的导航栏、键盘、侧边栏、弹出菜单的模糊半径也会被抬到配置值，
+/// 滚动时每帧重算更大的高斯核 —— 这是待机耗电之外最明显的一项。
+/// 所以默认只在系统界面里改写，App 内恢复原生观感。
+static BOOL AxsSettingsInSystemUI(void) {
+    static BOOL cached = NO;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSString *name = [NSProcessInfo processInfo].processName ?: @"";
-        wants = [name isEqualToString:@"SpringBoard"];
+        NSString *name = [NSProcessInfo processInfo].processName;
+        cached = [name isEqualToString:@"SpringBoard"];
     });
-    if (wants) return YES;
-    return AxsLiquidGlassParamsGet()->appBlur;
+    return cached;
 }
 
 static BOOL AxsSettingsActive(void) {
-    // 走结构体快照而不是消息派发：setter 在开合动画里是逐帧调用的，
-    // 每次都要走一遍 消息 → 字典查找 → isKindOfClass 的话，光判定就够呛。
-    return AxsLiquidGlassParamsGet()->enabled && AxsProcessWantsBlurRewrite();
+    if (![[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_isEnabled]) return NO;
+    if (AxsSettingsInSystemUI()) return YES;
+    // App 内是否加厚由面板「第三方 App 也加厚模糊」决定，默认关。
+    return [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_appBlur];
 }
 
 /// 系统给自己的玻璃表面填的原始半径：控制中心 / Dock / 文件夹 实测是 46。
@@ -57,7 +55,7 @@ static BOOL AxsSettingsActive(void) {
 /// 小于 8 的一律放行：那是系统本来就不打算模糊的表面（分隔线、纯色底）。
 static double AxsTargetBlur(double original) {
     if (original < 8.0) return original;
-    double configured = AxsLiquidGlassParamsGet()->blurRadius;
+    double configured = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_blurRadius];
     if (configured < 8.0) return original;
     double target = configured > original ? configured : original;
     return target > 176.0 ? 176.0 : target;
@@ -109,7 +107,7 @@ static void AxsHookSetSaturation(id self, SEL _cmd, double factor) {
     double value = factor;
     if (factor > 0.0 && AxsSettingsActive()) {
         // 只提高不降低：有些表面本来就带 0 以外的饱和度，压低会让颜色发灰。
-        double wanted = AxsLiquidGlassParamsGet()->saturation;
+        double wanted = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_saturation];
         value = factor > wanted ? factor : wanted;
     }
     if (axs_liquidglass_origSetSaturation) {
@@ -120,7 +118,7 @@ static void AxsHookSetSaturation(id self, SEL _cmd, double factor) {
 static void AxsHookSetTintAlpha(id self, SEL _cmd, double alpha) {
     double value = alpha;
     if (alpha > 0.0 && AxsSettingsActive()) {
-        double wanted = AxsLiquidGlassParamsGet()->tintAlpha;
+        double wanted = [[AxsLiquidGlassConfig axs_liquidglass_shared] axs_liquidglass_tintAlpha];
         value = alpha > wanted ? alpha : wanted;
     }
     if (axs_liquidglass_origSetTintAlpha) {

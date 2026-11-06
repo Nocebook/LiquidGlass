@@ -31,10 +31,9 @@ if [ -n "$UICACHE" ]; then
     done
 fi
 
-# 卸载一样不杀 SpringBoard：交给包管理器的「重启」按钮。
-# 这里的顺序很关键 —— 文件已经删掉了，此时若强行重启桌面，
-# 用户看到的是"卸载后桌面闪一下"，但包管理器进度条会卡在收尾步骤。
-rm -f /var/mobile/Library/Caches/com.heli.liquid.guard >/dev/null 2>&1
-rm -f /tmp/com.heli.liquid.guard >/dev/null 2>&1
+# 这里**不要**杀 SpringBoard。
+# 以前在这里执行 killall -9 SpringBoard，用户看到的现象是"装到一半自己注销了"，
+# 而且没有选择权。重启桌面交给包管理器（Sileo / Zebra 装完给的「重启」按钮），
+# 想立刻生效就点，不想点就先放着。
 
 exit 0
