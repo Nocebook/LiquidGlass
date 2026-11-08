@@ -16,9 +16,9 @@
 #import <math.h>
 #import <substrate.h>
 
-#define GS_DOMAIN @"com.yourname.glassify"
-#define GS_RELOAD "com.yourname.glassify/reload"
-#define GS_DUMP   "com.yourname.glassify/dump"
+#define GS_DOMAIN @"com.heli.liquid"
+#define GS_RELOAD "com.heli.liquid/reload"
+#define GS_DUMP   "com.heli.liquid/dump"
 
 static const NSInteger GSGlassTag = 0x6701;
 static const NSInteger GSBadgeGlassTag = 0x6702;

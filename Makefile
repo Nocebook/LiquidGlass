@@ -1,11 +1,14 @@
-export ARCHS = arm64 arm64e
-# latest = 用 CI 里装好的最新 SDK
-export TARGET = iphone:clang:latest:15.0
+# 目标设备：iPhone 14 Pro（A16 / arm64e）/ iOS 16.3 / RootHide（Dopamine roothide）
+#
+# 注意：这个仓库用 roothide scheme 出包，CI 里再统一做三件事：
+#   1) Architecture 改回 iphoneos-arm64（theos 会写成 arm64e，Sileo 判不兼容）
+#   2) 所有 rootfs 路径挪进 /var/jb（RootHide 的 rootfs 只读，装不进）
+#   3) 用 xz 重打包（Linux 新版 dpkg 默认 zstd，设备端不一定认）
+# 见 .github/workflows/build.yml 的 "Fix package for RootHide"。
 
-# 你的环境：Dopamine (roothide) + iOS 16.3 → roothide
+export ARCHS = arm64e
+export TARGET = iphone:clang:16.5:15.0
 export THEOS_PACKAGE_SCHEME = roothide
-# 如果以后换回普通 Dopamine/palera1n rootless，换成：
-# export THEOS_PACKAGE_SCHEME = rootless
 
 include $(THEOS)/makefiles/common.mk
 
@@ -20,5 +23,4 @@ include $(THEOS_MAKE_PATH)/tweak.mk
 SUBPROJECTS += prefs
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
-after-install::
-	install.exec "killall -9 SpringBoard"
+# 安装/卸载都不自动杀 SpringBoard，重启交给包管理器的按钮

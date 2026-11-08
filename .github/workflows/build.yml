@@ -1,50 +1,138 @@
-name: build
+name: Build Glassify
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    # 只改文档不必重新出包
+    paths-ignore:
+      - '**.md'
 
 permissions:
   contents: write
 
+env:
+  THEOS: ${{ github.workspace }}/theos
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install toolchain
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y make git curl clang dpkg-dev fakeroot ldid xz-utils
+          # noble 源里没有 ldid 包，由后面 Ensure ldid 用官方静态二进制补
+          sudo apt-get install -y build-essential fakeroot rsync perl zip libxml2 xz-utils python3
 
-      - name: Install Theos
+      - name: Checkout Theos (roothide fork)
+        uses: actions/checkout@v4
+        with:
+          repository: roothide/theos
+          path: theos
+          submodules: recursive
+
+      - name: Install Linux iOS toolchain
         run: |
-          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
-          git clone --depth 1 https://github.com/theos/headers.git "$HOME/theos/include"
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$HOME/theos/sdks"
-          cd "$HOME/theos/sdks"
-          for sdk in iPhoneOS17.0.sdk iPhoneOS16.5.sdk iPhoneOS16.4.sdk iPhoneOS15.6.sdk; do
-            git sparse-checkout set "$sdk" >/dev/null 2>&1 || true
-            if [ -d "$sdk" ]; then echo "SDK: $sdk"; break; fi
-          done
-          ls -d ./*.sdk
-          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
-          echo "$HOME/theos/bin" >> "$GITHUB_PATH"
+          set -euo pipefail
+          mkdir -p "$THEOS/toolchain"
+          curl -fsSL "https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz" \
+            | tar -xJ -C "$THEOS/toolchain/"
+          CLANG="$THEOS/toolchain/linux/iphone/bin/clang"
+          test -x "$CLANG" || { echo "toolchain clang missing"; find "$THEOS/toolchain" -maxdepth 3 | head -40; exit 1; }
+          "$CLANG" --version
+
+      - name: Ensure ldid
+        run: |
+          set -euo pipefail
+          if ! command -v ldid >/dev/null 2>&1; then
+            curl -fsSL -o /tmp/ldid "https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64"
+            chmod +x /tmp/ldid
+            sudo mv /tmp/ldid /usr/local/bin/ldid
+          fi
+          ldid -V || true
+
+      - name: Install iOS SDK (iPhoneOS16.5)
+        run: |
+          set -euo pipefail
+          mkdir -p "$THEOS/sdks"
+          if [ -d "$THEOS/sdks/iPhoneOS16.5.sdk" ]; then
+            echo "sdk already present"
+            exit 0
+          fi
+          STAGE="$(mktemp -d)"
+          trap 'rm -rf "$STAGE"' EXIT
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$STAGE/sdks"
+          git -C "$STAGE/sdks" sparse-checkout set iPhoneOS16.5.sdk
+          cp -R "$STAGE/sdks/iPhoneOS16.5.sdk" "$THEOS/sdks/"
+          ls -1 "$THEOS/sdks"
+
+      - name: Bump version
+        id: bump
+        run: |
+          BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
+          VERSION="${BASE}-${GITHUB_RUN_NUMBER}"
+          sed -i "s/^Version: .*/Version: ${VERSION}/" control
+          echo "package_version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "package version: $VERSION"
 
       - name: Build package
-        run: make package FINALPACKAGE=1
+        run: |
+          set -euo pipefail
+          make package FINALPACKAGE=1
+          ls -l packages/
 
-      - name: Build apt repo
-        run: bash scripts/make_repo.sh
+      - name: Fix package for RootHide
+        run: |
+          set -euo pipefail
+          for deb in packages/*.deb; do
+            [ -e "$deb" ] || continue
+            stage="$(mktemp -d)"
+            dpkg-deb -R "$deb" "$stage"
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+            # theos 的 roothide scheme 会把 Architecture 写成 iphoneos-arm64e，
+            # 而设备 dpkg 认的是 iphoneos-arm64，Sileo 会直接判不兼容
+            sed -i 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
+
+            # RootHide Bootstrap 是 rootless 布局（/var/jb），rootfs 只读装不进
+            python3 tools/relocate_to_jbroot.py "$stage"
+
+            # 硬校验：任何不在 /var/jb 下的绝对路径都会让安装失败
+            python3 tools/check_deb_paths.py "$stage"
+
+            # Linux 新版 dpkg 默认 zstd，统一回 xz
+            dpkg-deb -b -Zxz "$stage" "$deb"
+            rm -rf "$stage"
+
+            echo "--- $deb ---"
+            dpkg-deb -f "$deb" Package Architecture Version Depends
+            dpkg-deb -c "$deb" | sed -n '1,25p'
+
+            case "$deb" in
+              *_iphoneos-arm64e.deb)
+                fixed="${deb%_iphoneos-arm64e.deb}_iphoneos-arm64.deb"
+                mv -f "$deb" "$fixed"
+                echo "renamed: $fixed"
+                ;;
+            esac
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./repo
-          publish_branch: gh-pages
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
+          name: glassify-deb
+          path: ./packages/*.deb
+          if-no-files-found: error
+
+      - name: Create release
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ github.token }}
+          tag_name: v${{ steps.bump.outputs.package_version }}
+          name: "Glassify v${{ steps.bump.outputs.package_version }}"
+          files: ./packages/*.deb

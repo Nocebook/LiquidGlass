@@ -3,9 +3,9 @@
 #import <objc/message.h>
 #import <notify.h>
 
-#define GS_DOMAIN @"com.yourname.glassify"
-#define GS_RELOAD "com.yourname.glassify/reload"
-#define GS_DUMP   "com.yourname.glassify/dump"
+#define GS_DOMAIN @"com.heli.liquid"
+#define GS_RELOAD "com.heli.liquid/reload"
+#define GS_DUMP   "com.heli.liquid/dump"
 
 @implementation GSPRootListController
 
