@@ -289,22 +289,10 @@ static void GSRefreshAll(void) {
     }
 }
 
+// 8.0.2：默认不挂任何钩子。装上后先确认不崩，再在设置里逐个打开，
+// 就能精确定位是哪一个 hook 引起安全模式。
 %ctor {
-    Class badge = objc_getClass("SBIconBadgeView");
-
-    if (badge) {
-        MSHookMessageEx(badge, @selector(didMoveToWindow),
-                        (IMP)hook_badge_didMoveToWindow,
-                        (IMP *)&orig_badge_didMoveToWindow);
-        MSHookMessageEx(badge, @selector(layoutSubviews),
-                        (IMP)hook_badge_layoutSubviews,
-                        (IMP *)&orig_badge_layoutSubviews);
-    }
-
-    NSLog(@"[Glassify] 8.0.1 hooks: badge=%@ origMove=%d origLayout=%d",
-          badge ? @"yes" : @"no",
-          orig_badge_didMoveToWindow ? 1 : 0,
-          orig_badge_layoutSubviews ? 1 : 0);
+    NSLog(@"[Glassify] 8.0.2 loaded (hooks are opt-in)");
 
     static int reloadToken = 0;
     notify_register_dispatch(GS_RELOAD, &reloadToken, dispatch_get_main_queue(), ^(int token) {
@@ -315,4 +303,27 @@ static void GSRefreshAll(void) {
     notify_register_dispatch(GS_DUMP, &dumpToken, dispatch_get_main_queue(), ^(int token) {
         if (GSBool(@"DebugTree", NO)) GSDumpTree();
     });
+
+    if (!GSBool(@"HooksEnabled", NO)) {
+        NSLog(@"[Glassify] hooks disabled (HooksEnabled=NO)");
+        return;
+    }
+
+    Class badge = objc_getClass("SBIconBadgeView");
+    NSLog(@"[Glassify] SBIconBadgeView = %@", badge ? @"found" : @"MISSING");
+    if (!badge) return;
+
+    if (GSBool(@"HookMove", NO)) {
+        MSHookMessageEx(badge, @selector(didMoveToWindow),
+                        (IMP)hook_badge_didMoveToWindow,
+                        (IMP *)&orig_badge_didMoveToWindow);
+        NSLog(@"[Glassify] hooked didMoveToWindow");
+    }
+
+    if (GSBool(@"HookLayout", NO)) {
+        MSHookMessageEx(badge, @selector(layoutSubviews),
+                        (IMP)hook_badge_layoutSubviews,
+                        (IMP *)&orig_badge_layoutSubviews);
+        NSLog(@"[Glassify] hooked layoutSubviews");
+    }
 }

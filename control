@@ -1,8 +1,8 @@
 Package: com.heli.liquid
 Name: Glassify
-Version: 8.0.1
+Version: 8.0.2
 Architecture: iphoneos-arm64
-Description: 通知角标液态玻璃 + 未读呼吸动画（稳定版）。8.0.1 移除 Dock / 文件夹 / 控制中心三个挂钩——它们在系统 layoutSubviews 里插入子视图，会触发递归布局并进安全模式；角标改为 didMoveToWindow 时异步挂载，layoutSubviews 只调整已有图层，所有 hook 判空、所有挂载包 try。完全免费，无需激活码。
+Description: 通知角标液态玻璃（排查版）。8.0.2 默认不注册任何 hook，装上是安全的；设置里有三个排查开关（挂钩总开关 / didMoveToWindow / layoutSubviews），逐个打开即可定位引起安全模式的那一步。角标玻璃与未读呼吸动画在挂钩生效后才出现。完全免费，无需激活码。
 Maintainer: Heli
 Author: Heli
 Section: Heli
