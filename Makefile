@@ -12,7 +12,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Heli
 Heli_FILES = Tweak.xm
-Heli_CFLAHL = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
+Heli_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
 Heli_FRAMEWORKS = UIKit Foundation QuartzCore
 # substrate 由 tweak.mk 自动链接
 

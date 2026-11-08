@@ -336,9 +336,26 @@ static void HLDumpNode(UIView *view, int depth) {
     }
 }
 
+// 取窗口列表：优先走 windowScene，避免 deprecated 警告；
+// 拿不到时兜底回退到老的 UIApplication.windows。
+static NSArray<UIWindow *> *HLAllWindows(void) {
+    NSMutableArray<UIWindow *> *windows = [NSMutableArray array];
+    for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) continue;
+        [windows addObjectsFromArray:((UIWindowScene *)scene).windows];
+    }
+    if (windows.count == 0) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        [windows addObjectsFromArray:[UIApplication sharedApplication].windows];
+#pragma clang diagnostic pop
+    }
+    return windows;
+}
+
 static void HLDumpTree(void) {
     NSLog(@"[Heli] ===== tree begin =====");
-    for (UIWindow *window in [UIApplication sharedApplication].windows) {
+    for (UIWindow *window in HLAllWindows()) {
         HLDumpNode(window, 0);
     }
     NSLog(@"[Heli] ===== tree end =====");
@@ -379,7 +396,7 @@ static void hook_CC_viewDidAppear(UIViewController *self, SEL _cmd, BOOL animate
 static void HLRefreshAll(void) {
     BOOL badgeOn = HLBool(@"Enabled", YES) && HLBool(@"Badge", YES);
 
-    for (UIWindow *window in [UIApplication sharedApplication].windows) {
+    for (UIWindow *window in HLAllWindows()) {
         NSMutableArray *stack = [NSMutableArray arrayWithObject:window];
         while (stack.count) {
             UIView *view = stack.lastObject;
