@@ -20,7 +20,7 @@ jobs:
     # macOS + Xcode 工具链：arm64e 的 ABI 才是对的。
     # 之前用 Linux 的 L1ghtmann 工具链，编出的 arm64e 在 A16 上
     # objc readClass 直接 SIGBUS（安全模式 / 设置闪退）。
-    runs-on: macos-14
+    runs-on: macos-13
 
     steps:
       - name: Checkout

@@ -1,8 +1,9 @@
-﻿Package: com.heli.liquid
+Package: com.heli.liquid
 Name: Glassify
 Version: 8.0.3
 Architecture: iphoneos-arm64
-Description: 閫氱煡瑙掓爣娑叉€佺幓鐠?+ 鏈鍛煎惛鍔ㄧ敾銆?.0.2 鏀逛负鍗曟灦鏋?arm64 鏋勫缓鈥斺€斿厛鍓嶇敤 arm64e 缂栬瘧锛孡1ghtmann 宸ュ叿閾剧殑 ABI 涓?A16 涓嶅尮閰嶏紝dyld 鏄犲皠鍚?objc readClass 鐩存帴 SIGBUS锛岃〃鐜颁负瀹夊叏妯″紡鍜岃缃潰鏉块棯閫€锛沘rm64 鍦?arm64e 璁惧涓婂師鐢熻繍琛岋紝缁曞紑璇ラ棶棰樸€傝缃噷淇濈暀涓変釜鎺掓煡寮€鍏筹紝鍙殢鏃跺叧鎺夋寕閽╅獙璇併€傚畬鍏ㄥ厤璐癸紝鏃犻渶婵€娲荤爜銆?Maintainer: Heli
+Description: 通知角标液态玻璃 + 未读呼吸动画。8.0.3 改用 macOS/Xcode 工具链构建 arm64e：Linux 工具链编出的 arm64e ABI 不兼容，dyld 加载后 objc readClass 直接 SIGBUS（表现为安全模式、设置面板闪退）；纯 arm64 又会被系统进程以架构不兼容拒绝。设置里保留三个排查开关，可随时关掉挂钩验证。完全免费，无需激活码。
+Maintainer: Heli
 Author: Heli
 Section: Heli
 Depends: mobilesubstrate | ellekit, preferenceloader, firmware (>= 15.0)
