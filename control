@@ -2,7 +2,7 @@ Package: com.heli.liquid
 Name: Glassify
 Version: 8.0.2
 Architecture: iphoneos-arm64
-Description: 通知角标液态玻璃（排查版）。8.0.2 默认不注册任何 hook，装上是安全的；设置里有三个排查开关（挂钩总开关 / didMoveToWindow / layoutSubviews），逐个打开即可定位引起安全模式的那一步。角标玻璃与未读呼吸动画在挂钩生效后才出现。完全免费，无需激活码。
+Description: 通知角标液态玻璃 + 未读呼吸动画。8.0.2 改为单架构 arm64 构建——先前用 arm64e 编译，L1ghtmann 工具链的 ABI 与 A16 不匹配，dyld 映射后 objc readClass 直接 SIGBUS，表现为安全模式和设置面板闪退；arm64 在 arm64e 设备上原生运行，绕开该问题。设置里保留三个排查开关，可随时关掉挂钩验证。完全免费，无需激活码。
 Maintainer: Heli
 Author: Heli
 Section: Heli

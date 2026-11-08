@@ -292,7 +292,7 @@ static void GSRefreshAll(void) {
 // 8.0.2：默认不挂任何钩子。装上后先确认不崩，再在设置里逐个打开，
 // 就能精确定位是哪一个 hook 引起安全模式。
 %ctor {
-    NSLog(@"[Glassify] 8.0.2 loaded (hooks are opt-in)");
+    NSLog(@"[Glassify] 8.0.2 loaded (arm64, hooks default on)");
 
     static int reloadToken = 0;
     notify_register_dispatch(GS_RELOAD, &reloadToken, dispatch_get_main_queue(), ^(int token) {
@@ -304,7 +304,7 @@ static void GSRefreshAll(void) {
         if (GSBool(@"DebugTree", NO)) GSDumpTree();
     });
 
-    if (!GSBool(@"HooksEnabled", NO)) {
+    if (!GSBool(@"HooksEnabled", YES)) {
         NSLog(@"[Glassify] hooks disabled (HooksEnabled=NO)");
         return;
     }
@@ -313,7 +313,7 @@ static void GSRefreshAll(void) {
     NSLog(@"[Glassify] SBIconBadgeView = %@", badge ? @"found" : @"MISSING");
     if (!badge) return;
 
-    if (GSBool(@"HookMove", NO)) {
+    if (GSBool(@"HookMove", YES)) {
         MSHookMessageEx(badge, @selector(didMoveToWindow),
                         (IMP)hook_badge_didMoveToWindow,
                         (IMP *)&orig_badge_didMoveToWindow);

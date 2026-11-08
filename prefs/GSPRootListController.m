@@ -112,10 +112,10 @@
 
     NSMutableArray *specs = [NSMutableArray array];
 
-    [specs addObject:[self groupCell:@"排查开关（默认全关）"
-                              footer:@"8.0.2 默认不挂任何钩子，装上不会崩。按顺序打开：总开关 → 挂钩 A → 挂钩 B，每一步改完都要注销（重启 SpringBoard）才生效；哪一步进安全模式，问题就在哪一步。"]];
-    [specs addObject:[self switchCell:@"启用挂钩总开关" key:@"HooksEnabled" defaultValue:NO]];
-    [specs addObject:[self switchCell:@"挂钩 A：didMoveToWindow" key:@"HookMove" defaultValue:NO]];
+    [specs addObject:[self groupCell:@"排查开关"
+                              footer:@"默认全部打开。如果又进安全模式，先关掉这里的总开关再注销，就能确认是不是挂钩引起；然后逐个打开定位。"]];
+    [specs addObject:[self switchCell:@"启用挂钩总开关" key:@"HooksEnabled" defaultValue:YES]];
+    [specs addObject:[self switchCell:@"挂钩 A：didMoveToWindow" key:@"HookMove" defaultValue:YES]];
     [specs addObject:[self switchCell:@"挂钩 B：layoutSubviews" key:@"HookLayout" defaultValue:NO]];
 
     [specs addObject:[self groupCell:@"总开关"
