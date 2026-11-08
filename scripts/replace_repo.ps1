@@ -1,4 +1,4 @@
-# Replace Nocebook/LiquidGlass main with the local Glassify tree.
+# Replace Nocebook/LiquidGlass main with the local Heli tree.
 #
 # Steps:
 #   1) point origin at the repo
@@ -59,7 +59,7 @@ Write-Host "[4/5] commit" -ForegroundColor Cyan
 git add -A | Out-Host
 $pending = git status --porcelain
 if ($pending) {
-    if (-not (Run-Git @('commit', '-m', '8.0.0: replace with Glassify'))) {
+    if (-not (Run-Git @('commit', '-m', '8.0.0: replace with Heli'))) {
         Write-Host "commit failed - abort" -ForegroundColor Red
         exit 1
     }

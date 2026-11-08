@@ -1,4 +1,4 @@
-# Glassify（接管 LiquidGlass 仓库）
+# Heli（接管 LiquidGlass 仓库）
 
 iOS 越狱插件：**通知角标液态玻璃 + 未读呼吸动画**，外加 Dock / 文件夹 / 控制中心玻璃。
 
@@ -32,7 +32,7 @@ iOS 越狱插件：**通知角标液态玻璃 + 未读呼吸动画**，外加 Do
 
 ```
 Makefile                        根工程：roothide scheme，引入共享参数
-GlassifyBuild.mk                共享构建参数（ARCHS / TARGET），根和 prefs 都要 include
+HeliBuild.mk                共享构建参数（ARCHS / TARGET），根和 prefs 都要 include
 control                         com.heli.liquid, 8.0.0
 Tweak.xm                        全部插件逻辑（角标 / 呼吸 / 三处容器 / 调试）
 prefs/                          设置面板（PSListController），子工程
@@ -43,7 +43,7 @@ scripts/replace_repo.ps1        覆盖远端 main（带 tag 备份）
 .github/workflows/build.yml     推上去自动出包 + Release
 ```
 
-子工程的 Makefile **必须**先 `include ../GlassifyBuild.mk`，再 `include $(THEOS)/makefiles/common.mk`。少这一行就会报：
+子工程的 Makefile **必须**先 `include ../HeliBuild.mk`，再 `include $(THEOS)/makefiles/common.mk`。少这一行就会报：
 
 ```
 Theos version mismatch! common.mk [version 0] loaded in tandem with rules.mk [version 1]
@@ -75,13 +75,13 @@ git push --force origin legacy-7.4.0:main
 
 1. Sileo 里版本应该是 `8.0.0-<构建号>`，比 `7.4.0` 高，直接升级
 2. 装完在包管理器的「重启」按钮里重启 SpringBoard（不会自动杀）
-3. 设置里会出现 Glassify 面板
+3. 设置里会出现 Heli 面板
 4. 给微信发条消息，回桌面看角标：玻璃底 + 呼吸动画
-5. 不对就看日志：设置里开「调试：导出视图树」，`idevicesyslog | grep Glassify`
+5. 不对就看日志：设置里开「调试：导出视图树」，`idevicesyslog | grep Heli`
 
 ```
-[Glassify] hooks: badge=yes dock=yes folder=yes controlCenter=yes
-[Glassify] badge SBIconBadgeView (18x18)
+[Heli] hooks: badge=yes dock=yes folder=yes controlCenter=yes
+[Heli] badge SBIconBadgeView (18x18)
 ```
 
 ## 已知取舍

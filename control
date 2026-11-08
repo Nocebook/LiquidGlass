@@ -1,5 +1,5 @@
 Package: com.heli.liquid
-Name: Glassify
+Name: Heli
 Version: 8.0.0
 Architecture: iphoneos-arm64
 Description: 液态玻璃（重写版）：通知角标玻璃 + 未读呼吸动画，Dock / 文件夹 / 控制中心玻璃。8.0.0 是整体替换：旧的模糊改写、折射网格、灵动岛驱动、看门狗全部移除，只保留三层稳定实现（角标 / 容器 / 调试），每处独立开关，找不到类就跳过。完全免费，无需激活码。

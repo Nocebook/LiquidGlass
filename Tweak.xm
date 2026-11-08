@@ -1,11 +1,11 @@
-// Glassify — 液态玻璃效果框架（独立实现，不含任何第三方代码）
+// Heli — 液态玻璃效果框架（独立实现，不含任何第三方代码）
 //
 // 目标机型：iPhone 14 Pro / iOS 16.3 / Dopamine (roothide)
 // v0.2：通知角标玻璃（SBIconBadgeView）+ Dock / 文件夹 / 控制中心
 //
 // 每个作用位置独立开关，类名找不到就安静跳过，不会崩。
 // 打不开效果时打开「调试：导出视图树」，用 Console / idevicesyslog 看
-// [Glassify] 开头的日志，把类名和层级发我，逐个精确接管。
+// [Heli] 开头的日志，把类名和层级发我，逐个精确接管。
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -16,40 +16,40 @@
 #import <math.h>
 #import <substrate.h>
 
-#define GS_DOMAIN @"com.heli.liquid"
-#define GS_RELOAD "com.heli.liquid/reload"
-#define GS_DUMP   "com.heli.liquid/dump"
+#define HL_DOMAIN @"com.heli.liquid"
+#define HL_RELOAD "com.heli.liquid/reload"
+#define HL_DUMP   "com.heli.liquid/dump"
 
-static const NSInteger GSGlassTag = 0x6701;
-static const NSInteger GSBadgeGlassTag = 0x6702;
+static const NSInteger HLGlassTag = 0x6701;
+static const NSInteger HLBadgeGlassTag = 0x6702;
 
 #pragma mark - 偏好读取
 
-static id GSPref(NSString *key) {
-    CFPreferencesAppSynchronize((__bridge CFStringRef)GS_DOMAIN);
+static id HLPref(NSString *key) {
+    CFPreferencesAppSynchronize((__bridge CFStringRef)HL_DOMAIN);
     CFPropertyListRef v = CFPreferencesCopyAppValue((__bridge CFStringRef)key,
-                                                    (__bridge CFStringRef)GS_DOMAIN);
+                                                    (__bridge CFStringRef)HL_DOMAIN);
     return v ? (__bridge_transfer id)v : nil;
 }
 
-static BOOL GSBool(NSString *key, BOOL fallback) {
-    id v = GSPref(key);
+static BOOL HLBool(NSString *key, BOOL fallback) {
+    id v = HLPref(key);
     return v ? [v boolValue] : fallback;
 }
 
-static double GSDouble(NSString *key, double fallback) {
-    id v = GSPref(key);
+static double HLDouble(NSString *key, double fallback) {
+    id v = HLPref(key);
     return v ? [v doubleValue] : fallback;
 }
 
 #pragma mark - 通用玻璃层
 
-@interface GSGlassView : UIView
+@interface HLGlassView : UIView
 @property (nonatomic, strong) UIVisualEffectView *blur;
 @property (nonatomic, strong) CAGradientLayer *specular;
 @end
 
-@implementation GSGlassView
+@implementation HLGlassView
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -98,14 +98,14 @@ static double GSDouble(NSString *key, double fallback) {
 
 #pragma mark - 角标玻璃层
 
-@interface GSBadgeGlassView : UIView
+@interface HLBadgeGlassView : UIView
 @property (nonatomic, strong) UIVisualEffectView *blur;
 @property (nonatomic, strong) CAGradientLayer *sheen;
 @property (nonatomic, strong) CALayer *tint;
 - (void)setBreathing:(BOOL)on;
 @end
 
-@implementation GSBadgeGlassView
+@implementation HLBadgeGlassView
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -212,27 +212,27 @@ static double GSDouble(NSString *key, double fallback) {
 
 #pragma mark - 装饰：容器
 
-static void GSDecorate(UIView *host, NSString *switchKey, BOOL clearHostBackground) {
+static void HLDecorate(UIView *host, NSString *switchKey, BOOL clearHostBackground) {
     if (!host) return;
-    if (!GSBool(@"Enabled", YES)) return;
-    if (switchKey && !GSBool(switchKey, YES)) return;
+    if (!HLBool(@"Enabled", YES)) return;
+    if (switchKey && !HLBool(switchKey, YES)) return;
     if (CGRectGetWidth(host.bounds) < 1.0 || CGRectGetHeight(host.bounds) < 1.0) return;
 
-    CGSize size = host.bounds.size;
+    CHLize size = host.bounds.size;
     if (size.width > 4000.0 || size.height > 4000.0) return;
 
-    GSGlassView *existing = (GSGlassView *)[host viewWithTag:GSGlassTag];
+    HLGlassView *existing = (HLGlassView *)[host viewWithTag:HLGlassTag];
     if (existing) {
-        [existing applyRadius:GSDouble(@"CornerRadius", 28.0)];
+        [existing applyRadius:HLDouble(@"CornerRadius", 28.0)];
         existing.hidden = NO;
         return;
     }
 
-    GSGlassView *glass = [[GSGlassView alloc] initWithFrame:host.bounds];
-    glass.tag = GSGlassTag;
-    [glass applyRadius:GSDouble(@"CornerRadius", 28.0)];
+    HLGlassView *glass = [[HLGlassView alloc] initWithFrame:host.bounds];
+    glass.tag = HLGlassTag;
+    [glass applyRadius:HLDouble(@"CornerRadius", 28.0)];
 
-    if (GSBool(@"AboveContent", NO)) {
+    if (HLBool(@"AboveContent", NO)) {
         [host addSubview:glass];
     } else {
         [host insertSubview:glass atIndex:0];
@@ -242,17 +242,17 @@ static void GSDecorate(UIView *host, NSString *switchKey, BOOL clearHostBackgrou
         host.backgroundColor = [UIColor clearColor];
     }
 
-    NSLog(@"[Glassify] decorated %@ (%.0fx%.0f)",
+    NSLog(@"[Heli] decorated %@ (%.0fx%.0f)",
           NSStringFromClass([host class]), size.width, size.height);
 }
 
 #pragma mark - 装饰：通知角标
 
 // 角标里除了数字，其余子视图都是"底板"，把它们调淡让玻璃透出来
-static UIColor *GSBadgeDimBackground(UIView *badge, CGFloat alpha) {
+static UIColor *HLBadgeDimBackground(UIView *badge, CGFloat alpha) {
     UIColor *found = nil;
     for (UIView *sub in badge.subviews) {
-        if (sub.tag == GSBadgeGlassTag) continue;
+        if (sub.tag == HLBadgeGlassTag) continue;
         if ([sub isKindOfClass:[UILabel class]]) continue;
 
         if (!found && sub.backgroundColor) found = sub.backgroundColor;
@@ -261,27 +261,27 @@ static UIColor *GSBadgeDimBackground(UIView *badge, CGFloat alpha) {
     return found;
 }
 
-static void GSBadgeRestoreBackground(UIView *badge) {
+static void HLBadgeRestoreBackground(UIView *badge) {
     for (UIView *sub in badge.subviews) {
-        if (sub.tag == GSBadgeGlassTag) continue;
+        if (sub.tag == HLBadgeGlassTag) continue;
         if ([sub isKindOfClass:[UILabel class]]) continue;
         sub.alpha = 1.0;
     }
 }
 
-static void GSDecorateBadge(UIView *badge) {
+static void HLDecorateBadge(UIView *badge) {
     if (!badge) return;
 
-    BOOL enabled = GSBool(@"Enabled", YES) && GSBool(@"Badge", YES);
-    BOOL breathe = enabled && GSBool(@"BadgeBreathing", YES) &&
+    BOOL enabled = HLBool(@"Enabled", YES) && HLBool(@"Badge", YES);
+    BOOL breathe = enabled && HLBool(@"BadgeBreathing", YES) &&
                    !UIAccessibilityIsReduceMotionEnabled();
 
-    GSBadgeGlassView *glass = (GSBadgeGlassView *)[badge viewWithTag:GSBadgeGlassTag];
+    HLBadgeGlassView *glass = (HLBadgeGlassView *)[badge viewWithTag:HLBadgeGlassTag];
 
     if (!enabled) {
         if (glass) {
             [glass removeFromSuperview];
-            GSBadgeRestoreBackground(badge);
+            HLBadgeRestoreBackground(badge);
         }
         return;
     }
@@ -294,13 +294,13 @@ static void GSDecorateBadge(UIView *badge) {
         return;
     }
 
-    glass = [[GSBadgeGlassView alloc] initWithFrame:badge.bounds];
-    glass.tag = GSBadgeGlassTag;
+    glass = [[HLBadgeGlassView alloc] initWithFrame:badge.bounds];
+    glass.tag = HLBadgeGlassTag;
     [badge insertSubview:glass atIndex:0];
 
-    UIColor *originalColor = GSBadgeDimBackground(badge, GSDouble(@"BadgeBackgroundAlpha", 0.15));
+    UIColor *originalColor = HLBadgeDimBackground(badge, HLDouble(@"BadgeBackgroundAlpha", 0.15));
 
-    if (GSBool(@"BadgeKeepColor", YES)) {
+    if (HLBool(@"BadgeKeepColor", YES)) {
         [glass applyTint:originalColor ?: [UIColor systemRedColor]];
     }
 
@@ -317,31 +317,31 @@ static void GSDecorateBadge(UIView *badge) {
         glass.transform = CGAffineTransformIdentity;
     } completion:nil];
 
-    if (GSBool(@"DebugTree", NO)) {
-        NSLog(@"[Glassify] badge %@ (%.0fx%.0f)", NSStringFromClass([badge class]),
+    if (HLBool(@"DebugTree", NO)) {
+        NSLog(@"[Heli] badge %@ (%.0fx%.0f)", NSStringFromClass([badge class]),
               badge.bounds.size.width, badge.bounds.size.height);
     }
 }
 
 #pragma mark - 调试：导出视图树
 
-static void GSDumpNode(UIView *view, int depth) {
+static void HLDumpNode(UIView *view, int depth) {
     if (!view || depth > 14) return;
     NSMutableString *pad = [NSMutableString string];
     for (int i = 0; i < depth; i++) [pad appendString:@"  "];
-    NSLog(@"[Glassify] %@%@ %@", pad, NSStringFromClass([view class]),
+    NSLog(@"[Heli] %@%@ %@", pad, NSStringFromClass([view class]),
           NSStringFromCGRect(view.frame));
     for (UIView *child in view.subviews) {
-        GSDumpNode(child, depth + 1);
+        HLDumpNode(child, depth + 1);
     }
 }
 
-static void GSDumpTree(void) {
-    NSLog(@"[Glassify] ===== tree begin =====");
+static void HLDumpTree(void) {
+    NSLog(@"[Heli] ===== tree begin =====");
     for (UIWindow *window in [UIApplication sharedApplication].windows) {
-        GSDumpNode(window, 0);
+        HLDumpNode(window, 0);
     }
-    NSLog(@"[Glassify] ===== tree end =====");
+    NSLog(@"[Heli] ===== tree end =====");
 }
 
 #pragma mark - 各作用位置的适配器
@@ -350,34 +350,34 @@ static void (*orig_SBIconBadgeView_layoutSubviews)(UIView *, SEL);
 
 static void hook_SBIconBadgeView_layoutSubviews(UIView *self, SEL _cmd) {
     orig_SBIconBadgeView_layoutSubviews(self, _cmd);
-    GSDecorateBadge(self);
+    HLDecorateBadge(self);
 }
 
 static void (*orig_SBDockView_layoutSubviews)(UIView *, SEL);
 
 static void hook_SBDockView_layoutSubviews(UIView *self, SEL _cmd) {
     orig_SBDockView_layoutSubviews(self, _cmd);
-    GSDecorate(self, @"Dock", NO);
+    HLDecorate(self, @"Dock", NO);
 }
 
 static void (*orig_SBFolderBG_didMoveToWindow)(UIView *, SEL);
 
 static void hook_SBFolderBG_didMoveToWindow(UIView *self, SEL _cmd) {
     orig_SBFolderBG_didMoveToWindow(self, _cmd);
-    GSDecorate(self, @"Folder", YES);
+    HLDecorate(self, @"Folder", YES);
 }
 
 static void (*orig_CC_viewDidAppear)(UIViewController *, SEL, BOOL);
 
 static void hook_CC_viewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) {
     orig_CC_viewDidAppear(self, _cmd, animated);
-    GSDecorate(self.view, @"ControlCenter", NO);
+    HLDecorate(self.view, @"ControlCenter", NO);
 }
 
 #pragma mark - 安装
 
-static void GSRefreshAll(void) {
-    BOOL badgeOn = GSBool(@"Enabled", YES) && GSBool(@"Badge", YES);
+static void HLRefreshAll(void) {
+    BOOL badgeOn = HLBool(@"Enabled", YES) && HLBool(@"Badge", YES);
 
     for (UIWindow *window in [UIApplication sharedApplication].windows) {
         NSMutableArray *stack = [NSMutableArray arrayWithObject:window];
@@ -385,17 +385,17 @@ static void GSRefreshAll(void) {
             UIView *view = stack.lastObject;
             [stack removeLastObject];
 
-            if ([view isKindOfClass:[GSGlassView class]]) {
-                [(GSGlassView *)view applyRadius:GSDouble(@"CornerRadius", 28.0)];
-            } else if ([view isKindOfClass:[GSBadgeGlassView class]]) {
+            if ([view isKindOfClass:[HLGlassView class]]) {
+                [(HLGlassView *)view applyRadius:HLDouble(@"CornerRadius", 28.0)];
+            } else if ([view isKindOfClass:[HLBadgeGlassView class]]) {
                 UIView *host = view.superview;
                 if (!badgeOn && host) {
                     [view removeFromSuperview];
-                    GSBadgeRestoreBackground(host);
+                    HLBadgeRestoreBackground(host);
                 } else {
-                    BOOL breathe = badgeOn && GSBool(@"BadgeBreathing", YES) &&
+                    BOOL breathe = badgeOn && HLBool(@"BadgeBreathing", YES) &&
                                    !UIAccessibilityIsReduceMotionEnabled();
-                    [(GSBadgeGlassView *)view setBreathing:breathe];
+                    [(HLBadgeGlassView *)view setBreathing:breathe];
                     [view setNeedsLayout];
                 }
             }
@@ -434,17 +434,17 @@ static void GSRefreshAll(void) {
                         (IMP *)&orig_CC_viewDidAppear);
     }
 
-    NSLog(@"[Glassify] hooks: badge=%@ dock=%@ folder=%@ controlCenter=%@",
+    NSLog(@"[Heli] hooks: badge=%@ dock=%@ folder=%@ controlCenter=%@",
           badge ? @"yes" : @"no", dock ? @"yes" : @"no",
           folderBG ? @"yes" : @"no", cc ? @"yes" : @"no");
 
     static int reloadToken = 0;
-    notify_register_dispatch(GS_RELOAD, &reloadToken, dispatch_get_main_queue(), ^(int token) {
-        GSRefreshAll();
+    notify_register_dispatch(HL_RELOAD, &reloadToken, dispatch_get_main_queue(), ^(int token) {
+        HLRefreshAll();
     });
 
     static int dumpToken = 0;
-    notify_register_dispatch(GS_DUMP, &dumpToken, dispatch_get_main_queue(), ^(int token) {
-        if (GSBool(@"DebugTree", NO)) GSDumpTree();
+    notify_register_dispatch(HL_DUMP, &dumpToken, dispatch_get_main_queue(), ^(int token) {
+        if (HLBool(@"DebugTree", NO)) HLDumpTree();
     });
 }

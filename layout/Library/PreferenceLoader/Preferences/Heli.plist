@@ -5,13 +5,13 @@
 	<key>entry</key>
 	<dict>
 		<key>bundle</key>
-		<string>GlassifyPrefs</string>
+		<string>HeliPrefs</string>
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
-		<string>GSPRootListController</string>
+		<string>HLPRootListController</string>
 		<key>label</key>
-		<string>Glassify</string>
+		<string>Heli</string>
 		<key>isController</key>
 		<true/>
 	</dict>

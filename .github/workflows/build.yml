@@ -1,4 +1,4 @@
-name: Build Glassify
+name: Build Heli
 
 on:
   workflow_dispatch:
@@ -124,7 +124,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: glassify-deb
+          name: heli-deb
           path: ./packages/*.deb
           if-no-files-found: error
 
@@ -134,5 +134,5 @@ jobs:
         with:
           token: ${{ github.token }}
           tag_name: v${{ steps.bump.outputs.package_version }}
-          name: "Glassify v${{ steps.bump.outputs.package_version }}"
+          name: "Heli v${{ steps.bump.outputs.package_version }}"
           files: ./packages/*.deb
