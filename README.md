@@ -13,16 +13,17 @@ iOS 越狱插件：**通知角标液态玻璃 + 未读呼吸动画**，外加 Do
 | 越狱 | RootHide（Dopamine roothide 3.0.13） |
 | 打包 | roothide scheme + CI 改 `iphoneos-arm64` + 挪 `/var/jb` + xz 重打包 |
 
-## 8.0.0 做了什么
+## 8.0.1 做了什么
 
 | 模块 | 实现 | 开关 |
 |---|---|---|
 | 通知角标玻璃 | `SBIconBadgeView` 插超薄模糊层，原底板 alpha 降到 0.15，原色 30% 染色 | 角标玻璃 |
 | 未读呼吸动画 | 玻璃层 1.0⇄1.045 + 高光 0.55⇄1.0，1.5s，CA 驱动，尊重「减弱动态效果」 | 未读呼吸动画 |
-| Dock | `SBDockView` 插玻璃层 | Dock |
-| 文件夹背景 | `SBFolderControllerBackgroundView` | 文件夹背景 |
-| 控制中心 | `CCUIModularControlCenterOverlayViewController` | 控制中心 |
-| 调试 | 导出视图树到日志 | 调试：导出视图树 |
+| 调试 | 导出视图树到日志 | 调试 |
+
+> 8.0.0 的 Dock / 文件夹 / 控制中心三个挂钩已移除：它们在系统 `layoutSubviews` 里插入子视图，
+> 会触发递归布局并被看门狗杀掉，表现为「装完就安全模式」。
+> 8.0.1 只在 `didMoveToWindow` 时异步挂载角标，`layoutSubviews` 只调整已有图层。
 
 角标参数：原底板不透明度（0–1，默认 0.15）、保留角标颜色（默认开）。
 
