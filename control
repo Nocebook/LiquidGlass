@@ -1,0 +1,9 @@
+Package: com.yourname.glassify
+Name: Glassify
+Version: 0.3.0
+Architecture: iphoneos-arm64
+Description: 液态玻璃效果：通知角标 / Dock / 文件夹 / 控制中心，带设置面板与视图树调试。
+Maintainer: yourname
+Author: yourname
+Section: Tweaks
+Depends: mobilesubstrate | ellekit, firmware (>= 15.0)

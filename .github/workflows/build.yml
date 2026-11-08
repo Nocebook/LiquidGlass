@@ -1,0 +1,50 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make git curl clang dpkg-dev fakeroot ldid xz-utils
+
+      - name: Install Theos
+        run: |
+          git clone --recursive --depth 1 https://github.com/theos/theos.git "$HOME/theos"
+          git clone --depth 1 https://github.com/theos/headers.git "$HOME/theos/include"
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$HOME/theos/sdks"
+          cd "$HOME/theos/sdks"
+          for sdk in iPhoneOS17.0.sdk iPhoneOS16.5.sdk iPhoneOS16.4.sdk iPhoneOS15.6.sdk; do
+            git sparse-checkout set "$sdk" >/dev/null 2>&1 || true
+            if [ -d "$sdk" ]; then echo "SDK: $sdk"; break; fi
+          done
+          ls -d ./*.sdk
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+          echo "$HOME/theos/bin" >> "$GITHUB_PATH"
+
+      - name: Build package
+        run: make package FINALPACKAGE=1
+
+      - name: Build apt repo
+        run: bash scripts/make_repo.sh
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          publish_branch: gh-pages
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
