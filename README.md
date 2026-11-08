@@ -11,7 +11,7 @@ iOS 越狱插件：**通知角标液态玻璃 + 未读呼吸动画**，外加 Do
 | 设备 | iPhone 14 Pro（A16 / arm64e） |
 | 系统 | iOS 16.3 |
 | 越狱 | RootHide（Dopamine roothide 3.0.13） |
-| 打包 | roothide scheme + CI 里改 `iphoneos-arm64` + 挪 `/var/jb` + xz 重打包 |
+| 打包 | roothide scheme + CI 改 `iphoneos-arm64` + 挪 `/var/jb` + xz 重打包 |
 
 ## 8.0.0 做了什么
 
@@ -26,15 +26,16 @@ iOS 越狱插件：**通知角标液态玻璃 + 未读呼吸动画**，外加 Do
 
 角标参数：原底板不透明度（0–1，默认 0.15）、保留角标颜色（默认开）。
 
-设计原则：**找不到类就跳过，绝不挂系统类的 `layoutSubviews` 做全局改写**——这正是上一版卡安全模式、白屏、掉帧的来源。
+设计原则：**找不到类就跳过，绝不拿系统类的 `layoutSubviews` 做全局改写**——这正是上一版卡安全模式、白屏、掉帧的来源。
 
-## 仓库结构与构建
+## 仓库结构
 
 ```
-Makefile                        roothide scheme / arm64e / iOS 16.5 SDK
+Makefile                        根工程：roothide scheme，引入共享参数
+GlassifyBuild.mk                共享构建参数（ARCHS / TARGET），根和 prefs 都要 include
 control                         com.heli.liquid, 8.0.0
 Tweak.xm                        全部插件逻辑（角标 / 呼吸 / 三处容器 / 调试）
-prefs/                          设置面板（PSListController）
+prefs/                          设置面板（PSListController），子工程
 layout/                         注入过滤器 + PreferenceLoader 入口
 tools/relocate_to_jbroot.py     rootfs 布局 → /var/jb
 tools/check_deb_paths.py        校验没有 /var/jb 之外的路径
@@ -42,7 +43,13 @@ scripts/replace_repo.ps1        覆盖远端 main（带 tag 备份）
 .github/workflows/build.yml     推上去自动出包 + Release
 ```
 
-CI 里有四个坑，都是照着你上一版验证过的做法抄的，别删：
+子工程的 Makefile **必须**先 `include ../GlassifyBuild.mk`，再 `include $(THEOS)/makefiles/common.mk`。少这一行就会报：
+
+```
+Theos version mismatch! common.mk [version 0] loaded in tandem with rules.mk [version 1]
+```
+
+## CI 里四个坑（照你上一版验证过的做法抄的，别删）
 
 1. **ldid**：noble 源里没有这个包，必须从 ProcursusTeam 下静态二进制
 2. **工具链**：Linux 上要 L1ghtmann 的 `iOSToolchain-x86_64`，光 clone theos 编不了
@@ -51,14 +58,12 @@ CI 里有四个坑，都是照着你上一版验证过的做法抄的，别删�
 
 ## 怎么覆盖上去
 
-先确认本地仓库是干净的，然后在**你自己的** PowerShell 里跑：
-
 ```powershell
 cd "D:\Users\Administrator\Documents\deepseek-harness\default-workspace\glassify"
 powershell -ExecutionPolicy Bypass -File scripts\replace_repo.ps1
 ```
 
-它会：先把远端 `main` 存成 tag `legacy-7.4.0` → 再强制推送本地 `main`。
+它会先把远端 `main` 存成 tag `legacy-7.4.0`，再强制推送本地 `main`。
 
 后悔了随时回滚：
 
@@ -66,14 +71,12 @@ powershell -ExecutionPolicy Bypass -File scripts\replace_repo.ps1
 git push --force origin legacy-7.4.0:main
 ```
 
-推完 Actions 自动出包，Release 里就是新 deb。
-
 ## 装上之后
 
 1. Sileo 里版本应该是 `8.0.0-<构建号>`，比 `7.4.0` 高，直接升级
-2. 装完在包管理器的「重启」按钮里重启 SpringBoard（**不会自动杀**）
+2. 装完在包管理器的「重启」按钮里重启 SpringBoard（不会自动杀）
 3. 设置里会出现 Glassify 面板
-4. 给微信发条消息，回桌面看角标：应该有玻璃底 + 呼吸动画
+4. 给微信发条消息，回桌面看角标：玻璃底 + 呼吸动画
 5. 不对就看日志：设置里开「调试：导出视图树」，`idevicesyslog | grep Glassify`
 
 ```
@@ -83,16 +86,9 @@ git push --force origin legacy-7.4.0:main
 
 ## 已知取舍
 
-- 老版的「系统级模糊改写 / 边缘折射 / 灵动岛」没有保留。那些是它不稳定的根因，先不要。
+- 老版的「系统级模糊改写 / 边缘折射 / 灵动岛」没有保留，那些是不稳定的根因。
 - 只覆盖 `SBIconBadgeView`，锁屏和通知中心的数字是别的类，需要另做。
-- 本机（Windows，无 WSL 发行版、无 Theos）编不了，首次真实编译在 Actions。
-
-## 下一步候选
-
-1. 角标跟随 App 图标主色
-2. 呼吸节奏滑条（0.8 / 1.5 / 2.5s）
-3. 角标数字字体/字重
-4. 锁屏通知玻璃
+- 本机（Windows，无 WSL 发行版、无 Theos）编不了，真实编译在 Actions。
 
 ## License
 
