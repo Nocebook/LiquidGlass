@@ -1,18 +1,18 @@
-#import "HLPRootListController.h"
+#import "GSPRootListController.h"
 #import <Foundation/Foundation.h>
 #import <objc/message.h>
 #import <notify.h>
 
-#define HL_DOMAIN @"com.heli.liquid"
-#define HL_RELOAD "com.heli.liquid/reload"
-#define HL_DUMP   "com.heli.liquid/dump"
+#define GS_DOMAIN @"com.heli.liquid"
+#define GS_RELOAD "com.heli.liquid/reload"
+#define GS_DUMP   "com.heli.liquid/dump"
 
-@implementation HLPRootListController
+@implementation GSPRootListController
 
 - (instancetype)init {
     self = [super init];
     if (self) {
-        self.title = @"Heli";
+        self.title = @"Glassify";
     }
     return self;
 }
@@ -53,7 +53,15 @@
 }
 
 - (PSSpecifier *)groupCell:(NSString *)name footer:(NSString *)footer {
-    PSSpecifier *sp = [PSSpecifier groupSpecifierWithName:name];
+    // 不用 groupSpecifierWithName:，不同版本 Preferences 头文件不保证声明它；
+    // 走通用构造 + label 属性最稳。
+    PSSpecifier *sp = [PSSpecifier preferenceSpecifierNamed:name
+                                                     target:nil
+                                                        set:nil
+                                                        get:nil
+                                                     detail:nil
+                                                       cell:PSGroupCell
+                                                       edit:nil];
     if (footer.length) [sp setProperty:footer forKey:@"footerText"];
     return sp;
 }
@@ -81,9 +89,9 @@
 
 - (id)readPref:(PSSpecifier *)specifier {
     NSString *key = [specifier propertyForKey:@"key"];
-    CFPreferencesAppSynchronize((__bridge CFStringRef)HL_DOMAIN);
+    CFPreferencesAppSynchronize((__bridge CFStringRef)GS_DOMAIN);
     CFPropertyListRef value = CFPreferencesCopyAppValue((__bridge CFStringRef)key,
-                                                        (__bridge CFStringRef)HL_DOMAIN);
+                                                        (__bridge CFStringRef)GS_DOMAIN);
     if (value) return (__bridge_transfer id)value;
     return [specifier propertyForKey:@"default"];
 }
@@ -92,9 +100,9 @@
     NSString *key = [specifier propertyForKey:@"key"];
     CFPreferencesSetAppValue((__bridge CFStringRef)key,
                              (__bridge CFTypeRef)value,
-                             (__bridge CFStringRef)HL_DOMAIN);
-    CFPreferencesAppSynchronize((__bridge CFStringRef)HL_DOMAIN);
-    notify_post(HL_RELOAD);
+                             (__bridge CFStringRef)GS_DOMAIN);
+    CFPreferencesAppSynchronize((__bridge CFStringRef)GS_DOMAIN);
+    notify_post(GS_RELOAD);
 }
 
 #pragma mark - 界面
@@ -106,7 +114,7 @@
 
     [specs addObject:[self groupCell:@"总开关"
                               footer:@"玻璃层只作用于下面勾选的位置；改完立即生效，个别位置需要重开对应界面。"]];
-    [specs addObject:[self switchCell:@"启用 Heli" key:@"Enabled" defaultValue:YES]];
+    [specs addObject:[self switchCell:@"启用 Glassify" key:@"Enabled" defaultValue:YES]];
 
     [specs addObject:[self groupCell:@"效果" footer:@"圆角按连续曲率绘制，贴近系统视觉。"]];
     [specs addObject:[self sliderCell:@"圆角"
@@ -133,7 +141,7 @@
     [specs addObject:[self switchCell:@"控制中心" key:@"ControlCenter" defaultValue:YES]];
 
     [specs addObject:[self groupCell:@"调试"
-                              footer:@"打开后，进入控制中心会打印当前视图树。用 Console 或 idevicesyslog 查看 [Heli] 开头的行。"]];
+                              footer:@"打开后，进入控制中心会打印当前视图树。用 Console 或 idevicesyslog 查看 [Glassify] 开头的行。"]];
     [specs addObject:[self switchCell:@"调试：导出视图树" key:@"DebugTree" defaultValue:NO]];
     [specs addObject:[self buttonCell:@"立即导出一次" action:@selector(dumpTree:)]];
 
@@ -142,7 +150,7 @@
 }
 
 - (void)dumpTree:(PSSpecifier *)specifier {
-    notify_post(HL_DUMP);
+    notify_post(GS_DUMP);
 }
 
 @end

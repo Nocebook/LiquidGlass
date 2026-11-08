@@ -7,13 +7,13 @@
 
 export THEOS_PACKAGE_SCHEME = roothide
 
-include HeliBuild.mk
+include GlassifyBuild.mk
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = Heli
-Heli_FILES = Tweak.xm
-Heli_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
-Heli_FRAMEWORKS = UIKit Foundation QuartzCore
+TWEAK_NAME = Glassify
+Glassify_FILES = Tweak.xm
+Glassify_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
+Glassify_FRAMEWORKS = UIKit Foundation QuartzCore
 # substrate 由 tweak.mk 自动链接
 
 include $(THEOS_MAKE_PATH)/tweak.mk
