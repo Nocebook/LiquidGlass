@@ -218,7 +218,7 @@ static void HLDecorate(UIView *host, NSString *switchKey, BOOL clearHostBackgrou
     if (switchKey && !HLBool(switchKey, YES)) return;
     if (CGRectGetWidth(host.bounds) < 1.0 || CGRectGetHeight(host.bounds) < 1.0) return;
 
-    CHLize size = host.bounds.size;
+    CGSize size = host.bounds.size;
     if (size.width > 4000.0 || size.height > 4000.0) return;
 
     HLGlassView *existing = (HLGlassView *)[host viewWithTag:HLGlassTag];

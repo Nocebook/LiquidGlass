@@ -6,3 +6,4 @@ repo/
 .DS_Store
 __pycache__/
 *.pyc
+push.bat
