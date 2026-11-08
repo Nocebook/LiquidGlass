@@ -1,57 +1,83 @@
-# 用本地内容整体覆盖 Nocebook/LiquidGlass 的 main 分支。
+# Replace Nocebook/LiquidGlass main with the local Glassify tree.
 #
-# 做的事：
-#   1) 把远端现有 main 存成 tag legacy-7.4.0（后悔了能找回来）
-#   2) 强制推送本地的 main
+# Steps:
+#   1) point origin at the repo
+#   2) fetch
+#   3) save remote main as a backup tag
+#   4) commit any local change
+#   5) force push main
 #
-# 用法（在你自己的 PowerShell 里跑，需要能出网）：
+# Usage (run in your own PowerShell, needs network):
 #   powershell -ExecutionPolicy Bypass -File scripts\replace_repo.ps1
+#
+# If git fails with "schannel: failed to receive handshake",
+# every step is retried once with the openssl TLS backend.
 param(
     [string]$Remote = 'https://github.com/Nocebook/LiquidGlass.git',
     [string]$BackupTag = 'legacy-7.4.0'
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
-Write-Host "[1/4] 配置远端 $Remote" -ForegroundColor Cyan
-$remotes = git remote
-if ($remotes -contains 'origin') {
+function Run-Git([string[]]$GitArgs) {
+    & git @GitArgs | Out-Host
+    if ($LASTEXITCODE -eq 0) { return $true }
+
+    Write-Host "  retry with openssl backend: git $($GitArgs -join ' ')" -ForegroundColor Yellow
+    & git -c http.sslBackend=openssl @GitArgs | Out-Host
+    return ($LASTEXITCODE -eq 0)
+}
+
+Write-Host "[1/5] remote" -ForegroundColor Cyan
+$existing = git remote
+if ($existing -contains 'origin') {
     git remote set-url origin $Remote
 } else {
     git remote add origin $Remote
 }
+Write-Host "      $Remote" -ForegroundColor DarkGray
 
-Write-Host "[2/4] 备份远端 main -> $BackupTag" -ForegroundColor Cyan
-git fetch origin
-git tag -f $BackupTag origin/main
-git push origin $BackupTag --force
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "备份失败，已中止（没有做任何覆盖）。" -ForegroundColor Yellow
+Write-Host "[2/5] fetch" -ForegroundColor Cyan
+if (-not (Run-Git @('fetch', 'origin', '--tags'))) {
+    Write-Host "fetch failed - network or proxy issue, nothing was changed" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "[3/4] 提交本地内容" -ForegroundColor Cyan
-git add -A
-$pending = git status --porcelain
-if ($pending) {
-    git commit -m "8.0.0: 整体替换为 Glassify（角标玻璃 + 呼吸动画 + Dock/文件夹/控制中心）"
-} else {
-    Write-Host "      没有新改动，直接推当前提交" -ForegroundColor DarkGray
+Write-Host "[3/5] backup tag $BackupTag" -ForegroundColor Cyan
+if (-not (Run-Git @('tag', '-f', $BackupTag, 'origin/main'))) {
+    Write-Host "cannot create backup tag - abort" -ForegroundColor Red
+    exit 1
+}
+if (-not (Run-Git @('push', 'origin', $BackupTag, '--force'))) {
+    Write-Host "backup push failed - abort, remote untouched" -ForegroundColor Red
+    exit 1
 }
 
-Write-Host "[4/4] 强制推送 main" -ForegroundColor Cyan
-git push --force origin main
-if ($LASTEXITCODE -ne 0) {
+Write-Host "[4/5] commit" -ForegroundColor Cyan
+git add -A | Out-Host
+$pending = git status --porcelain
+if ($pending) {
+    if (-not (Run-Git @('commit', '-m', '8.0.0: replace with Glassify'))) {
+        Write-Host "commit failed - abort" -ForegroundColor Red
+        exit 1
+    }
+} else {
+    Write-Host "      nothing new to commit" -ForegroundColor DarkGray
+}
+
+Write-Host "[5/5] force push main" -ForegroundColor Cyan
+if (-not (Run-Git @('push', '--force', 'origin', 'main'))) {
     Write-Host ""
-    Write-Host "推送失败。先确认：" -ForegroundColor Yellow
-    Write-Host "  1. 浏览器已登录 Nocebook 账号"
-    Write-Host "  2. 仓库地址正确: $Remote"
+    Write-Host "push failed." -ForegroundColor Red
+    Write-Host "  - make sure the browser is logged in as Nocebook"
+    Write-Host "  - if it says schannel / TLS: rerun, or use"
+    Write-Host "      git -c http.sslBackend=openssl push --force origin main"
     exit 1
 }
 
 Write-Host ""
-Write-Host "完成。旧版本已备份到 tag: $BackupTag" -ForegroundColor Green
-Write-Host "  Actions: https://github.com/Nocebook/LiquidGlass/actions"
-Write-Host "  回滚：  git push --force origin $BackupTag:main"
+Write-Host "DONE. backup tag: $BackupTag" -ForegroundColor Green
+Write-Host "  actions:  https://github.com/Nocebook/LiquidGlass/actions"
+Write-Host "  rollback: git push --force origin ${BackupTag}:main"
