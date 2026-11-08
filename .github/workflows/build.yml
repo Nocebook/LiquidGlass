@@ -17,17 +17,18 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    # macOS + Xcode 工具链：arm64e 的 ABI 才是对的。
+    # 之前用 Linux 的 L1ghtmann 工具链，编出的 arm64e 在 A16 上
+    # objc readClass 直接 SIGBUS（安全模式 / 设置闪退）。
+    runs-on: macos-14
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install packaging tools
         run: |
-          sudo apt-get update
-          # noble 源里没有 ldid 包，由后面 Ensure ldid 用官方静态二进制补
-          sudo apt-get install -y build-essential fakeroot rsync perl zip libxml2 xz-utils python3
+          brew install dpkg xz ldid
 
       - name: Checkout Theos (roothide fork)
         uses: actions/checkout@v4
@@ -36,47 +37,13 @@ jobs:
           path: theos
           submodules: recursive
 
-      - name: Install Linux iOS toolchain
-        run: |
-          set -euo pipefail
-          mkdir -p "$THEOS/toolchain"
-          curl -fsSL "https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz" \
-            | tar -xJ -C "$THEOS/toolchain/"
-          CLANG="$THEOS/toolchain/linux/iphone/bin/clang"
-          test -x "$CLANG" || { echo "toolchain clang missing"; find "$THEOS/toolchain" -maxdepth 3 | head -40; exit 1; }
-          "$CLANG" --version
-
-      - name: Ensure ldid
-        run: |
-          set -euo pipefail
-          if ! command -v ldid >/dev/null 2>&1; then
-            curl -fsSL -o /tmp/ldid "https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64"
-            chmod +x /tmp/ldid
-            sudo mv /tmp/ldid /usr/local/bin/ldid
-          fi
-          ldid -V || true
-
-      - name: Install iOS SDK (iPhoneOS16.5)
-        run: |
-          set -euo pipefail
-          mkdir -p "$THEOS/sdks"
-          if [ -d "$THEOS/sdks/iPhoneOS16.5.sdk" ]; then
-            echo "sdk already present"
-            exit 0
-          fi
-          STAGE="$(mktemp -d)"
-          trap 'rm -rf "$STAGE"' EXIT
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$STAGE/sdks"
-          git -C "$STAGE/sdks" sparse-checkout set iPhoneOS16.5.sdk
-          cp -R "$STAGE/sdks/iPhoneOS16.5.sdk" "$THEOS/sdks/"
-          ls -1 "$THEOS/sdks"
-
       - name: Bump version
         id: bump
         run: |
+          set -euo pipefail
           BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
           VERSION="${BASE}-${GITHUB_RUN_NUMBER}"
-          sed -i "s/^Version: .*/Version: ${VERSION}/" control
+          sed -i '' "s/^Version: .*/Version: ${VERSION}/" control
           echo "package_version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "package version: $VERSION"
 
@@ -95,16 +62,14 @@ jobs:
             dpkg-deb -R "$deb" "$stage"
 
             # theos 的 roothide scheme 会把 Architecture 写成 iphoneos-arm64e，
-            # 而设备 dpkg 认的是 iphoneos-arm64，Sileo 会直接判不兼容
-            sed -i 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
+            # 设备 dpkg 认的是 iphoneos-arm64
+            sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
 
             # RootHide Bootstrap 是 rootless 布局（/var/jb），rootfs 只读装不进
             python3 tools/relocate_to_jbroot.py "$stage"
-
-            # 硬校验：任何不在 /var/jb 下的绝对路径都会让安装失败
             python3 tools/check_deb_paths.py "$stage"
 
-            # Linux 新版 dpkg 默认 zstd，统一回 xz
+            # 统一 xz 压缩
             dpkg-deb -b -Zxz "$stage" "$deb"
             rm -rf "$stage"
 

@@ -5,16 +5,12 @@
 DEBUG ?= 0
 FINALPACKAGE ?= 1
 
-# 只编 arm64，不要 arm64e。
-# L1ghtmann 工具链产出的 arm64e 切片 ABI 与 A16 不一致，dyld 映射后
-# objc readClass 会 SIGBUS（崩溃日志：map_images_nolock -> readClass），
-# 表现为 SpringBoard 安全模式 / 设置面板一打开就闪退。
-# arm64 二进制在 arm64e 设备上原生运行，代价只是不走指针认证。
-ARCHS = arm64
+# 必须是 arm64e：SpringBoard / 设置这些都是 arm64e 进程，
+# 只接受 arm64e 的 dylib 和 bundle（纯 arm64 会被 dlopen 以
+# "incompatible architecture (have 'arm64', need 'arm64e')" 拒绝）。
+# 之前的 SIGBUS 不是架构选错，而是 Linux 工具链编出的 arm64e ABI 有问题，
+# 所以 CI 改用 macOS runner + Xcode SDK。
+ARCHS = arm64 arm64e
 
-# rootless / roothide 都要求 iOS 15+；rootful 保留 14.0 下限
-ifneq ($(filter rootless roothide,$(THEOS_PACKAGE_SCHEME)),)
-TARGET = iphone:clang:16.5:15.0
-else
-TARGET = iphone:clang:16.5:14.0
-endif
+# latest = 用 Xcode 自带的最新 iOS SDK
+TARGET = iphone:clang:latest:15.0
