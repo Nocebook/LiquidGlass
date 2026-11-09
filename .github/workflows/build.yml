@@ -73,8 +73,19 @@ jobs:
           set -euo pipefail
           mkdir -p "$THEOS/toolchain"
           # Theos 官方安装脚本在 Linux 上用的就是这个预编译工具链。
-          curl -fsSL "https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz" \
-            | tar -xJ -C "$THEOS/toolchain/"
+          # GitHub Release 的 CDN 会偶发 504（今天连续两次），所以这里自己重试，
+          # 不用 `curl | tar`：管道里失败会被当成成功的空输入，报错位置会很迷惑。
+          URL="https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz"
+          for attempt in 1 2 3 4 5; do
+            if curl -fL --retry 3 --retry-delay 5 --retry-all-errors \
+                     --connect-timeout 20 --max-time 600 -o /tmp/iostoolchain.tar.xz "$URL"; then
+              break
+            fi
+            echo "toolchain download failed (attempt $attempt)"
+            sleep 15
+          done
+          test -s /tmp/iostoolchain.tar.xz || { echo "toolchain download gave up"; exit 1; }
+          tar -xJf /tmp/iostoolchain.tar.xz -C "$THEOS/toolchain/"
           CLANG="$THEOS/toolchain/linux/iphone/bin/clang"
           test -x "$CLANG" || { echo "toolchain clang missing"; find "$THEOS/toolchain" -maxdepth 3 | head -40; exit 1; }
           "$CLANG" --version
@@ -83,7 +94,8 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v ldid >/dev/null 2>&1; then
-            curl -fsSL -o /tmp/ldid "https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64"
+            curl -fL --retry 3 --retry-delay 5 --retry-all-errors \
+              -o /tmp/ldid "https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64"
             chmod +x /tmp/ldid
             sudo mv /tmp/ldid /usr/local/bin/ldid
           fi
