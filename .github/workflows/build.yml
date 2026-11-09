@@ -1,10 +1,11 @@
-name: Build Glassify
+name: Build LiquidGlass
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+      - master
     # 只改文档不必重新出包
     paths-ignore:
       - '**.md'
@@ -13,70 +14,142 @@ permissions:
   contents: write
 
 env:
-  THEOS: ${{ github.workspace }}/theos
+  THEOS: ${{ github.workspace }}/theos-roothide
 
 jobs:
   build:
-    # macOS + Xcode 工具链：arm64e 的 ABI 才是对的。
-    # 之前用 Linux 的 L1ghtmann 工具链，编出的 arm64e 在 A16 上
-    # objc readClass 直接 SIGBUS（安全模式 / 设置闪退）。
-    runs-on: macos-13
+    name: Build (${{ matrix.build_variant }})
+    # Linux runner：macOS 按 10 倍计费且配额容易耗尽，Ubuntu 按 1 倍计费。
+    # Theos 官方支持 Linux（L1ghtmann/llvm-project 提供预编译 iOS 工具链），
+    # 本项目只编 ObjC，不需要 Xcode。
+    runs-on: ubuntu-24.04
+    outputs:
+      package_version: ${{ steps.bump.outputs.package_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 目标设备是 roothide（隐根）：必须用 roothide scheme 编译，
+          # 让 Theos 跑一遍 roothide patcher，dylib 里的依赖路径才会指向 jbroot。
+          # 用 rootless scheme 编出来的包在 roothide 上虽然能装，
+          # 但 dylib 没打过补丁，注入器加载不到真正的隐藏根。
+          - build_variant: roothide
 
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          # noble 源里没有 ldid 包，由后面的 Ensure ldid 步骤用官方静态二进制补。
+          sudo apt-get install -y build-essential fakeroot rsync perl zip libxml2 xz-utils
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install packaging tools
+      - name: Setup Environment
         run: |
-          brew install dpkg xz ldid
+          echo "$THEOS/bin" >> "$GITHUB_PATH"
+          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
+          echo "THEOS_IGNORE_PARALLEL_BUILDING_NOTICE=yes" >> "$HOME/.theosrc"
 
-      - name: Checkout Theos (roothide fork)
+      - name: Bump Package Version
+        id: bump
+        run: |
+          BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
+          [ -n "$BASE" ] || BASE="6.1.0"
+          VERSION="${BASE}-${{ github.run_number }}"
+          echo "Using version: $VERSION"
+          sed -i "s/^Version: .*/Version: ${VERSION}/" control
+          echo "package_version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Theos (RootHide)
         uses: actions/checkout@v4
         with:
           repository: roothide/theos
-          path: theos
+          path: theos-roothide
           submodules: recursive
 
-      - name: Bump version
-        id: bump
+      - name: Install Linux iOS Toolchain
         run: |
           set -euo pipefail
-          BASE="$(sed -n 's/^Version: //p' control | head -1 | cut -d- -f1)"
-          VERSION="${BASE}-${GITHUB_RUN_NUMBER}"
-          sed -i '' "s/^Version: .*/Version: ${VERSION}/" control
-          echo "package_version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "package version: $VERSION"
+          mkdir -p "$THEOS/toolchain"
+          # Theos 官方安装脚本在 Linux 上用的就是这个预编译工具链。
+          curl -fsSL "https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz" \
+            | tar -xJ -C "$THEOS/toolchain/"
+          CLANG="$THEOS/toolchain/linux/iphone/bin/clang"
+          test -x "$CLANG" || { echo "toolchain clang missing"; find "$THEOS/toolchain" -maxdepth 3 | head -40; exit 1; }
+          "$CLANG" --version
 
-      - name: Build package
+      - name: Ensure ldid
         run: |
           set -euo pipefail
-          make package FINALPACKAGE=1
-          ls -l packages/
+          if ! command -v ldid >/dev/null 2>&1; then
+            curl -fsSL -o /tmp/ldid "https://github.com/ProcursusTeam/ldid/releases/latest/download/ldid_linux_x86_64"
+            chmod +x /tmp/ldid
+            sudo mv /tmp/ldid /usr/local/bin/ldid
+          fi
+          ldid -V || true
 
-      - name: Fix package for RootHide
+      - name: Install iOS SDK (iPhoneOS16.5)
         run: |
           set -euo pipefail
+          mkdir -p "$THEOS/sdks"
+          if [ -d "$THEOS/sdks/iPhoneOS16.5.sdk" ]; then
+            echo "iPhoneOS16.5.sdk already present"
+            exit 0
+          fi
+          SDK_STAGE="$(mktemp -d)"
+          trap 'rm -rf "$SDK_STAGE"' EXIT
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git "$SDK_STAGE/sdks"
+          git -C "$SDK_STAGE/sdks" sparse-checkout set iPhoneOS16.5.sdk
+          cp -R "$SDK_STAGE/sdks/iPhoneOS16.5.sdk" "$THEOS/sdks/"
+          ls -1 "$THEOS/sdks"
+
+      - name: Build Package
+        run: |
+          set -euo pipefail
+          chmod 755 layout/DEBIAN/postinst layout/DEBIAN/postrm 2>/dev/null || true
+          sh build.sh "${{ matrix.build_variant }}"
+          # roothide 环境里 dpkg 的系统架构是 iphoneos-arm64，而 theos 的 roothide
+          # scheme 会把 Architecture 字段写成 iphoneos-arm64e，Sileo 直接判为不兼容。
+          # 这里重打包，把字段改回 iphoneos-arm64（二进制本身已经是单架构 arm64）。
           for deb in packages/*.deb; do
             [ -e "$deb" ] || continue
             stage="$(mktemp -d)"
             dpkg-deb -R "$deb" "$stage"
+            sed -i 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
+            chmod 755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/postrm" 2>/dev/null || true
+            chmod -R go-w "$stage/DEBIAN"
 
-            # theos 的 roothide scheme 会把 Architecture 写成 iphoneos-arm64e，
-            # 设备 dpkg 认的是 iphoneos-arm64
-            sed -i '' 's/^Architecture: .*/Architecture: iphoneos-arm64/' "$stage/DEBIAN/control"
-
-            # RootHide Bootstrap 是 rootless 布局（/var/jb），rootfs 只读装不进
+            # roothide scheme 出的是 rootfs 布局（/Library、/Applications），
+            # 而 RootHide Bootstrap 是 rootless 布局，rootfs 只读装不进。
+            # 这里统一挪进 var/jb，dylib 的 jbroot 解析不受移动影响。
             python3 tools/relocate_to_jbroot.py "$stage"
+
+            # 这一版不带桌面 App，入口只在设置里。确认 dylib 与面板都在。
+            dylib_path="$(find "$stage" -name 'AxsLiquidGlass.dylib' | head -n 1)"
+            prefs_path="$(find "$stage" -name 'AxsLiquidGlassPrefs' -type f | head -n 1)"
+            if [ -z "$dylib_path" ] || [ -z "$prefs_path" ]; then
+              echo "ERROR: dylib 或设置面板缺失"
+              echo "  dylib=$dylib_path"
+              echo "  prefs=$prefs_path"
+              find "$stage" -maxdepth 6 | head -60
+              exit 1
+            fi
+            echo "dylib: $dylib_path"
+            echo "prefs: $prefs_path"
+
+            # 隐根硬校验：roothide 的 rootfs 是只读的，
+            # 包里出现任何不在 /var/jb 下的绝对路径都会让安装直接失败。
             python3 tools/check_deb_paths.py "$stage"
 
-            # 统一 xz 压缩
+            # 显式 xz：Linux 的新 dpkg 默认 zstd，统一回与旧版本一致的压缩，
+            # 避免设备端 dpkg 对 zstd 支持程度的差异。
             dpkg-deb -b -Zxz "$stage" "$deb"
             rm -rf "$stage"
-
             echo "--- $deb ---"
             dpkg-deb -f "$deb" Package Architecture Version Depends
-            dpkg-deb -c "$deb" | sed -n '1,25p'
-
+            dpkg-deb -c "$deb" | sed -n '1,60p'
+            # theos 的 roothide scheme 会把架构写进文件名，统一成 iphoneos-arm64
             case "$deb" in
               *_iphoneos-arm64e.deb)
                 fixed="${deb%_iphoneos-arm64e.deb}_iphoneos-arm64.deb"
@@ -85,19 +158,21 @@ jobs:
                 ;;
             esac
           done
+          echo "=== .deb files ==="
+          find ./packages -name "*.deb" -type f
 
-      - name: Upload artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: glassify-deb
+          name: packages-${{ matrix.build_variant }}
           path: ./packages/*.deb
           if-no-files-found: error
 
-      - name: Create release
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      - name: Create Release
+        if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ github.token }}
           tag_name: v${{ steps.bump.outputs.package_version }}
-          name: "Glassify v${{ steps.bump.outputs.package_version }}"
+          name: "liquid (HL) v${{ steps.bump.outputs.package_version }}"
           files: ./packages/*.deb

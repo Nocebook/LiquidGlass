@@ -1,0 +1,39 @@
+#!/bin/sh
+set +e
+
+find_jb() {
+    if [ -n "${JBROOT:-}" ] && [ -d "$JBROOT/usr" ]; then
+        printf '%s' "$JBROOT"
+        return 0
+    fi
+    for candidate in /var/jb /var/containers/Bundle/Application/.jbroot-*; do
+        if [ -d "$candidate/usr" ] || [ -d "$candidate/Library/MobileSubstrate" ]; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+    printf ''
+}
+
+JB="$(find_jb)"
+
+UICACHE=""
+for candidate in "${JB}/usr/bin/uicache" /var/jb/usr/bin/uicache /usr/bin/uicache; do
+    [ -n "$candidate" ] && [ -x "$candidate" ] && UICACHE="$candidate" && break
+done
+if [ -z "$UICACHE" ]; then
+    UICACHE="$(command -v uicache 2>/dev/null)"
+fi
+
+if [ -n "$UICACHE" ]; then
+    for app in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app; do
+        [ -n "$app" ] && "$UICACHE" -p "$app" >/dev/null 2>&1
+    done
+fi
+
+# 这里**不要**杀 SpringBoard。
+# 以前在这里执行 killall -9 SpringBoard，用户看到的现象是"装到一半自己注销了"，
+# 而且没有选择权。重启桌面交给包管理器（Sileo / Zebra 装完给的「重启」按钮），
+# 想立刻生效就点，不想点就先放着。
+
+exit 0

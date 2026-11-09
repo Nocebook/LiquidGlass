@@ -1,44 +1,48 @@
 #!/usr/bin/env python3
-"""校验打包目录里没有 /var/jb 之外的绝对路径。
+"""校验 deb 解包后的路径。
 
-RootHide 的 rootfs 只读，包里出现 /Library、/Applications 这类路径时
-安装会直接失败。这个检查让 CI 在出包阶段就红，而不是装到手机上才发现。
-
-用法: python3 tools/check_deb_paths.py <stage 目录>
+roothide（隐根）的 rootfs 是只读的，包内任何不在 var/jb 下的绝对路径
+都会让安装直接失败（error creating directory './rootfs/Library/...': Read-only file system）。
+所以打包后必须逐条检查，发现越界路径就中断构建。
 """
 
 import os
 import sys
 
 
-def main(stage):
-    if not os.path.isdir(stage):
-        raise SystemExit(f"not a directory: {stage}")
+def main():
+    if len(sys.argv) != 2:
+        print("usage: check_deb_paths.py <staging-dir>")
+        return 2
 
+    stage = sys.argv[1]
     bad = []
-    for root, dirs, _files in os.walk(stage):
+
+    for root, dirs, files in os.walk(stage):
         rel = os.path.relpath(root, stage)
         if rel == ".":
             continue
-
-        top = rel.split(os.sep)[0]
-        if top == "DEBIAN":
-            dirs[:] = []
+        parts = rel.split(os.sep)
+        if parts[0] == "DEBIAN":
             continue
-        if top != "var":
+        if parts[0] != "var":
+            bad.append(rel)
+            continue
+        # var 自身和 var/jb 都是合法中间目录
+        if len(parts) == 1:
+            continue
+        if parts[1] != "jb":
             bad.append(rel)
 
     if bad:
-        print("ERROR: 以下目录不在 /var/jb 下，RootHide 上装不进去：", file=sys.stderr)
-        for item in bad[:40]:
-            print("  /" + item.replace(os.sep, "/"), file=sys.stderr)
+        print("ERROR: 以下路径不在 var/jb 下，roothide 装不进只读 rootfs：")
+        for item in bad:
+            print("   !", item)
         return 1
 
-    print("path check ok：所有内容都在 /var/jb 下")
+    print("path check: all entries under var/jb")
     return 0
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit(__doc__)
-    sys.exit(main(sys.argv[1]))
+    sys.exit(main())

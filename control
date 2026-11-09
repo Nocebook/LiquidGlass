@@ -1,8 +1,8 @@
 Package: com.heli.liquid
-Name: Glassify
-Version: 8.0.3
+Name: liquid (HL)
+Version: 8.1.0
 Architecture: iphoneos-arm64
-Description: 通知角标液态玻璃 + 未读呼吸动画。8.0.3 改用 macOS/Xcode 工具链构建 arm64e：Linux 工具链编出的 arm64e ABI 不兼容，dyld 加载后 objc readClass 直接 SIGBUS（表现为安全模式、设置面板闪退）；纯 arm64 又会被系统进程以架构不兼容拒绝。设置里保留三个排查开关，可随时关掉挂钩验证。完全免费，无需激活码。
+Description: 把系统毛玻璃重写成液态玻璃：更强模糊与饱和度、整片玻璃膜、定向描边、圆角边缘折射，覆盖主屏、Dock、文件夹、搜索胶囊、资源库、上下文菜单、控制中心、通知、弹窗、灵动岛与小组件，全部场景独立开关。8.1.0 在验证过能开机的那套内核上新增「液态角标」：把桌面图标的通知角标换成一块小玻璃——原底板压透露出壁纸，上面补乳白与 1pt 描边，未读时左上高光呼吸；面板可单独关掉并立刻还原原生角标。小组件只做纯装饰，不替换模糊，规避快照白屏；锁屏与整屏背景虚化交给系统。默认模糊 88；第三方 App 内默认不改写系统模糊（面板可开）。安装与卸载都不自动杀 SpringBoard，重启交给包管理器的「重启」按钮。完全免费，无需激活码。
 Maintainer: Heli
 Author: Heli
 Section: Heli

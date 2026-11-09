@@ -1,24 +1,26 @@
-# 目标设备：iPhone 14 Pro（A16 / arm64e）/ iOS 16.3 / RootHide（Dopamine roothide）
-#
-# 用 roothide scheme 出包，CI 里再统一做三件事：
-#   1) Architecture 改回 iphoneos-arm64（theos 会写成 arm64e，Sileo 判不兼容）
-#   2) 所有 rootfs 路径挪进 /var/jb（RootHide 的 rootfs 只读，装不进）
-#   3) 用 xz 重打包（Linux 新版 dpkg 默认 zstd，设备端不一定认）
+DEBUG = 0
+FINALPACKAGE = 1
 
-export THEOS_PACKAGE_SCHEME = roothide
+# 目标设备：iPhone 14 Pro / iOS 16.3 / roothide（隐藏根）。
+# roothide 与 rootless 都要求 iOS 15+；rootful 保留 14.0 下限。
+# build.sh 会用命令行变量覆盖这里，直接 make 时默认出 roothide 包。
+THEOS_PACKAGE_SCHEME ?= roothide
 
-include GlassifyBuild.mk
+ARCHS = arm64e
+
+# Share the SDK and deployment targets with the PreferenceBundle.
+include AxsLiquidGlassBuild.mk
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = Glassify
-Glassify_FILES = Tweak.xm
-Glassify_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-function
-Glassify_FRAMEWORKS = UIKit Foundation QuartzCore
-# substrate 由 tweak.mk 自动链接
+TWEAK_NAME = AxsLiquidGlass
+AxsLiquidGlass_FILES = $(wildcard Hooks/*.xm Sources/*.m)
+AxsLiquidGlass_CFLAGS = -fobjc-arc -I./Headers -I./Sources
+AxsLiquidGlass_FRAMEWORKS = UIKit Foundation CoreFoundation QuartzCore
+AxsLiquidGlass_LIBRARIES = substrate
 
+# 本插件不读取任何 rootfs 内文件，路径全部交给系统与 cfprefsd，
+# 因此 roothide 下不需要链接 libroot，也不必 include roothide.h。
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-SUBPROJECTS += prefs
+SUBPROJECTS += AxsLiquidGlassPrefs
 include $(THEOS_MAKE_PATH)/aggregate.mk
-
-# 安装/卸载都不自动杀 SpringBoard，重启交给包管理器的按钮

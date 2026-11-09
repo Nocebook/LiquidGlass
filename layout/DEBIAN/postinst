@@ -1,0 +1,48 @@
+#!/bin/sh
+# 这一版不再带桌面 App（入口只在 设置 → 越狱插件 → liquid (HL)）。
+# 但旧版本装过 /Applications/Heli.app，升级时 dpkg 不会自动删，
+# 这里主动清掉并注销，免得桌面上留一个点了没用的图标。
+#
+# roothide（隐根）下 /var/jb 只是兼容链接，真实根在
+# /var/containers/Bundle/Application/.jbroot-*，所以三个位置都要探。
+set +e
+
+find_jb() {
+    if [ -n "${JBROOT:-}" ] && [ -d "$JBROOT/usr" ]; then
+        printf '%s' "$JBROOT"
+        return 0
+    fi
+    for candidate in /var/jb /var/containers/Bundle/Application/.jbroot-*; do
+        if [ -d "$candidate/usr" ] || [ -d "$candidate/Library/MobileSubstrate" ]; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+    printf ''
+}
+
+JB="$(find_jb)"
+
+UICACHE=""
+for candidate in "${JB}/usr/bin/uicache" /var/jb/usr/bin/uicache /usr/bin/uicache; do
+    [ -n "$candidate" ] && [ -x "$candidate" ] && UICACHE="$candidate" && break
+done
+if [ -z "$UICACHE" ]; then
+    UICACHE="$(command -v uicache 2>/dev/null)"
+fi
+
+# 清掉旧版残留的桌面 App
+for app in "${JB}/Applications/Heli.app" /var/jb/Applications/Heli.app; do
+    [ -n "$app" ] && [ -d "$app" ] || continue
+    rm -rf "$app"
+    if [ -n "$UICACHE" ]; then
+        "$UICACHE" -p "$app" >/dev/null 2>&1
+    fi
+done
+
+# 这里**不要**杀 SpringBoard。
+# 以前在这里执行 killall -9 SpringBoard，用户看到的现象是"装到一半自己注销了"，
+# 而且没有选择权。重启桌面交给包管理器（Sileo / Zebra 装完给的「重启」按钮），
+# 想立刻生效就点，不想点就先放着。
+
+exit 0
