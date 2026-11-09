@@ -360,7 +360,12 @@ static void AxsBadgeWalk(UIView *view, void (^block)(UIView *)) {
     if (!badgeClass) return;
 
     UIApplication *application = [UIApplication sharedApplication];
+    // SpringBoard 只有一个窗口场景，走 scene API 反而要处理"场景还没连上"的分支；
+    // 这里保留 windows，把弃用警告就地关掉（-Werror 会把警告当错误）。
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSArray<UIWindow *> *windows = application.windows;
+#pragma clang diagnostic pop
     for (UIWindow *window in windows) {
         AxsBadgeWalk(window, ^(UIView *view) {
             if (![view isKindOfClass:badgeClass]) return;
